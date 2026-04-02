@@ -95,7 +95,7 @@ var objectivesToolCallsDeny = cli.Command{
 }
 
 func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -105,7 +105,7 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveToolCallListParams{}
+	params := cadenya.ObjectiveToolCallListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -150,7 +150,7 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 }
 
 func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -164,7 +164,7 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveToolCallApproveParams{}
+	params := cadenya.ObjectiveToolCallApproveParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -197,7 +197,7 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 }
 
 func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -211,7 +211,7 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveToolCallDenyParams{}
+	params := cadenya.ObjectiveToolCallDenyParams{}
 
 	options, err := flagOptions(
 		cmd,

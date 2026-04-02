@@ -44,7 +44,7 @@ var objectivesToolsList = cli.Command{
 }
 
 func handleObjectivesToolsList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -54,7 +54,7 @@ func handleObjectivesToolsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveToolListParams{}
+	params := cadenya.ObjectiveToolListParams{}
 
 	options, err := flagOptions(
 		cmd,
