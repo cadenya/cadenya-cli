@@ -74,10 +74,6 @@ func init() {
 				Name:    "api-key",
 				Sources: cli.EnvVars("CADENYA_API_KEY"),
 			},
-			&cli.StringFlag{
-				Name:  "environment",
-				Usage: "Set the environment for API requests",
-			},
 		},
 		Commands: []*cli.Command{
 			{
