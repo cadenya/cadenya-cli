@@ -59,14 +59,14 @@ var workspacesGet = cli.Command{
 }
 
 func handleWorkspacesList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.WorkspaceListParams{}
+	params := cadenya.WorkspaceListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -101,7 +101,7 @@ func handleWorkspacesList(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleWorkspacesGet(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {

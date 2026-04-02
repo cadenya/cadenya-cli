@@ -54,7 +54,7 @@ var agentsWebhookDeliveriesList = cli.Command{
 }
 
 func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
@@ -64,7 +64,7 @@ func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) er
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.AgentWebhookDeliveryListParams{}
+	params := cadenya.AgentWebhookDeliveryListParams{}
 
 	options, err := flagOptions(
 		cmd,

@@ -246,14 +246,14 @@ var agentsDelete = cli.Command{
 }
 
 func handleAgentsCreate(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.AgentNewParams{}
+	params := cadenya.AgentNewParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -280,7 +280,7 @@ func handleAgentsCreate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -315,7 +315,7 @@ func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -325,7 +325,7 @@ func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.AgentUpdateParams{}
+	params := cadenya.AgentUpdateParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -357,14 +357,14 @@ func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.AgentListParams{}
+	params := cadenya.AgentListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -399,7 +399,7 @@ func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAgentsDelete(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])

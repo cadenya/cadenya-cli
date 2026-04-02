@@ -30,14 +30,14 @@ var searchSearchToolsOrToolSets = cli.Command{
 }
 
 func handleSearchSearchToolsOrToolSets(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.SearchSearchToolsOrToolSetsParams{}
+	params := cadenya.SearchSearchToolsOrToolSetsParams{}
 
 	options, err := flagOptions(
 		cmd,
