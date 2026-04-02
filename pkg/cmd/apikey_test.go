@@ -5,8 +5,8 @@ package cmd
 import (
 	"testing"
 
-	"github.com/stainless-sdks/cadenya-cli/internal/mocktest"
-	"github.com/stainless-sdks/cadenya-cli/internal/requestflag"
+	"github.com/cadenya/cadenya-cli/internal/mocktest"
+	"github.com/cadenya/cadenya-cli/internal/requestflag"
 )
 
 func TestAPIKeysCreate(t *testing.T) {

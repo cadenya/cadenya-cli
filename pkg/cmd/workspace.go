@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cadenya/cadenya-cli/internal/apiquery"
+	"github.com/cadenya/cadenya-cli/internal/requestflag"
 	"github.com/cadenya/cadenya-sdk-go"
 	"github.com/cadenya/cadenya-sdk-go/option"
-	"github.com/stainless-sdks/cadenya-cli/internal/apiquery"
-	"github.com/stainless-sdks/cadenya-cli/internal/requestflag"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
