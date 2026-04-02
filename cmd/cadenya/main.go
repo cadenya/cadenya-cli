@@ -6,11 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.cadenya.com/cadenya-sdk-go"
 	"net/http"
 	"os"
 	"slices"
 
+	"github.com/cadenya/cadenya-sdk-go"
 	"github.com/stainless-sdks/cadenya-cli/pkg/cmd"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
