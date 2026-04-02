@@ -208,14 +208,14 @@ var apiKeysRotate = cli.Command{
 }
 
 func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.APIKeyNewParams{}
+	params := cadenya.APIKeyNewParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -242,7 +242,7 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAPIKeysRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -277,7 +277,7 @@ func handleAPIKeysRetrieve(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAPIKeysUpdate(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -287,7 +287,7 @@ func handleAPIKeysUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.APIKeyUpdateParams{}
+	params := cadenya.APIKeyUpdateParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -319,14 +319,14 @@ func handleAPIKeysUpdate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.APIKeyListParams{}
+	params := cadenya.APIKeyListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -361,7 +361,7 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -386,7 +386,7 @@ func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAPIKeysRotate(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])

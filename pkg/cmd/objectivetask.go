@@ -67,7 +67,7 @@ var objectivesTasksList = cli.Command{
 }
 
 func handleObjectivesTasksRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -111,7 +111,7 @@ func handleObjectivesTasksRetrieve(ctx context.Context, cmd *cli.Command) error 
 }
 
 func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyasdkgo.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -121,7 +121,7 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyasdkgo.ObjectiveTaskListParams{}
+	params := cadenya.ObjectiveTaskListParams{}
 
 	options, err := flagOptions(
 		cmd,
