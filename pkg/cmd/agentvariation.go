@@ -5,12 +5,12 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"go.cadenya.com/cadenya-go"
-	"go.cadenya.com/cadenya-go/option"
 	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
+	"github.com/cadenya/cadenya-go"
+	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
