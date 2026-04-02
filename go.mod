@@ -1,4 +1,4 @@
-module github.com/cadenya/cadenya-cli
+module github.com/cadenya/cli
 
 go 1.25
 

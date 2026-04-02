@@ -5,12 +5,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 	"os"
 
-	"github.com/cadenya/cadenya-cli/internal/apiquery"
-	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-sdk-go"
-	"github.com/cadenya/cadenya-sdk-go/option"
+	"github.com/cadenya/cli/internal/apiquery"
+	"github.com/cadenya/cli/internal/requestflag"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -180,14 +180,14 @@ var workspaceSecretsDelete = cli.Command{
 }
 
 func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.WorkspaceSecretNewParams{}
+	params := gocadenyacomcadenyago.WorkspaceSecretNewParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -214,7 +214,7 @@ func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -249,7 +249,7 @@ func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error
 }
 
 func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -259,7 +259,7 @@ func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.WorkspaceSecretUpdateParams{}
+	params := gocadenyacomcadenyago.WorkspaceSecretUpdateParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -291,14 +291,14 @@ func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.WorkspaceSecretListParams{}
+	params := gocadenyacomcadenyago.WorkspaceSecretListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -333,7 +333,7 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleWorkspaceSecretsDelete(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
