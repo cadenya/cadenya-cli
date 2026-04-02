@@ -158,6 +158,15 @@ func init() {
 				},
 			},
 			{
+				Name:     "objectives:feedback",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&objectivesFeedbackCreate,
+					&objectivesFeedbackList,
+				},
+			},
+			{
 				Name:     "models",
 				Category: "API RESOURCE",
 				Suggest:  true,
