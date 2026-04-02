@@ -5,7 +5,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/cadenya/cli/internal/mocktest"
+	"github.com/cadenya/cadenya-cli/internal/mocktest"
 )
 
 func TestObjectivesToolsList(t *testing.T) {

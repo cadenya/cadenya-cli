@@ -5,8 +5,8 @@ package cmd
 import (
 	"testing"
 
-	"github.com/cadenya/cli/internal/mocktest"
-	"github.com/cadenya/cli/internal/requestflag"
+	"github.com/cadenya/cadenya-cli/internal/mocktest"
+	"github.com/cadenya/cadenya-cli/internal/requestflag"
 )
 
 func TestAgentsCreate(t *testing.T) {

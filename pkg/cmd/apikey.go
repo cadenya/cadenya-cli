@@ -9,8 +9,8 @@ import (
 	"go.cadenya.com/cadenya-go/option"
 	"os"
 
-	"github.com/cadenya/cli/internal/apiquery"
-	"github.com/cadenya/cli/internal/requestflag"
+	"github.com/cadenya/cadenya-cli/internal/apiquery"
+	"github.com/cadenya/cadenya-cli/internal/requestflag"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
