@@ -225,14 +225,14 @@ var toolSetsListEvents = cli.Command{
 }
 
 func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ToolSetNewParams{}
+	params := cadenya.ToolSetNewParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -259,7 +259,7 @@ func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -294,7 +294,7 @@ func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -304,7 +304,7 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ToolSetUpdateParams{}
+	params := cadenya.ToolSetUpdateParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -336,14 +336,14 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ToolSetListParams{}
+	params := cadenya.ToolSetListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -378,7 +378,7 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -403,7 +403,7 @@ func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
@@ -413,7 +413,7 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ToolSetListEventsParams{}
+	params := cadenya.ToolSetListEventsParams{}
 
 	options, err := flagOptions(
 		cmd,

@@ -299,14 +299,14 @@ var objectivesListEvents = cli.Command{
 }
 
 func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveNewParams{}
+	params := cadenya.ObjectiveNewParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -333,7 +333,7 @@ func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -368,14 +368,14 @@ func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveListParams{}
+	params := cadenya.ObjectiveListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -410,7 +410,7 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -420,7 +420,7 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveCancelParams{}
+	params := cadenya.ObjectiveCancelParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -452,7 +452,7 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -462,7 +462,7 @@ func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveContinueParams{}
+	params := cadenya.ObjectiveContinueParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -494,7 +494,7 @@ func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -504,7 +504,7 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveListContextWindowsParams{}
+	params := cadenya.ObjectiveListContextWindowsParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -549,7 +549,7 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 }
 
 func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
@@ -559,7 +559,7 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ObjectiveListEventsParams{}
+	params := cadenya.ObjectiveListEventsParams{}
 
 	options, err := flagOptions(
 		cmd,

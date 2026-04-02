@@ -88,7 +88,7 @@ var modelsSetStatus = cli.Command{
 }
 
 func handleModelsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -123,14 +123,14 @@ func handleModelsRetrieve(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleModelsList(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ModelListParams{}
+	params := cadenya.ModelListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -165,7 +165,7 @@ func handleModelsList(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleModelsSetStatus(ctx context.Context, cmd *cli.Command) error {
-	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
@@ -175,7 +175,7 @@ func handleModelsSetStatus(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := gocadenyacomcadenyago.ModelSetStatusParams{}
+	params := cadenya.ModelSetStatusParams{}
 
 	options, err := flagOptions(
 		cmd,
