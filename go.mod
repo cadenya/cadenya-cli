@@ -1,4 +1,4 @@
-module github.com/stainless-sdks/cadenya-cli
+module github.com/cadenya/cadenya-cli
 
 go 1.25
 

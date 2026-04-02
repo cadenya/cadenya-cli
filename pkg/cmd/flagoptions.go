@@ -14,11 +14,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/cadenya/cadenya-sdk-go/option"
-	"github.com/stainless-sdks/cadenya-cli/internal/apiform"
-	"github.com/stainless-sdks/cadenya-cli/internal/apiquery"
-	"github.com/stainless-sdks/cadenya-cli/internal/debugmiddleware"
-	"github.com/stainless-sdks/cadenya-cli/internal/requestflag"
+	"github.com/cadenya/cadenya-cli/internal/apiform"
+	"github.com/cadenya/cadenya-cli/internal/apiquery"
+	"github.com/cadenya/cadenya-cli/internal/debugmiddleware"
+	"github.com/cadenya/cadenya-cli/internal/requestflag"
+	"github.com/cadenya/cadenya-go/option"
 
 	"github.com/goccy/go-yaml"
 	"github.com/urfave/cli/v3"

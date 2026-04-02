@@ -10,8 +10,8 @@ import (
 	"os"
 	"slices"
 
-	"github.com/cadenya/cadenya-sdk-go"
-	"github.com/stainless-sdks/cadenya-cli/pkg/cmd"
+	"github.com/cadenya/cadenya-cli/pkg/cmd"
+	"github.com/cadenya/cadenya-go"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )

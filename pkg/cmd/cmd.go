@@ -12,8 +12,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/stainless-sdks/cadenya-cli/internal/autocomplete"
-	"github.com/stainless-sdks/cadenya-cli/internal/requestflag"
+	"github.com/cadenya/cadenya-cli/internal/autocomplete"
+	"github.com/cadenya/cadenya-cli/internal/requestflag"
 	docs "github.com/urfave/cli-docs/v3"
 	"github.com/urfave/cli/v3"
 )

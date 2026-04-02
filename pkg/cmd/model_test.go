@@ -5,7 +5,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/stainless-sdks/cadenya-cli/internal/mocktest"
+	"github.com/cadenya/cadenya-cli/internal/mocktest"
 )
 
 func TestModelsRetrieve(t *testing.T) {

@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cadenya/cadenya-sdk-go"
-	"github.com/cadenya/cadenya-sdk-go/option"
-	"github.com/stainless-sdks/cadenya-cli/internal/apiquery"
+	"github.com/cadenya/cadenya-cli/internal/apiquery"
+	"github.com/cadenya/cadenya-go"
+	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
