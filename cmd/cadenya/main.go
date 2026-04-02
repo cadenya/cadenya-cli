@@ -11,7 +11,7 @@ import (
 	"os"
 	"slices"
 
-	"github.com/cadenya/cli/pkg/cmd"
+	"github.com/cadenya/cadenya-cli/pkg/cmd"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )

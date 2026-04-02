@@ -16,8 +16,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/cadenya/cadenya-cli/internal/jsonview"
 	"github.com/cadenya/cadenya-go/option"
-	"github.com/cadenya/cli/internal/jsonview"
 
 	"github.com/charmbracelet/x/term"
 	"github.com/itchyny/json2yaml"

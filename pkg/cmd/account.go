@@ -9,7 +9,7 @@ import (
 	"go.cadenya.com/cadenya-go/option"
 	"os"
 
-	"github.com/cadenya/cli/internal/apiquery"
+	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
