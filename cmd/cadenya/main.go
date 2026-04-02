@@ -6,12 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.cadenya.com/cadenya-go"
 	"net/http"
 	"os"
 	"slices"
 
 	"github.com/cadenya/cadenya-cli/pkg/cmd"
+	"github.com/cadenya/cadenya-go"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
