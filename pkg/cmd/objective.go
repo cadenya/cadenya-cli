@@ -5,10 +5,10 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-sdk-go"
+	"go.cadenya.com/cadenya-sdk-go/option"
 	"os"
 
-	"github.com/cadenya/cadenya-sdk-go"
-	"github.com/cadenya/cadenya-sdk-go/option"
 	"github.com/stainless-sdks/cadenya-cli/internal/apiquery"
 	"github.com/stainless-sdks/cadenya-cli/internal/requestflag"
 	"github.com/tidwall/gjson"
