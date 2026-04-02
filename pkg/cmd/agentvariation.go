@@ -5,12 +5,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 	"os"
 
-	"github.com/cadenya/cadenya-cli/internal/apiquery"
-	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-sdk-go"
-	"github.com/cadenya/cadenya-sdk-go/option"
+	"github.com/cadenya/cli/internal/apiquery"
+	"github.com/cadenya/cli/internal/requestflag"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -285,7 +285,7 @@ var agentsVariationsDelete = cli.Command{
 }
 
 func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
@@ -295,7 +295,7 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentVariationNewParams{}
+	params := gocadenyacomcadenyago.AgentVariationNewParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -327,7 +327,7 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
@@ -371,7 +371,7 @@ func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error
 }
 
 func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
@@ -385,7 +385,7 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentVariationUpdateParams{}
+	params := gocadenyacomcadenyago.AgentVariationUpdateParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -418,7 +418,7 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
@@ -428,7 +428,7 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentVariationListParams{}
+	params := gocadenyacomcadenyago.AgentVariationListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -473,7 +473,7 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 }
 
 func handleAgentsVariationsDelete(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	client := gocadenyacomcadenyago.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])

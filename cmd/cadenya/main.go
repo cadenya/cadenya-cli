@@ -6,12 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
 	"net/http"
 	"os"
 	"slices"
 
-	"github.com/cadenya/cadenya-cli/pkg/cmd"
-	"github.com/cadenya/cadenya-sdk-go"
+	"github.com/cadenya/cli/pkg/cmd"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -31,7 +31,7 @@ func main() {
 			exitCode = exitErr.ExitCode()
 		}
 
-		var apierr *cadenya.Error
+		var apierr *gocadenyacomcadenyago.Error
 		if errors.As(err, &apierr) {
 			fmt.Fprintf(os.Stderr, "%s %q: %d %s\n", apierr.Request.Method, apierr.Request.URL, apierr.Response.StatusCode, http.StatusText(apierr.Response.StatusCode))
 			format := app.String("format-error")
