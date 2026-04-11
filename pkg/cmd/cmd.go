@@ -128,6 +128,7 @@ func init() {
 					&objectivesRetrieve,
 					&objectivesList,
 					&objectivesCancel,
+					&objectivesCompact,
 					&objectivesContinue,
 					&objectivesListContextWindows,
 					&objectivesListEvents,

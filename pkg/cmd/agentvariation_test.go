@@ -18,7 +18,7 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"agents:variations", "create",
 			"--agent-id", "agentId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{agentDocuments: [{documentId: documentId, documentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, documentNamespaceId: documentNamespaceId, documentNamespaceMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
+			"--spec", "{agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], compactionConfig: {summarization: {instructions: instructions, minPreserveTurns: 0}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
 		)
 	})
 
@@ -35,8 +35,8 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.agent-documents", "[{documentId: documentId, documentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, documentNamespaceId: documentNamespaceId, documentNamespaceMetadata: {name: name, externalId: externalId, labels: {foo: string}}}]",
 			"--spec.agent-tools", "[{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}]",
+			"--spec.compaction-config", "{summarization: {instructions: instructions, minPreserveTurns: 0}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
 			"--spec.constraints", "{maxSubObjectives: 0, maxToolCalls: 0}",
 			"--spec.description", "description",
 			"--spec.enable-episodic-memory=true",
@@ -57,19 +57,6 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  agentDocuments:\n" +
-			"    - documentId: documentId\n" +
-			"      documentMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
-			"      documentNamespaceId: documentNamespaceId\n" +
-			"      documentNamespaceMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
 			"  agentTools:\n" +
 			"    - agentId: agentId\n" +
 			"      agentMetadata:\n" +
@@ -89,6 +76,13 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"        externalId: externalId\n" +
 			"        labels:\n" +
 			"          foo: string\n" +
+			"  compactionConfig:\n" +
+			"    summarization:\n" +
+			"      instructions: instructions\n" +
+			"      minPreserveTurns: 0\n" +
+			"    toolResultClearing:\n" +
+			"      preserveRecentResults: 0\n" +
+			"    triggerThreshold: 0\n" +
 			"  constraints:\n" +
 			"    maxSubObjectives: 0\n" +
 			"    maxToolCalls: 0\n" +
@@ -139,7 +133,7 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{agentDocuments: [{documentId: documentId, documentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, documentNamespaceId: documentNamespaceId, documentNamespaceMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
+			"--spec", "{agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], compactionConfig: {summarization: {instructions: instructions, minPreserveTurns: 0}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -158,8 +152,8 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.agent-documents", "[{documentId: documentId, documentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, documentNamespaceId: documentNamespaceId, documentNamespaceMetadata: {name: name, externalId: externalId, labels: {foo: string}}}]",
 			"--spec.agent-tools", "[{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}]",
+			"--spec.compaction-config", "{summarization: {instructions: instructions, minPreserveTurns: 0}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
 			"--spec.constraints", "{maxSubObjectives: 0, maxToolCalls: 0}",
 			"--spec.description", "description",
 			"--spec.enable-episodic-memory=true",
@@ -181,19 +175,6 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  agentDocuments:\n" +
-			"    - documentId: documentId\n" +
-			"      documentMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
-			"      documentNamespaceId: documentNamespaceId\n" +
-			"      documentNamespaceMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
 			"  agentTools:\n" +
 			"    - agentId: agentId\n" +
 			"      agentMetadata:\n" +
@@ -213,6 +194,13 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"        externalId: externalId\n" +
 			"        labels:\n" +
 			"          foo: string\n" +
+			"  compactionConfig:\n" +
+			"    summarization:\n" +
+			"      instructions: instructions\n" +
+			"      minPreserveTurns: 0\n" +
+			"    toolResultClearing:\n" +
+			"      preserveRecentResults: 0\n" +
+			"    triggerThreshold: 0\n" +
 			"  constraints:\n" +
 			"    maxSubObjectives: 0\n" +
 			"    maxToolCalls: 0\n" +
