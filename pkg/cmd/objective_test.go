@@ -121,6 +121,53 @@ func TestObjectivesCancel(t *testing.T) {
 	})
 }
 
+func TestObjectivesCompact(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"objectives", "compact",
+			"--objective-id", "objectiveId",
+			"--compaction-config", "{summarization: {instructions: instructions, minPreserveTurns: 0}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
+		)
+	})
+
+	t.Run("inner flags", func(t *testing.T) {
+		// Check that inner flags have been set up correctly
+		requestflag.CheckInnerFlags(objectivesCompact)
+
+		// Alternative argument passing style using inner flags
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"objectives", "compact",
+			"--objective-id", "objectiveId",
+			"--compaction-config.summarization", "{instructions: instructions, minPreserveTurns: 0}",
+			"--compaction-config.tool-result-clearing", "{preserveRecentResults: 0}",
+			"--compaction-config.trigger-threshold", "0",
+		)
+	})
+
+	t.Run("piping data", func(t *testing.T) {
+		// Test piping YAML data over stdin
+		pipeData := []byte("" +
+			"compactionConfig:\n" +
+			"  summarization:\n" +
+			"    instructions: instructions\n" +
+			"    minPreserveTurns: 0\n" +
+			"  toolResultClearing:\n" +
+			"    preserveRecentResults: 0\n" +
+			"  triggerThreshold: 0\n")
+		mocktest.TestRunMockTestWithPipeAndFlags(
+			t, pipeData,
+			"--api-key", "string",
+			"objectives", "compact",
+			"--objective-id", "objectiveId",
+		)
+	})
+}
+
 func TestObjectivesContinue(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {

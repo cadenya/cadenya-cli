@@ -18,7 +18,7 @@ func TestAgentsCreate(t *testing.T) {
 			"agents", "create",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, webhookEventsUrl: webhookEventsUrl}",
-			"--default-variation", "{metadata: {name: name, externalId: externalId, labels: {foo: string}}, spec: {agentDocuments: [{documentId: documentId, documentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, documentNamespaceId: documentNamespaceId, documentNamespaceMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}}",
+			"--default-variation", "{metadata: {name: name, externalId: externalId, labels: {foo: string}}, spec: {agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], compactionConfig: {summarization: {instructions: instructions, minPreserveTurns: 0}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}}",
 		)
 	})
 
@@ -39,7 +39,7 @@ func TestAgentsCreate(t *testing.T) {
 			"--spec.description", "description",
 			"--spec.webhook-events-url", "webhookEventsUrl",
 			"--default-variation.metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--default-variation.spec", "{agentDocuments: [{documentId: documentId, documentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, documentNamespaceId: documentNamespaceId, documentNamespaceMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
+			"--default-variation.spec", "{agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], compactionConfig: {summarization: {instructions: instructions, minPreserveTurns: 0}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
 		)
 	})
 
@@ -63,19 +63,6 @@ func TestAgentsCreate(t *testing.T) {
 			"    labels:\n" +
 			"      foo: string\n" +
 			"  spec:\n" +
-			"    agentDocuments:\n" +
-			"      - documentId: documentId\n" +
-			"        documentMetadata:\n" +
-			"          name: name\n" +
-			"          externalId: externalId\n" +
-			"          labels:\n" +
-			"            foo: string\n" +
-			"        documentNamespaceId: documentNamespaceId\n" +
-			"        documentNamespaceMetadata:\n" +
-			"          name: name\n" +
-			"          externalId: externalId\n" +
-			"          labels:\n" +
-			"            foo: string\n" +
 			"    agentTools:\n" +
 			"      - agentId: agentId\n" +
 			"        agentMetadata:\n" +
@@ -95,6 +82,13 @@ func TestAgentsCreate(t *testing.T) {
 			"          externalId: externalId\n" +
 			"          labels:\n" +
 			"            foo: string\n" +
+			"    compactionConfig:\n" +
+			"      summarization:\n" +
+			"        instructions: instructions\n" +
+			"        minPreserveTurns: 0\n" +
+			"      toolResultClearing:\n" +
+			"        preserveRecentResults: 0\n" +
+			"      triggerThreshold: 0\n" +
 			"    constraints:\n" +
 			"      maxSubObjectives: 0\n" +
 			"      maxToolCalls: 0\n" +

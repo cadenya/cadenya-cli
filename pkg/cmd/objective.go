@@ -182,6 +182,43 @@ var objectivesCancel = cli.Command{
 	HideHelpCommand: true,
 }
 
+var objectivesCompact = requestflag.WithInnerFlags(cli.Command{
+	Name:    "compact",
+	Usage:   "Triggers compaction on a running objective. Optionally override the variation's\ncompaction config.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "objective-id",
+			Required: true,
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "compaction-config",
+			Usage:    "CompactionConfig defines how context window compaction behaves for objectives using this variation.",
+			BodyPath: "compactionConfig",
+		},
+	},
+	Action:          handleObjectivesCompact,
+	HideHelpCommand: true,
+}, map[string][]requestflag.HasOuterFlag{
+	"compaction-config": {
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "compaction-config.summarization",
+			Usage:      "SummarizationStrategy configures LLM-powered summarization of older conversation turns.",
+			InnerField: "summarization",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "compaction-config.tool-result-clearing",
+			Usage:      "ToolResultClearingStrategy configures clearing of older tool result content.",
+			InnerField: "toolResultClearing",
+		},
+		&requestflag.InnerFlag[float64]{
+			Name:       "compaction-config.trigger-threshold",
+			Usage:      "Trigger threshold as a percentage of the model's context window (0.0 to 1.0).\n When input tokens reach this percentage of the model's limit, compaction triggers.\n Default: 0.75 (75%)",
+			InnerField: "triggerThreshold",
+		},
+	},
+})
+
 var objectivesContinue = requestflag.WithInnerFlags(cli.Command{
 	Name:    "continue",
 	Usage:   "Continues an objective that has completed",
@@ -449,6 +486,48 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "objectives cancel", obj, format, transform)
+}
+
+func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
+		cmd.Set("objective-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := cadenya.ObjectiveCompactParams{}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		ApplicationJSON,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Objectives.Compact(
+		ctx,
+		cmd.Value("objective-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "objectives compact", obj, format, transform)
 }
 
 func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {

@@ -59,14 +59,14 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 	},
 	"spec": {
 		&requestflag.InnerFlag[[]map[string]any]{
-			Name:       "spec.agent-documents",
-			Usage:      "Documents assigned to this variation.\n Can include individual documents or entire document namespaces (which include all documents in the namespace).",
-			InnerField: "agentDocuments",
-		},
-		&requestflag.InnerFlag[[]map[string]any]{
 			Name:       "spec.agent-tools",
 			Usage:      "Tools assigned to this variation",
 			InnerField: "agentTools",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "spec.compaction-config",
+			Usage:      "CompactionConfig defines how context window compaction behaves for objectives using this variation.",
+			InnerField: "compactionConfig",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.constraints",
@@ -178,14 +178,14 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 	},
 	"spec": {
 		&requestflag.InnerFlag[[]map[string]any]{
-			Name:       "spec.agent-documents",
-			Usage:      "Documents assigned to this variation.\n Can include individual documents or entire document namespaces (which include all documents in the namespace).",
-			InnerField: "agentDocuments",
-		},
-		&requestflag.InnerFlag[[]map[string]any]{
 			Name:       "spec.agent-tools",
 			Usage:      "Tools assigned to this variation",
 			InnerField: "agentTools",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "spec.compaction-config",
+			Usage:      "CompactionConfig defines how context window compaction behaves for objectives using this variation.",
+			InnerField: "compactionConfig",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.constraints",
