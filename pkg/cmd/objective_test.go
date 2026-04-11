@@ -129,7 +129,7 @@ func TestObjectivesCompact(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "compact",
 			"--objective-id", "objectiveId",
-			"--compaction-config", "{summarization: {instructions: instructions, minPreserveTurns: 0}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
+			"--compaction-config", "{summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
 		)
 	})
 
@@ -143,7 +143,7 @@ func TestObjectivesCompact(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "compact",
 			"--objective-id", "objectiveId",
-			"--compaction-config.summarization", "{instructions: instructions, minPreserveTurns: 0}",
+			"--compaction-config.summarization", "{instructions: instructions}",
 			"--compaction-config.tool-result-clearing", "{preserveRecentResults: 0}",
 			"--compaction-config.trigger-threshold", "0",
 		)
@@ -155,7 +155,6 @@ func TestObjectivesCompact(t *testing.T) {
 			"compactionConfig:\n" +
 			"  summarization:\n" +
 			"    instructions: instructions\n" +
-			"    minPreserveTurns: 0\n" +
 			"  toolResultClearing:\n" +
 			"    preserveRecentResults: 0\n" +
 			"  triggerThreshold: 0\n")
