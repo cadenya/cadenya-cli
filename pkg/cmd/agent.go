@@ -75,11 +75,6 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "description",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.webhook-events-hmac-secret",
-			Usage:      "The generated secret that will sign all webhooks that are sent to your configured Webhook URL.\n Formatted as \"wh_asdf1234\" per the https://www.standardwebhooks.com/ format.",
-			InnerField: "webhookEventsHmacSecret",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "spec.webhook-events-url",
 			Usage:      "The URL that Cadenya will send events for any objective assigned to the agent.",
 			InnerField: "webhookEventsUrl",
@@ -178,11 +173,6 @@ var agentsUpdate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "spec.description",
 			Usage:      "Description of the agent's purpose",
 			InnerField: "description",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.webhook-events-hmac-secret",
-			Usage:      "The generated secret that will sign all webhooks that are sent to your configured Webhook URL.\n Formatted as \"wh_asdf1234\" per the https://www.standardwebhooks.com/ format.",
-			InnerField: "webhookEventsHmacSecret",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.webhook-events-url",
