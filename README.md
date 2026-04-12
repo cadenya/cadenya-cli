@@ -56,13 +56,15 @@ For details about specific commands, use the `--help` flag.
 
 ### Environment variables
 
-| Environment variable | Required |
-| -------------------- | -------- |
-| `CADENYA_API_KEY`    | yes      |
+| Environment variable  | Required | Default value |
+| --------------------- | -------- | ------------- |
+| `CADENYA_API_KEY`     | yes      |               |
+| `CADENYA_WEBHOOK_KEY` | no       | `null`        |
 
 ### Global flags
 
 - `--api-key` (can also be set with `CADENYA_API_KEY` env var)
+- `--webhook-key` (can also be set with `CADENYA_WEBHOOK_KEY` env var)
 - `--help` - Show command line usage
 - `--debug` - Enable debug logging (includes HTTP request/response details)
 - `--version`, `-v` - Show the CLI version

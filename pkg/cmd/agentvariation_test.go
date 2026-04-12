@@ -9,33 +9,32 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
 )
 
-func TestAgentsVariationsCreate(t *testing.T) {
+func TestAgentVariationsCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agents:variations", "create",
+			"agent-variations", "create",
 			"--agent-id", "agentId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
+			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
 		)
 	})
 
 	t.Run("inner flags", func(t *testing.T) {
 		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(agentsVariationsCreate)
+		requestflag.CheckInnerFlags(agentVariationsCreate)
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agents:variations", "create",
+			"agent-variations", "create",
 			"--agent-id", "agentId",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.agent-tools", "[{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}]",
 			"--spec.compaction-config", "{summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
 			"--spec.constraints", "{maxSubObjectives: 0, maxToolCalls: 0}",
 			"--spec.description", "description",
@@ -57,25 +56,6 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  agentTools:\n" +
-			"    - agentId: agentId\n" +
-			"      agentMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
-			"      toolId: toolId\n" +
-			"      toolMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
-			"      toolSetId: toolSetId\n" +
-			"      toolSetMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
 			"  compactionConfig:\n" +
 			"    summarization:\n" +
 			"      instructions: instructions\n" +
@@ -103,55 +83,54 @@ func TestAgentsVariationsCreate(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"agents:variations", "create",
+			"agent-variations", "create",
 			"--agent-id", "agentId",
 		)
 	})
 }
 
-func TestAgentsVariationsRetrieve(t *testing.T) {
+func TestAgentVariationsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agents:variations", "retrieve",
+			"agent-variations", "retrieve",
 			"--agent-id", "agentId",
 			"--id", "id",
 		)
 	})
 }
 
-func TestAgentsVariationsUpdate(t *testing.T) {
+func TestAgentVariationsUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agents:variations", "update",
+			"agent-variations", "update",
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{agentTools: [{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}], compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
+			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
 			"--update-mask", "updateMask",
 		)
 	})
 
 	t.Run("inner flags", func(t *testing.T) {
 		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(agentsVariationsUpdate)
+		requestflag.CheckInnerFlags(agentVariationsUpdate)
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agents:variations", "update",
+			"agent-variations", "update",
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.agent-tools", "[{agentId: agentId, agentMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolId: toolId, toolMetadata: {name: name, externalId: externalId, labels: {foo: string}}, toolSetId: toolSetId, toolSetMetadata: {name: name, externalId: externalId, labels: {foo: string}}}]",
 			"--spec.compaction-config", "{summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
 			"--spec.constraints", "{maxSubObjectives: 0, maxToolCalls: 0}",
 			"--spec.description", "description",
@@ -174,25 +153,6 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  agentTools:\n" +
-			"    - agentId: agentId\n" +
-			"      agentMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
-			"      toolId: toolId\n" +
-			"      toolMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
-			"      toolSetId: toolSetId\n" +
-			"      toolSetMetadata:\n" +
-			"        name: name\n" +
-			"        externalId: externalId\n" +
-			"        labels:\n" +
-			"          foo: string\n" +
 			"  compactionConfig:\n" +
 			"    summarization:\n" +
 			"      instructions: instructions\n" +
@@ -221,20 +181,20 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"agents:variations", "update",
+			"agent-variations", "update",
 			"--agent-id", "agentId",
 			"--id", "id",
 		)
 	})
 }
 
-func TestAgentsVariationsList(t *testing.T) {
+func TestAgentVariationsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agents:variations", "list",
+			"agent-variations", "list",
 			"--max-items", "10",
 			"--agent-id", "agentId",
 			"--cursor", "cursor",
@@ -245,14 +205,56 @@ func TestAgentsVariationsList(t *testing.T) {
 	})
 }
 
-func TestAgentsVariationsDelete(t *testing.T) {
+func TestAgentVariationsDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agents:variations", "delete",
+			"agent-variations", "delete",
 			"--agent-id", "agentId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestAgentVariationsAddAssignment(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agent-variations", "add-assignment",
+			"--agent-variation-id", "agentVariationId",
+			"--sub-agent-id", "subAgentId",
+			"--tool-id", "toolId",
+			"--tool-set-id", "toolSetId",
+		)
+	})
+
+	t.Run("piping data", func(t *testing.T) {
+		// Test piping YAML data over stdin
+		pipeData := []byte("" +
+			"subAgentId: subAgentId\n" +
+			"toolId: toolId\n" +
+			"toolSetId: toolSetId\n")
+		mocktest.TestRunMockTestWithPipeAndFlags(
+			t, pipeData,
+			"--api-key", "string",
+			"agent-variations", "add-assignment",
+			"--agent-variation-id", "agentVariationId",
+		)
+	})
+}
+
+func TestAgentVariationsRemoveAssignment(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agent-variations", "remove-assignment",
+			"--agent-variation-id", "agentVariationId",
 			"--id", "id",
 		)
 	})

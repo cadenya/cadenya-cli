@@ -77,6 +77,10 @@ func init() {
 				Name:    "api-key",
 				Sources: cli.EnvVars("CADENYA_API_KEY"),
 			},
+			&requestflag.Flag[string]{
+				Name:    "webhook-key",
+				Sources: cli.EnvVars("CADENYA_WEBHOOK_KEY"),
+			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -85,6 +89,7 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&accountRetrieve,
+					&accountRotateWebhookSigningKey,
 				},
 			},
 			{
@@ -100,23 +105,25 @@ func init() {
 				},
 			},
 			{
-				Name:     "agents:variations",
-				Category: "API RESOURCE",
-				Suggest:  true,
-				Commands: []*cli.Command{
-					&agentsVariationsCreate,
-					&agentsVariationsRetrieve,
-					&agentsVariationsUpdate,
-					&agentsVariationsList,
-					&agentsVariationsDelete,
-				},
-			},
-			{
 				Name:     "agents:webhook-deliveries",
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&agentsWebhookDeliveriesList,
+				},
+			},
+			{
+				Name:     "agent-variations",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&agentVariationsCreate,
+					&agentVariationsRetrieve,
+					&agentVariationsUpdate,
+					&agentVariationsList,
+					&agentVariationsDelete,
+					&agentVariationsAddAssignment,
+					&agentVariationsRemoveAssignment,
 				},
 			},
 			{

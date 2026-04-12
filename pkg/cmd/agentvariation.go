@@ -15,7 +15,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
+var agentVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
 	Usage:   "Creates a new variation for an agent",
 	Suggest: true,
@@ -37,7 +37,7 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "spec",
 		},
 	},
-	Action:          handleAgentsVariationsCreate,
+	Action:          handleAgentVariationsCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
@@ -58,11 +58,6 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 	},
 	"spec": {
-		&requestflag.InnerFlag[[]map[string]any]{
-			Name:       "spec.agent-tools",
-			Usage:      "Tools assigned to this variation",
-			InnerField: "agentTools",
-		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.compaction-config",
 			Usage:      "CompactionConfig defines how context window compaction behaves for objectives using this variation.",
@@ -109,7 +104,7 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 	},
 })
 
-var agentsVariationsRetrieve = cli.Command{
+var agentVariationsRetrieve = cli.Command{
 	Name:    "retrieve",
 	Usage:   "Retrieves a variation by ID from an agent",
 	Suggest: true,
@@ -123,11 +118,11 @@ var agentsVariationsRetrieve = cli.Command{
 			Required: true,
 		},
 	},
-	Action:          handleAgentsVariationsRetrieve,
+	Action:          handleAgentVariationsRetrieve,
 	HideHelpCommand: true,
 }
 
-var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
+var agentVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "update",
 	Usage:   "Updates a variation for an agent",
 	Suggest: true,
@@ -156,7 +151,7 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "updateMask",
 		},
 	},
-	Action:          handleAgentsVariationsUpdate,
+	Action:          handleAgentVariationsUpdate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
@@ -177,11 +172,6 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 	},
 	"spec": {
-		&requestflag.InnerFlag[[]map[string]any]{
-			Name:       "spec.agent-tools",
-			Usage:      "Tools assigned to this variation",
-			InnerField: "agentTools",
-		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.compaction-config",
 			Usage:      "CompactionConfig defines how context window compaction behaves for objectives using this variation.",
@@ -228,7 +218,7 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 	},
 })
 
-var agentsVariationsList = cli.Command{
+var agentVariationsList = cli.Command{
 	Name:    "list",
 	Usage:   "Lists all variations for an agent",
 	Suggest: true,
@@ -262,11 +252,11 @@ var agentsVariationsList = cli.Command{
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
 		},
 	},
-	Action:          handleAgentsVariationsList,
+	Action:          handleAgentVariationsList,
 	HideHelpCommand: true,
 }
 
-var agentsVariationsDelete = cli.Command{
+var agentVariationsDelete = cli.Command{
 	Name:    "delete",
 	Usage:   "Deletes a variation from an agent",
 	Suggest: true,
@@ -280,11 +270,55 @@ var agentsVariationsDelete = cli.Command{
 			Required: true,
 		},
 	},
-	Action:          handleAgentsVariationsDelete,
+	Action:          handleAgentVariationsDelete,
 	HideHelpCommand: true,
 }
 
-func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
+var agentVariationsAddAssignment = cli.Command{
+	Name:    "add-assignment",
+	Usage:   "Assigns a tool, tool set, or sub-agent to a variation. Exactly one target ID\nmust be set.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "agent-variation-id",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "sub-agent-id",
+			BodyPath: "subAgentId",
+		},
+		&requestflag.Flag[string]{
+			Name:     "tool-id",
+			BodyPath: "toolId",
+		},
+		&requestflag.Flag[string]{
+			Name:     "tool-set-id",
+			BodyPath: "toolSetId",
+		},
+	},
+	Action:          handleAgentVariationsAddAssignment,
+	HideHelpCommand: true,
+}
+
+var agentVariationsRemoveAssignment = cli.Command{
+	Name:    "remove-assignment",
+	Usage:   "Detaches an assignment from a variation, identified by the assignment ID\nreturned when it was added.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "agent-variation-id",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "id",
+			Required: true,
+		},
+	},
+	Action:          handleAgentVariationsRemoveAssignment,
+	HideHelpCommand: true,
+}
+
+func handleAgentVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
@@ -310,7 +344,7 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Agents.Variations.New(
+	_, err = client.AgentVariations.New(
 		ctx,
 		cmd.Value("agent-id").(string),
 		params,
@@ -323,10 +357,10 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agents:variations create", obj, format, transform)
+	return ShowJSON(os.Stdout, "agent-variations create", obj, format, transform)
 }
 
-func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error {
+func handleAgentVariationsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
@@ -354,7 +388,7 @@ func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Agents.Variations.Get(
+	_, err = client.AgentVariations.Get(
 		ctx,
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
@@ -367,10 +401,10 @@ func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agents:variations retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, "agent-variations retrieve", obj, format, transform)
 }
 
-func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
+func handleAgentVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
@@ -400,7 +434,7 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Agents.Variations.Update(
+	_, err = client.AgentVariations.Update(
 		ctx,
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
@@ -414,10 +448,10 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agents:variations update", obj, format, transform)
+	return ShowJSON(os.Stdout, "agent-variations update", obj, format, transform)
 }
 
-func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
+func handleAgentVariationsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
@@ -446,7 +480,7 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.Agents.Variations.List(
+		_, err = client.AgentVariations.List(
 			ctx,
 			cmd.Value("agent-id").(string),
 			params,
@@ -456,9 +490,9 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "agents:variations list", obj, format, transform)
+		return ShowJSON(os.Stdout, "agent-variations list", obj, format, transform)
 	} else {
-		iter := client.Agents.Variations.ListAutoPaging(
+		iter := client.AgentVariations.ListAutoPaging(
 			ctx,
 			cmd.Value("agent-id").(string),
 			params,
@@ -468,11 +502,11 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "agents:variations list", iter, format, transform, maxItems)
+		return ShowJSONIterator(os.Stdout, "agent-variations list", iter, format, transform, maxItems)
 	}
 }
 
-func handleAgentsVariationsDelete(ctx context.Context, cmd *cli.Command) error {
+func handleAgentVariationsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
@@ -498,9 +532,85 @@ func handleAgentsVariationsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.Agents.Variations.Delete(
+	return client.AgentVariations.Delete(
 		ctx,
 		cmd.Value("agent-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
+}
+
+func handleAgentVariationsAddAssignment(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-variation-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-variation-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := cadenya.AgentVariationAddAssignmentParams{}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		ApplicationJSON,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.AgentVariations.AddAssignment(
+		ctx,
+		cmd.Value("agent-variation-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "agent-variations add-assignment", obj, format, transform)
+}
+
+func handleAgentVariationsRemoveAssignment(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-variation-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-variation-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	return client.AgentVariations.RemoveAssignment(
+		ctx,
+		cmd.Value("agent-variation-id").(string),
 		cmd.Value("id").(string),
 		options...,
 	)
