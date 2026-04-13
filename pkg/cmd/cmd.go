@@ -178,6 +178,39 @@ func init() {
 				},
 			},
 			{
+				Name:     "memory-layers",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&memoryLayersCreate,
+					&memoryLayersRetrieve,
+					&memoryLayersUpdate,
+					&memoryLayersList,
+					&memoryLayersDelete,
+				},
+			},
+			{
+				Name:     "memory-layers:entries",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&memoryLayersEntriesCreate,
+					&memoryLayersEntriesRetrieve,
+					&memoryLayersEntriesUpdate,
+					&memoryLayersEntriesList,
+					&memoryLayersEntriesDelete,
+				},
+			},
+			{
+				Name:     "uploads",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&uploadsCreate,
+					&uploadsRetrieve,
+				},
+			},
+			{
 				Name:     "models",
 				Category: "API RESOURCE",
 				Suggest:  true,
