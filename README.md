@@ -113,3 +113,23 @@ base64-encoding). Note that absolute paths will begin with `@file://` or
 ```bash
 cadenya <command> --arg @data://file.txt
 ```
+
+## Linking different Go SDK versions
+
+You can link the CLI against a different version of the Cadenya Go SDK
+for development purposes using the `./scripts/link` script.
+
+To link to a specific version from a repository (version can be a branch,
+git tag, or commit hash):
+
+```bash
+./scripts/link github.com/org/repo@version
+```
+
+To link to a local copy of the SDK:
+
+```bash
+./scripts/link ../path/to/cadenya-go
+```
+
+If you run the link script without any arguments, it will default to `../cadenya-go`.
