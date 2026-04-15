@@ -356,8 +356,9 @@ func handleAgentVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agent-variations create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "agent-variations create", obj, format, explicitFormat, transform)
 }
 
 func handleAgentVariationsRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -400,8 +401,9 @@ func handleAgentVariationsRetrieve(ctx context.Context, cmd *cli.Command) error 
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agent-variations retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "agent-variations retrieve", obj, format, explicitFormat, transform)
 }
 
 func handleAgentVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -447,8 +449,9 @@ func handleAgentVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agent-variations update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "agent-variations update", obj, format, explicitFormat, transform)
 }
 
 func handleAgentVariationsList(ctx context.Context, cmd *cli.Command) error {
@@ -476,6 +479,7 @@ func handleAgentVariationsList(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -490,7 +494,7 @@ func handleAgentVariationsList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "agent-variations list", obj, format, transform)
+		return ShowJSON(os.Stdout, os.Stderr, "agent-variations list", obj, format, explicitFormat, transform)
 	} else {
 		iter := client.AgentVariations.ListAutoPaging(
 			ctx,
@@ -502,7 +506,7 @@ func handleAgentVariationsList(ctx context.Context, cmd *cli.Command) error {
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "agent-variations list", iter, format, transform, maxItems)
+		return ShowJSONIterator(os.Stdout, os.Stderr, "agent-variations list", iter, format, explicitFormat, transform, maxItems)
 	}
 }
 
@@ -578,8 +582,9 @@ func handleAgentVariationsAddAssignment(ctx context.Context, cmd *cli.Command) e
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agent-variations add-assignment", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "agent-variations add-assignment", obj, format, explicitFormat, transform)
 }
 
 func handleAgentVariationsRemoveAssignment(ctx context.Context, cmd *cli.Command) error {

@@ -106,8 +106,9 @@ func handleObjectivesTasksRetrieve(ctx context.Context, cmd *cli.Command) error 
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "objectives:tasks retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "objectives:tasks retrieve", obj, format, explicitFormat, transform)
 }
 
 func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
@@ -135,6 +136,7 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -149,7 +151,7 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "objectives:tasks list", obj, format, transform)
+		return ShowJSON(os.Stdout, os.Stderr, "objectives:tasks list", obj, format, explicitFormat, transform)
 	} else {
 		iter := client.Objectives.Tasks.ListAutoPaging(
 			ctx,
@@ -161,6 +163,6 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "objectives:tasks list", iter, format, transform, maxItems)
+		return ShowJSONIterator(os.Stdout, os.Stderr, "objectives:tasks list", iter, format, explicitFormat, transform, maxItems)
 	}
 }
