@@ -265,8 +265,9 @@ func handleAgentsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agents create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "agents create", obj, format, explicitFormat, transform)
 }
 
 func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -300,8 +301,9 @@ func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agents retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "agents retrieve", obj, format, explicitFormat, transform)
 }
 
 func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -342,8 +344,9 @@ func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agents update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "agents update", obj, format, explicitFormat, transform)
 }
 
 func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
@@ -368,6 +371,7 @@ func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -377,14 +381,14 @@ func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "agents list", obj, format, transform)
+		return ShowJSON(os.Stdout, os.Stderr, "agents list", obj, format, explicitFormat, transform)
 	} else {
 		iter := client.Agents.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "agents list", iter, format, transform, maxItems)
+		return ShowJSONIterator(os.Stdout, os.Stderr, "agents list", iter, format, explicitFormat, transform, maxItems)
 	}
 }
 

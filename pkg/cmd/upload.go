@@ -115,8 +115,9 @@ func handleUploadsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "uploads create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "uploads create", obj, format, explicitFormat, transform)
 }
 
 func handleUploadsRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -150,6 +151,7 @@ func handleUploadsRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "uploads retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "uploads retrieve", obj, format, explicitFormat, transform)
 }

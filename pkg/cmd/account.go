@@ -60,8 +60,9 @@ func handleAccountRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "account retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "account retrieve", obj, format, explicitFormat, transform)
 }
 
 func handleAccountRotateWebhookSigningKey(ctx context.Context, cmd *cli.Command) error {
@@ -92,6 +93,7 @@ func handleAccountRotateWebhookSigningKey(ctx context.Context, cmd *cli.Command)
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "account rotate-webhook-signing-key", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "account rotate-webhook-signing-key", obj, format, explicitFormat, transform)
 }

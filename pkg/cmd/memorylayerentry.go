@@ -273,8 +273,9 @@ func handleMemoryLayersEntriesCreate(ctx context.Context, cmd *cli.Command) erro
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "memory-layers:entries create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "memory-layers:entries create", obj, format, explicitFormat, transform)
 }
 
 func handleMemoryLayersEntriesRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -317,8 +318,9 @@ func handleMemoryLayersEntriesRetrieve(ctx context.Context, cmd *cli.Command) er
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "memory-layers:entries retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "memory-layers:entries retrieve", obj, format, explicitFormat, transform)
 }
 
 func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -364,8 +366,9 @@ func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) erro
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "memory-layers:entries update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "memory-layers:entries update", obj, format, explicitFormat, transform)
 }
 
 func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error {
@@ -393,6 +396,7 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -407,7 +411,7 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "memory-layers:entries list", obj, format, transform)
+		return ShowJSON(os.Stdout, os.Stderr, "memory-layers:entries list", obj, format, explicitFormat, transform)
 	} else {
 		iter := client.MemoryLayers.Entries.ListAutoPaging(
 			ctx,
@@ -419,7 +423,7 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "memory-layers:entries list", iter, format, transform, maxItems)
+		return ShowJSONIterator(os.Stdout, os.Stderr, "memory-layers:entries list", iter, format, explicitFormat, transform, maxItems)
 	}
 }
 

@@ -209,8 +209,9 @@ func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "workspace-secrets create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "workspace-secrets create", obj, format, explicitFormat, transform)
 }
 
 func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -244,8 +245,9 @@ func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "workspace-secrets retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "workspace-secrets retrieve", obj, format, explicitFormat, transform)
 }
 
 func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -286,8 +288,9 @@ func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "workspace-secrets update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "workspace-secrets update", obj, format, explicitFormat, transform)
 }
 
 func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
@@ -312,6 +315,7 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -321,14 +325,14 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "workspace-secrets list", obj, format, transform)
+		return ShowJSON(os.Stdout, os.Stderr, "workspace-secrets list", obj, format, explicitFormat, transform)
 	} else {
 		iter := client.WorkspaceSecrets.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "workspace-secrets list", iter, format, transform, maxItems)
+		return ShowJSONIterator(os.Stdout, os.Stderr, "workspace-secrets list", iter, format, explicitFormat, transform, maxItems)
 	}
 }
 

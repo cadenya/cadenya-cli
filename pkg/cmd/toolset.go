@@ -254,8 +254,9 @@ func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "tool-sets create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "tool-sets create", obj, format, explicitFormat, transform)
 }
 
 func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -289,8 +290,9 @@ func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "tool-sets retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "tool-sets retrieve", obj, format, explicitFormat, transform)
 }
 
 func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -331,8 +333,9 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "tool-sets update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "tool-sets update", obj, format, explicitFormat, transform)
 }
 
 func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
@@ -357,6 +360,7 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -366,14 +370,14 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "tool-sets list", obj, format, transform)
+		return ShowJSON(os.Stdout, os.Stderr, "tool-sets list", obj, format, explicitFormat, transform)
 	} else {
 		iter := client.ToolSets.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "tool-sets list", iter, format, transform, maxItems)
+		return ShowJSONIterator(os.Stdout, os.Stderr, "tool-sets list", iter, format, explicitFormat, transform, maxItems)
 	}
 }
 
@@ -427,6 +431,7 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -441,7 +446,7 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "tool-sets list-events", obj, format, transform)
+		return ShowJSON(os.Stdout, os.Stderr, "tool-sets list-events", obj, format, explicitFormat, transform)
 	} else {
 		iter := client.ToolSets.ListEventsAutoPaging(
 			ctx,
@@ -453,6 +458,6 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "tool-sets list-events", iter, format, transform, maxItems)
+		return ShowJSONIterator(os.Stdout, os.Stderr, "tool-sets list-events", iter, format, explicitFormat, transform, maxItems)
 	}
 }
