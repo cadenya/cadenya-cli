@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
@@ -274,7 +273,12 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "tool-sets:tools create", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "tool-sets:tools create",
+		Transform:      transform,
+	})
 }
 
 func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -319,7 +323,12 @@ func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "tool-sets:tools retrieve", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "tool-sets:tools retrieve",
+		Transform:      transform,
+	})
 }
 
 func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -367,7 +376,12 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "tool-sets:tools update", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "tool-sets:tools update",
+		Transform:      transform,
+	})
 }
 
 func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
@@ -410,7 +424,12 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, os.Stderr, "tool-sets:tools list", obj, format, explicitFormat, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "tool-sets:tools list",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.ToolSets.Tools.ListAutoPaging(
 			ctx,
@@ -422,7 +441,12 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, os.Stderr, "tool-sets:tools list", iter, format, explicitFormat, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "tool-sets:tools list",
+			Transform:      transform,
+		})
 	}
 }
 

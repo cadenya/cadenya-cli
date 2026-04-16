@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
@@ -275,7 +274,12 @@ func handleMemoryLayersEntriesCreate(ctx context.Context, cmd *cli.Command) erro
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "memory-layers:entries create", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "memory-layers:entries create",
+		Transform:      transform,
+	})
 }
 
 func handleMemoryLayersEntriesRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -320,7 +324,12 @@ func handleMemoryLayersEntriesRetrieve(ctx context.Context, cmd *cli.Command) er
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "memory-layers:entries retrieve", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "memory-layers:entries retrieve",
+		Transform:      transform,
+	})
 }
 
 func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -368,7 +377,12 @@ func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) erro
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "memory-layers:entries update", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "memory-layers:entries update",
+		Transform:      transform,
+	})
 }
 
 func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error {
@@ -411,7 +425,12 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, os.Stderr, "memory-layers:entries list", obj, format, explicitFormat, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "memory-layers:entries list",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.MemoryLayers.Entries.ListAutoPaging(
 			ctx,
@@ -423,7 +442,12 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, os.Stderr, "memory-layers:entries list", iter, format, explicitFormat, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "memory-layers:entries list",
+			Transform:      transform,
+		})
 	}
 }
 

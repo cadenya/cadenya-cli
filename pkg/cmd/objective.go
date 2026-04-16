@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
@@ -367,7 +366,12 @@ func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "objectives create", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "objectives create",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -403,7 +407,12 @@ func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "objectives retrieve", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "objectives retrieve",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
@@ -438,14 +447,24 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, os.Stderr, "objectives list", obj, format, explicitFormat, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "objectives list",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Objectives.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, os.Stderr, "objectives list", iter, format, explicitFormat, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "objectives list",
+			Transform:      transform,
+		})
 	}
 }
 
@@ -489,7 +508,12 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "objectives cancel", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "objectives cancel",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
@@ -532,7 +556,12 @@ func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "objectives compact", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "objectives compact",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
@@ -575,7 +604,12 @@ func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "objectives continue", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "objectives continue",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) error {
@@ -618,7 +652,12 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, os.Stderr, "objectives list-context-windows", obj, format, explicitFormat, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "objectives list-context-windows",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Objectives.ListContextWindowsAutoPaging(
 			ctx,
@@ -630,7 +669,12 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, os.Stderr, "objectives list-context-windows", iter, format, explicitFormat, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "objectives list-context-windows",
+			Transform:      transform,
+		})
 	}
 }
 
@@ -674,7 +718,12 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, os.Stderr, "objectives list-events", obj, format, explicitFormat, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "objectives list-events",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Objectives.ListEventsAutoPaging(
 			ctx,
@@ -686,6 +735,11 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, os.Stderr, "objectives list-events", iter, format, explicitFormat, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "objectives list-events",
+			Transform:      transform,
+		})
 	}
 }
