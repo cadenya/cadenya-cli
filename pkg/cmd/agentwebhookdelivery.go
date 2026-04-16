@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
@@ -93,7 +92,12 @@ func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) er
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, os.Stderr, "agents:webhook-deliveries list", obj, format, explicitFormat, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "agents:webhook-deliveries list",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Agents.WebhookDeliveries.ListAutoPaging(
 			ctx,
@@ -105,6 +109,11 @@ func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) er
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, os.Stderr, "agents:webhook-deliveries list", iter, format, explicitFormat, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "agents:webhook-deliveries list",
+			Transform:      transform,
+		})
 	}
 }

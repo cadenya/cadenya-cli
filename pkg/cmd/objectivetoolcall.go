@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
@@ -134,7 +133,12 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, os.Stderr, "objectives:tool-calls list", obj, format, explicitFormat, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "objectives:tool-calls list",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Objectives.ToolCalls.ListAutoPaging(
 			ctx,
@@ -146,7 +150,12 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, os.Stderr, "objectives:tool-calls list", iter, format, explicitFormat, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			Title:          "objectives:tool-calls list",
+			Transform:      transform,
+		})
 	}
 }
 
@@ -195,7 +204,12 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "objectives:tool-calls approve", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "objectives:tool-calls approve",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error {
@@ -243,5 +257,10 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "objectives:tool-calls deny", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "objectives:tool-calls deny",
+		Transform:      transform,
+	})
 }
