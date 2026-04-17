@@ -249,6 +249,7 @@ func handleMemoryLayersCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "memory-layers create",
 		Transform:      transform,
 	})
@@ -290,6 +291,7 @@ func handleMemoryLayersRetrieve(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "memory-layers retrieve",
 		Transform:      transform,
 	})
@@ -338,6 +340,7 @@ func handleMemoryLayersUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "memory-layers update",
 		Transform:      transform,
 	})
@@ -378,6 +381,7 @@ func handleMemoryLayersList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "memory-layers list",
 			Transform:      transform,
 		})
@@ -390,6 +394,7 @@ func handleMemoryLayersList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "memory-layers list",
 			Transform:      transform,
 		})

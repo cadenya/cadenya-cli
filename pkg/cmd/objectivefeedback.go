@@ -122,6 +122,7 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives:feedback create",
 		Transform:      transform,
 	})
@@ -170,6 +171,7 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives:feedback list",
 			Transform:      transform,
 		})
@@ -187,6 +189,7 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives:feedback list",
 			Transform:      transform,
 		})

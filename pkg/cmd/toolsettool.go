@@ -276,6 +276,7 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "tool-sets:tools create",
 		Transform:      transform,
 	})
@@ -326,6 +327,7 @@ func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "tool-sets:tools retrieve",
 		Transform:      transform,
 	})
@@ -379,6 +381,7 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "tool-sets:tools update",
 		Transform:      transform,
 	})
@@ -427,6 +430,7 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "tool-sets:tools list",
 			Transform:      transform,
 		})
@@ -444,6 +448,7 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "tool-sets:tools list",
 			Transform:      transform,
 		})

@@ -360,6 +360,7 @@ func handleAgentVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "agent-variations create",
 		Transform:      transform,
 	})
@@ -410,6 +411,7 @@ func handleAgentVariationsRetrieve(ctx context.Context, cmd *cli.Command) error 
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "agent-variations retrieve",
 		Transform:      transform,
 	})
@@ -463,6 +465,7 @@ func handleAgentVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "agent-variations update",
 		Transform:      transform,
 	})
@@ -511,6 +514,7 @@ func handleAgentVariationsList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "agent-variations list",
 			Transform:      transform,
 		})
@@ -528,6 +532,7 @@ func handleAgentVariationsList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "agent-variations list",
 			Transform:      transform,
 		})
@@ -611,6 +616,7 @@ func handleAgentVariationsAddAssignment(ctx context.Context, cmd *cli.Command) e
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "agent-variations add-assignment",
 		Transform:      transform,
 	})

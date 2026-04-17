@@ -258,6 +258,7 @@ func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "tool-sets create",
 		Transform:      transform,
 	})
@@ -299,6 +300,7 @@ func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "tool-sets retrieve",
 		Transform:      transform,
 	})
@@ -347,6 +349,7 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "tool-sets update",
 		Transform:      transform,
 	})
@@ -387,6 +390,7 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "tool-sets list",
 			Transform:      transform,
 		})
@@ -399,6 +403,7 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "tool-sets list",
 			Transform:      transform,
 		})
@@ -473,6 +478,7 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "tool-sets list-events",
 			Transform:      transform,
 		})
@@ -490,6 +496,7 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "tool-sets list-events",
 			Transform:      transform,
 		})

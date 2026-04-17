@@ -136,6 +136,7 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives:tool-calls list",
 			Transform:      transform,
 		})
@@ -153,6 +154,7 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives:tool-calls list",
 			Transform:      transform,
 		})
@@ -207,6 +209,7 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives:tool-calls approve",
 		Transform:      transform,
 	})
@@ -260,6 +263,7 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives:tool-calls deny",
 		Transform:      transform,
 	})
