@@ -369,6 +369,7 @@ func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives create",
 		Transform:      transform,
 	})
@@ -410,6 +411,7 @@ func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives retrieve",
 		Transform:      transform,
 	})
@@ -450,6 +452,7 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives list",
 			Transform:      transform,
 		})
@@ -462,6 +465,7 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives list",
 			Transform:      transform,
 		})
@@ -511,6 +515,7 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives cancel",
 		Transform:      transform,
 	})
@@ -559,6 +564,7 @@ func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives compact",
 		Transform:      transform,
 	})
@@ -607,6 +613,7 @@ func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives continue",
 		Transform:      transform,
 	})
@@ -655,6 +662,7 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives list-context-windows",
 			Transform:      transform,
 		})
@@ -672,6 +680,7 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives list-context-windows",
 			Transform:      transform,
 		})
@@ -721,6 +730,7 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives list-events",
 			Transform:      transform,
 		})
@@ -738,6 +748,7 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives list-events",
 			Transform:      transform,
 		})

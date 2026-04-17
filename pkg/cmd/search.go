@@ -63,6 +63,7 @@ func handleSearchSearchToolsOrToolSets(ctx context.Context, cmd *cli.Command) er
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "search search-tools-or-tool-sets",
 		Transform:      transform,
 	})

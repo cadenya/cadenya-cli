@@ -110,6 +110,7 @@ func handleObjectivesTasksRetrieve(ctx context.Context, cmd *cli.Command) error 
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives:tasks retrieve",
 		Transform:      transform,
 	})
@@ -158,6 +159,7 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives:tasks list",
 			Transform:      transform,
 		})
@@ -175,6 +177,7 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "objectives:tasks list",
 			Transform:      transform,
 		})

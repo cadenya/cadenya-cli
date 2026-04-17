@@ -213,6 +213,7 @@ func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "workspace-secrets create",
 		Transform:      transform,
 	})
@@ -254,6 +255,7 @@ func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "workspace-secrets retrieve",
 		Transform:      transform,
 	})
@@ -302,6 +304,7 @@ func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "workspace-secrets update",
 		Transform:      transform,
 	})
@@ -342,6 +345,7 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "workspace-secrets list",
 			Transform:      transform,
 		})
@@ -354,6 +358,7 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "workspace-secrets list",
 			Transform:      transform,
 		})

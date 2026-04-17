@@ -241,6 +241,7 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "api-keys create",
 		Transform:      transform,
 	})
@@ -282,6 +283,7 @@ func handleAPIKeysRetrieve(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "api-keys retrieve",
 		Transform:      transform,
 	})
@@ -330,6 +332,7 @@ func handleAPIKeysUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "api-keys update",
 		Transform:      transform,
 	})
@@ -370,6 +373,7 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSON(obj, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "api-keys list",
 			Transform:      transform,
 		})
@@ -382,6 +386,7 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
 			ExplicitFormat: explicitFormat,
 			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "api-keys list",
 			Transform:      transform,
 		})
@@ -449,6 +454,7 @@ func handleAPIKeysRotate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "api-keys rotate",
 		Transform:      transform,
 	})

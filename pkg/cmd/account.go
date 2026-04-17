@@ -64,6 +64,7 @@ func handleAccountRetrieve(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "account retrieve",
 		Transform:      transform,
 	})
@@ -102,6 +103,7 @@ func handleAccountRotateWebhookSigningKey(ctx context.Context, cmd *cli.Command)
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "account rotate-webhook-signing-key",
 		Transform:      transform,
 	})
