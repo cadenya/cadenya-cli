@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
@@ -60,6 +59,11 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "data.initial-message",
 			Usage:      "The initial message sent to the agent. This becomes the first user message in the LLM chat history.",
 			InnerField: "initialMessage",
+		},
+		&requestflag.InnerFlag[[]map[string]any]{
+			Name:       "data.memory-stack",
+			Usage:      "Memory layers/entries to push onto this objective's memory stack on\n top of the baseline stack inherited from the selected variation.\n\n See \"Memory stack composition\" in memory.proto for lookup semantics.\n\n Array order is push order: the first element sits lower in the\n objective's contribution to the stack; the LAST element ends up on\n top of the effective stack. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically via the runtime based on\n episodic_key.\n\n Stack size cap: the TOTAL effective stack (variation's memory layers\n + this field) must not exceed 10 entries. A request that would\n produce an effective stack larger than 10 is rejected with\n InvalidArgument. Variations themselves are capped at 10 memory layer\n assignments, so a variation that is already \"full\" leaves no room\n for objective-level references.",
+			InnerField: "memoryStack",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "data.parent-objective-id",
@@ -181,6 +185,43 @@ var objectivesCancel = cli.Command{
 	Action:          handleObjectivesCancel,
 	HideHelpCommand: true,
 }
+
+var objectivesCompact = requestflag.WithInnerFlags(cli.Command{
+	Name:    "compact",
+	Usage:   "Triggers compaction on a running objective. Optionally override the variation's\ncompaction config.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "objective-id",
+			Required: true,
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "compaction-config",
+			Usage:    "CompactionConfig defines how context window compaction behaves for objectives using this variation.",
+			BodyPath: "compactionConfig",
+		},
+	},
+	Action:          handleObjectivesCompact,
+	HideHelpCommand: true,
+}, map[string][]requestflag.HasOuterFlag{
+	"compaction-config": {
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "compaction-config.summarization",
+			Usage:      "SummarizationStrategy configures LLM-powered summarization of older conversation turns.",
+			InnerField: "summarization",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "compaction-config.tool-result-clearing",
+			Usage:      "ToolResultClearingStrategy configures clearing of older tool result content.",
+			InnerField: "toolResultClearing",
+		},
+		&requestflag.InnerFlag[float64]{
+			Name:       "compaction-config.trigger-threshold",
+			Usage:      "Trigger threshold as a percentage of the model's context window (0.0 to 1.0).\n When input tokens reach this percentage of the model's limit, compaction triggers.\n Default: 0.75 (75%)",
+			InnerField: "triggerThreshold",
+		},
+	},
+})
 
 var objectivesContinue = requestflag.WithInnerFlags(cli.Command{
 	Name:    "continue",
@@ -328,8 +369,15 @@ func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "objectives create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives create",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -363,8 +411,15 @@ func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "objectives retrieve", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives retrieve",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
@@ -389,6 +444,7 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -398,14 +454,26 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "objectives list", obj, format, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives list",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Objectives.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "objectives list", iter, format, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives list",
+			Transform:      transform,
+		})
 	}
 }
 
@@ -447,8 +515,64 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "objectives cancel", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives cancel",
+		Transform:      transform,
+	})
+}
+
+func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
+		cmd.Set("objective-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := cadenya.ObjectiveCompactParams{}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		ApplicationJSON,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Objectives.Compact(
+		ctx,
+		cmd.Value("objective-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives compact",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
@@ -489,8 +613,15 @@ func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "objectives continue", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives continue",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) error {
@@ -518,6 +649,7 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -532,7 +664,13 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "objectives list-context-windows", obj, format, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives list-context-windows",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Objectives.ListContextWindowsAutoPaging(
 			ctx,
@@ -544,7 +682,13 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "objectives list-context-windows", iter, format, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives list-context-windows",
+			Transform:      transform,
+		})
 	}
 }
 
@@ -573,6 +717,7 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -587,7 +732,13 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "objectives list-events", obj, format, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives list-events",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Objectives.ListEventsAutoPaging(
 			ctx,
@@ -599,6 +750,12 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "objectives list-events", iter, format, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives list-events",
+			Transform:      transform,
+		})
 	}
 }

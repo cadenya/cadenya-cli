@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
@@ -118,8 +117,15 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "objectives:feedback create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives:feedback create",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
@@ -147,6 +153,7 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -161,7 +168,13 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "objectives:feedback list", obj, format, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives:feedback list",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Objectives.Feedback.ListAutoPaging(
 			ctx,
@@ -173,6 +186,12 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "objectives:feedback list", iter, format, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives:feedback list",
+			Transform:      transform,
+		})
 	}
 }

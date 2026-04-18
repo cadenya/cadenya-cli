@@ -17,7 +17,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "create",
 			"--agent-id", "agentId",
-			"--data", "{data: {}, initialMessage: initialMessage, secrets: [{name: name, value: value}]}",
+			"--data", "{data: {}, initialMessage: initialMessage, memoryStack: [{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}], secrets: [{name: name, value: value}]}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
 			"--variation-id", "variationId",
 		)
@@ -35,6 +35,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"--agent-id", "agentId",
 			"--data.data", "{}",
 			"--data.initial-message", "initialMessage",
+			"--data.memory-stack", "[{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}]",
 			"--data.secrets", "[{name: name, value: value}]",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -49,6 +50,9 @@ func TestObjectivesCreate(t *testing.T) {
 			"data:\n" +
 			"  data: {}\n" +
 			"  initialMessage: initialMessage\n" +
+			"  memoryStack:\n" +
+			"    - memoryEntryId: memoryEntryId\n" +
+			"      memoryLayerId: memoryLayerId\n" +
 			"  secrets:\n" +
 			"    - name: name\n" +
 			"      value: value\n" +
@@ -116,6 +120,52 @@ func TestObjectivesCancel(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives", "cancel",
+			"--objective-id", "objectiveId",
+		)
+	})
+}
+
+func TestObjectivesCompact(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"objectives", "compact",
+			"--objective-id", "objectiveId",
+			"--compaction-config", "{summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
+		)
+	})
+
+	t.Run("inner flags", func(t *testing.T) {
+		// Check that inner flags have been set up correctly
+		requestflag.CheckInnerFlags(objectivesCompact)
+
+		// Alternative argument passing style using inner flags
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"objectives", "compact",
+			"--objective-id", "objectiveId",
+			"--compaction-config.summarization", "{instructions: instructions}",
+			"--compaction-config.tool-result-clearing", "{preserveRecentResults: 0}",
+			"--compaction-config.trigger-threshold", "0",
+		)
+	})
+
+	t.Run("piping data", func(t *testing.T) {
+		// Test piping YAML data over stdin
+		pipeData := []byte("" +
+			"compactionConfig:\n" +
+			"  summarization:\n" +
+			"    instructions: instructions\n" +
+			"  toolResultClearing:\n" +
+			"    preserveRecentResults: 0\n" +
+			"  triggerThreshold: 0\n")
+		mocktest.TestRunMockTestWithPipeAndFlags(
+			t, pipeData,
+			"--api-key", "string",
+			"objectives", "compact",
 			"--objective-id", "objectiveId",
 		)
 	})

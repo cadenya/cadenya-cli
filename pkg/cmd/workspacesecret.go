@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
@@ -209,8 +208,15 @@ func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "workspace-secrets create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "workspace-secrets create",
+		Transform:      transform,
+	})
 }
 
 func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error {
@@ -244,8 +250,15 @@ func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "workspace-secrets retrieve", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "workspace-secrets retrieve",
+		Transform:      transform,
+	})
 }
 
 func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -286,8 +299,15 @@ func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "workspace-secrets update", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "workspace-secrets update",
+		Transform:      transform,
+	})
 }
 
 func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
@@ -312,6 +332,7 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -321,14 +342,26 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "workspace-secrets list", obj, format, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "workspace-secrets list",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.WorkspaceSecrets.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "workspace-secrets list", iter, format, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "workspace-secrets list",
+			Transform:      transform,
+		})
 	}
 }
 

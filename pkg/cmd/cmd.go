@@ -39,6 +39,9 @@ func init() {
 				Name:        "base-url",
 				DefaultText: "url",
 				Usage:       "Override the base URL for API requests",
+				Validator: func(baseURL string) error {
+					return ValidateBaseURL(baseURL, "--base-url")
+				},
 			},
 			&cli.StringFlag{
 				Name:  "format",
@@ -70,9 +73,18 @@ func init() {
 				Name:  "transform-error",
 				Usage: "The GJSON transformation for errors.",
 			},
+			&cli.BoolFlag{
+				Name:    "raw-output",
+				Aliases: []string{"r"},
+				Usage:   "If the result is a string, print it without JSON quotes. This can be useful for making output transforms talk to non-JSON-based systems.",
+			},
 			&requestflag.Flag[string]{
 				Name:    "api-key",
 				Sources: cli.EnvVars("CADENYA_API_KEY"),
+			},
+			&requestflag.Flag[string]{
+				Name:    "webhook-key",
+				Sources: cli.EnvVars("CADENYA_WEBHOOK_KEY"),
 			},
 		},
 		Commands: []*cli.Command{
@@ -82,6 +94,7 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&accountRetrieve,
+					&accountRotateWebhookSigningKey,
 				},
 			},
 			{
@@ -97,23 +110,28 @@ func init() {
 				},
 			},
 			{
-				Name:     "agents:variations",
-				Category: "API RESOURCE",
-				Suggest:  true,
-				Commands: []*cli.Command{
-					&agentsVariationsCreate,
-					&agentsVariationsRetrieve,
-					&agentsVariationsUpdate,
-					&agentsVariationsList,
-					&agentsVariationsDelete,
-				},
-			},
-			{
 				Name:     "agents:webhook-deliveries",
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&agentsWebhookDeliveriesList,
+				},
+			},
+			{
+				Name:     "agent-variations",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&agentVariationsCreate,
+					&agentVariationsRetrieve,
+					&agentVariationsUpdate,
+					&agentVariationsList,
+					&agentVariationsDelete,
+					&agentVariationsAddAssignment,
+					&agentVariationsAddMemoryLayer,
+					&agentVariationsRemoveAssignment,
+					&agentVariationsRemoveMemoryLayer,
+					&agentVariationsUpdateMemoryLayer,
 				},
 			},
 			{
@@ -125,6 +143,7 @@ func init() {
 					&objectivesRetrieve,
 					&objectivesList,
 					&objectivesCancel,
+					&objectivesCompact,
 					&objectivesContinue,
 					&objectivesListContextWindows,
 					&objectivesListEvents,
@@ -164,6 +183,39 @@ func init() {
 				Commands: []*cli.Command{
 					&objectivesFeedbackCreate,
 					&objectivesFeedbackList,
+				},
+			},
+			{
+				Name:     "memory-layers",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&memoryLayersCreate,
+					&memoryLayersRetrieve,
+					&memoryLayersUpdate,
+					&memoryLayersList,
+					&memoryLayersDelete,
+				},
+			},
+			{
+				Name:     "memory-layers:entries",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&memoryLayersEntriesCreate,
+					&memoryLayersEntriesRetrieve,
+					&memoryLayersEntriesUpdate,
+					&memoryLayersEntriesList,
+					&memoryLayersEntriesDelete,
+				},
+			},
+			{
+				Name:     "uploads",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&uploadsCreate,
+					&uploadsRetrieve,
 				},
 			},
 			{

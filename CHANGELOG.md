@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.3.0 (2026-04-18)
+
+Full Changelog: [v0.2.0...v0.3.0](https://github.com/cadenya/cadenya-cli/compare/v0.2.0...v0.3.0)
+
+### Features
+
+* Add memory service and upload service ([acd0121](https://github.com/cadenya/cadenya-cli/commit/acd0121209c68b32450d9a441ec0784b2a150213))
+* Add memory stack to objectives and agent variations ([7d9a269](https://github.com/cadenya/cadenya-cli/commit/7d9a269b97a2841846c2968f1ffd8249744342f5))
+* allow `-` as value representing stdin to binary-only file parameters in CLIs ([81053b2](https://github.com/cadenya/cadenya-cli/commit/81053b248a294ec2797feda68b38b9fa5a37b180))
+* **api:** api update ([c75cb59](https://github.com/cadenya/cadenya-cli/commit/c75cb591e516b76709f7f1383620eb626149bef2))
+* **api:** api update ([0be761c](https://github.com/cadenya/cadenya-cli/commit/0be761cb19638a659590cf1632628336ab3dd7fb))
+* **api:** api update ([bb32bfc](https://github.com/cadenya/cadenya-cli/commit/bb32bfcf4e5a8fcccf5e538259c53bcac72b1a8e))
+* **api:** api update ([0986c49](https://github.com/cadenya/cadenya-cli/commit/0986c490cec51a717107ca9e1b8c055ac70ab23d))
+* better error message if scheme forgotten in CLI `*_BASE_URL`/`--base-url` ([f9659e2](https://github.com/cadenya/cadenya-cli/commit/f9659e218740ff4b38bdbdf37b6c2d82c7567d88))
+* binary-only parameters become CLI flags that take filenames only ([3488aa4](https://github.com/cadenya/cadenya-cli/commit/3488aa432bb475f8325a693894f2e29ae67dec72))
+* **cli:** add `--raw-output`/`-r` option to print raw (non-JSON) strings ([934c6a0](https://github.com/cadenya/cadenya-cli/commit/934c6a08a73715a4bb08a81dda8537b2b457feec))
+* **cli:** alias parameters in data with `x-stainless-cli-data-alias` ([c401554](https://github.com/cadenya/cadenya-cli/commit/c401554944a89abed7456ff7b81be965c2528b98))
+* **cli:** send filename and content type when reading input from files ([f86c389](https://github.com/cadenya/cadenya-cli/commit/f86c389eb950b3eebd0399136ddcfdc091208afc))
+
+
+### Bug Fixes
+
+* fall back to main branch if linking fails in CI ([6b002fa](https://github.com/cadenya/cadenya-cli/commit/6b002fa5c0aad4722e4a499ce17ecbdec1dd8439))
+* fix for failing to drop invalid module replace in link script ([8868093](https://github.com/cadenya/cadenya-cli/commit/8868093282107fb4a2fea23d1df4329ae194757f))
+* fix quoting typo ([c758cf5](https://github.com/cadenya/cadenya-cli/commit/c758cf5804b9ee7c9cdbc9ce793ae4b738670040))
+
+
+### Chores
+
+* add documentation for ./scripts/link ([6845881](https://github.com/cadenya/cadenya-cli/commit/6845881b5ada8541cc2f584b9958b513a70c4372))
+* **ci:** add github env support for goreleaser ([8e99466](https://github.com/cadenya/cadenya-cli/commit/8e9946650e7d8028b2cba97dec814e352387ffea))
+* **ci:** remove release-doctor workflow ([6251f13](https://github.com/cadenya/cadenya-cli/commit/6251f13f064ece40f1acc846626ff77f8bc68c79))
+* **ci:** support manually triggering release workflow ([54dfff8](https://github.com/cadenya/cadenya-cli/commit/54dfff825b4f811fdfe4aa8e357dbe0ffa100923))
+* **cli:** additional test cases for `ShowJSONIterator` ([fc26c81](https://github.com/cadenya/cadenya-cli/commit/fc26c81553f2b0b796ada372b134350a3737ca54))
+* **cli:** fall back to JSON when using default "explore" with non-TTY ([de19889](https://github.com/cadenya/cadenya-cli/commit/de19889b9621500ea26a28e2fcfe5641bdfa0d38))
+* **cli:** let `--format raw` be used in conjunction with `--transform` ([ea76967](https://github.com/cadenya/cadenya-cli/commit/ea76967e2733b96cc2130b8c2c81a975ea3e1629))
+* **cli:** switch long lists of positional args over to param structs ([35185e2](https://github.com/cadenya/cadenya-cli/commit/35185e2984537d523b78eaf916e0d47d14d0910a))
+* **cli:** use `ShowJSONOpts` as argument to `formatJSON` instead of many positionals ([996a612](https://github.com/cadenya/cadenya-cli/commit/996a6120e3f0d22eac4c1ff43315805d9dcb1d9a))
+* mark all CLI-related tests in Go with `t.Parallel()` ([095954b](https://github.com/cadenya/cadenya-cli/commit/095954b5e2e8250ce959f01441e2f5117fa4eaf2))
+* modify CLI tests to inject stdout so mutating `os.Stdout` isn't necessary ([f78dbde](https://github.com/cadenya/cadenya-cli/commit/f78dbde134d4e0c54e3ddd47be81a01be8a92db6))
+* switch some CLI Go tests from `os.Chdir` to `t.Chdir` ([317aeb7](https://github.com/cadenya/cadenya-cli/commit/317aeb786b557a5cb58a778f840f9d8506a33c79))
+
 ## 0.2.0 (2026-04-02)
 
 Full Changelog: [v0.1.0...v0.2.0](https://github.com/cadenya/cadenya-cli/compare/v0.1.0...v0.2.0)

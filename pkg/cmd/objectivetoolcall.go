@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
@@ -119,6 +118,7 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 	}
 
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
 	if format == "raw" {
 		var res []byte
@@ -133,7 +133,13 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 			return err
 		}
 		obj := gjson.ParseBytes(res)
-		return ShowJSON(os.Stdout, "objectives:tool-calls list", obj, format, transform)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives:tool-calls list",
+			Transform:      transform,
+		})
 	} else {
 		iter := client.Objectives.ToolCalls.ListAutoPaging(
 			ctx,
@@ -145,7 +151,13 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
 		}
-		return ShowJSONIterator(os.Stdout, "objectives:tool-calls list", iter, format, transform, maxItems)
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "objectives:tool-calls list",
+			Transform:      transform,
+		})
 	}
 }
 
@@ -192,8 +204,15 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "objectives:tool-calls approve", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives:tool-calls approve",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error {
@@ -239,6 +258,13 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "objectives:tool-calls deny", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives:tool-calls deny",
+		Transform:      transform,
+	})
 }

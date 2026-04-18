@@ -14,11 +14,15 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var agentsCreate = requestflag.WithInnerFlags(cli.Command{
+var memoryLayersEntriesCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
-	Usage:   "Creates a new agent in the workspace",
+	Usage:   "Creates a new entry in a memory layer. Returns the detail view, including the\nresolved content body.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "memory-layer-id",
+			Required: true,
+		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
 			Usage:    "CreateResourceMetadata contains the user-provided fields for creating\n a workspace-scoped resource. Read-only fields (id, account_id, workspace_id, profile_id,\n created_at) are excluded since they are set by the server.",
@@ -27,17 +31,12 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "spec",
-			Usage:    "Agent specification (user-provided configuration)",
+			Usage:    "MemoryEntryCreateSpec is the input shape for CreateMemoryEntry. It accepts\n either inline content or a reference to a completed Upload; exactly one of\n the two must be set.",
 			Required: true,
 			BodyPath: "spec",
 		},
-		&requestflag.Flag[map[string]any]{
-			Name:     "default-variation",
-			Usage:    "Create agent variation request",
-			BodyPath: "defaultVariation",
-		},
 	},
-	Action:          handleAgentsCreate,
+	Action:          handleMemoryLayersEntriesCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
@@ -59,64 +58,54 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 	},
 	"spec": {
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.status",
-			Usage:      "Status of the agent",
-			InnerField: "status",
+			Name:       "spec.key",
+			Usage:      "See MemoryEntrySpec.key for the full rule set. Same constraints apply\n here.",
+			InnerField: "key",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.variation-selection-mode",
-			Usage:      "Controls how variations are automatically selected when creating objectives\n Defaults to RANDOM when unspecified",
-			InnerField: "variationSelectionMode",
+			Name:       "spec.content",
+			Usage:      "Inline content, written directly into the entry.",
+			InnerField: "content",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
-			Usage:      "Description of the agent's purpose",
 			InnerField: "description",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.webhook-events-url",
-			Usage:      "The URL that Cadenya will send events for any objective assigned to the agent.",
-			InnerField: "webhookEventsUrl",
-		},
-	},
-	"default-variation": {
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "default-variation.metadata",
-			Usage:      "CreateResourceMetadata contains the user-provided fields for creating\n a workspace-scoped resource. Read-only fields (id, account_id, workspace_id, profile_id,\n created_at) are excluded since they are set by the server.",
-			InnerField: "metadata",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "default-variation.spec",
-			Usage:      "AgentVariationSpec defines the operational configuration for a variation",
-			InnerField: "spec",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "default-variation.agent-id",
-			Usage:      "Agent ID (from path)",
-			InnerField: "agentId",
+			Name:       "spec.upload-id",
+			Usage:      "ID of a COMPLETE Upload. The server reads the object from storage,\n copies its bytes into the entry, and marks the upload consumed.",
+			InnerField: "uploadId",
 		},
 	},
 })
 
-var agentsRetrieve = cli.Command{
+var memoryLayersEntriesRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Retrieves an agent by ID from the workspace",
+	Usage:   "Retrieves a memory entry by ID from a memory layer. Returns the detail view,\nincluding the content body.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "memory-layer-id",
+			Required: true,
+		},
 		&requestflag.Flag[string]{
 			Name:     "id",
 			Required: true,
 		},
 	},
-	Action:          handleAgentsRetrieve,
+	Action:          handleMemoryLayersEntriesRetrieve,
 	HideHelpCommand: true,
 }
 
-var agentsUpdate = requestflag.WithInnerFlags(cli.Command{
+var memoryLayersEntriesUpdate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "update",
-	Usage:   "Updates an agent in the workspace",
+	Usage:   "Updates a memory entry in a memory layer. Returns the detail view, including the\nresolved content body.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "memory-layer-id",
+			Required: true,
+		},
 		&requestflag.Flag[string]{
 			Name:     "id",
 			Required: true,
@@ -128,16 +117,15 @@ var agentsUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "spec",
-			Usage:    "Agent specification (user-provided configuration)",
+			Usage:    "MemoryEntryUpdateSpec is the input shape for UpdateMemoryEntry. Fields\n present in the request's update_mask are applied; unset fields are left\n alone. The source oneof is optional for updates — omit it to leave the\n body untouched, or set exactly one branch to replace it.",
 			BodyPath: "spec",
 		},
 		&requestflag.Flag[string]{
 			Name:     "update-mask",
-			Usage:    "Fields to update",
 			BodyPath: "updateMask",
 		},
 	},
-	Action:          handleAgentsUpdate,
+	Action:          handleMemoryLayersEntriesUpdate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
@@ -159,33 +147,33 @@ var agentsUpdate = requestflag.WithInnerFlags(cli.Command{
 	},
 	"spec": {
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.status",
-			Usage:      "Status of the agent",
-			InnerField: "status",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.variation-selection-mode",
-			Usage:      "Controls how variations are automatically selected when creating objectives\n Defaults to RANDOM when unspecified",
-			InnerField: "variationSelectionMode",
+			Name:       "spec.content",
+			InnerField: "content",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
-			Usage:      "Description of the agent's purpose",
 			InnerField: "description",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.webhook-events-url",
-			Usage:      "The URL that Cadenya will send events for any objective assigned to the agent.",
-			InnerField: "webhookEventsUrl",
+			Name:       "spec.key",
+			InnerField: "key",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.upload-id",
+			InnerField: "uploadId",
 		},
 	},
 })
 
-var agentsList = cli.Command{
+var memoryLayersEntriesList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists all agents in the workspace",
+	Usage:   "Lists all entries in a memory layer",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "memory-layer-id",
+			Required: true,
+		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
@@ -203,7 +191,7 @@ var agentsList = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:      "prefix",
-			Usage:     "Filter expression (query param: prefix)",
+			Usage:     "Filter by key prefix (e.g., \"skills/postmortem/\" to list all entries\n under that hierarchy). Matches against the entry's key, not its name.",
 			QueryPath: "prefix",
 		},
 		&requestflag.Flag[string]{
@@ -216,33 +204,40 @@ var agentsList = cli.Command{
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
 		},
 	},
-	Action:          handleAgentsList,
+	Action:          handleMemoryLayersEntriesList,
 	HideHelpCommand: true,
 }
 
-var agentsDelete = cli.Command{
+var memoryLayersEntriesDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Deletes an agent from the workspace",
+	Usage:   "Deletes a memory entry from a memory layer",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "memory-layer-id",
+			Required: true,
+		},
 		&requestflag.Flag[string]{
 			Name:     "id",
 			Required: true,
 		},
 	},
-	Action:          handleAgentsDelete,
+	Action:          handleMemoryLayersEntriesDelete,
 	HideHelpCommand: true,
 }
 
-func handleAgentsCreate(ctx context.Context, cmd *cli.Command) error {
+func handleMemoryLayersEntriesCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
+		cmd.Set("memory-layer-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentNewParams{}
+	params := cadenya.MemoryLayerEntryNewParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -257,7 +252,12 @@ func handleAgentsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Agents.New(ctx, params, options...)
+	_, err = client.MemoryLayers.Entries.New(
+		ctx,
+		cmd.Value("memory-layer-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -270,14 +270,18 @@ func handleAgentsCreate(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "agents create",
+		Title:          "memory-layers:entries create",
 		Transform:      transform,
 	})
 }
 
-func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
+func handleMemoryLayersEntriesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
+		cmd.Set("memory-layer-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -299,7 +303,12 @@ func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Agents.Get(ctx, cmd.Value("id").(string), options...)
+	_, err = client.MemoryLayers.Entries.Get(
+		ctx,
+		cmd.Value("memory-layer-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -312,14 +321,18 @@ func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "agents retrieve",
+		Title:          "memory-layers:entries retrieve",
 		Transform:      transform,
 	})
 }
 
-func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
+func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
+		cmd.Set("memory-layer-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -328,7 +341,7 @@ func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentUpdateParams{}
+	params := cadenya.MemoryLayerEntryUpdateParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -343,8 +356,9 @@ func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Agents.Update(
+	_, err = client.MemoryLayers.Entries.Update(
 		ctx,
+		cmd.Value("memory-layer-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -361,20 +375,23 @@ func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "agents update",
+		Title:          "memory-layers:entries update",
 		Transform:      transform,
 	})
 }
 
-func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
+func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
+		cmd.Set("memory-layer-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentListParams{}
+	params := cadenya.MemoryLayerEntryListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -393,7 +410,12 @@ func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.Agents.List(ctx, params, options...)
+		_, err = client.MemoryLayers.Entries.List(
+			ctx,
+			cmd.Value("memory-layer-id").(string),
+			params,
+			options...,
+		)
 		if err != nil {
 			return err
 		}
@@ -402,11 +424,16 @@ func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "agents list",
+			Title:          "memory-layers:entries list",
 			Transform:      transform,
 		})
 	} else {
-		iter := client.Agents.ListAutoPaging(ctx, params, options...)
+		iter := client.MemoryLayers.Entries.ListAutoPaging(
+			ctx,
+			cmd.Value("memory-layer-id").(string),
+			params,
+			options...,
+		)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -415,15 +442,19 @@ func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "agents list",
+			Title:          "memory-layers:entries list",
 			Transform:      transform,
 		})
 	}
 }
 
-func handleAgentsDelete(ctx context.Context, cmd *cli.Command) error {
+func handleMemoryLayersEntriesDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
+		cmd.Set("memory-layer-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -443,5 +474,10 @@ func handleAgentsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.Agents.Delete(ctx, cmd.Value("id").(string), options...)
+	return client.MemoryLayers.Entries.Delete(
+		ctx,
+		cmd.Value("memory-layer-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
 }
