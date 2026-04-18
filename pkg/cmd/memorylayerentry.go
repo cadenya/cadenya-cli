@@ -72,10 +72,6 @@ var memoryLayersEntriesCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "description",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.title",
-			InnerField: "title",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "spec.upload-id",
 			Usage:      "ID of a COMPLETE Upload. The server reads the object from storage,\n copies its bytes into the entry, and marks the upload consumed.",
 			InnerField: "uploadId",
@@ -161,10 +157,6 @@ var memoryLayersEntriesUpdate = requestflag.WithInnerFlags(cli.Command{
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.key",
 			InnerField: "key",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.title",
-			InnerField: "title",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.upload-id",
