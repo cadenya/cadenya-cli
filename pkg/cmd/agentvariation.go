@@ -299,6 +299,30 @@ var agentVariationsAddAssignment = cli.Command{
 	HideHelpCommand: true,
 }
 
+var agentVariationsAddMemoryLayer = cli.Command{
+	Name:    "add-memory-layer",
+	Usage:   "Attaches a memory layer to a variation at a given position in the variation's\nbaseline memory stack.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "agent-variation-id",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "memory-layer-id",
+			Usage:    "Layer to attach. Accepts memlyr_… or external_id:… form.",
+			BodyPath: "memoryLayerId",
+		},
+		&requestflag.Flag[int64]{
+			Name:     "position",
+			Usage:    "Position in the stack. If omitted, server appends\n (max existing position + 1).",
+			BodyPath: "position",
+		},
+	},
+	Action:          handleAgentVariationsAddMemoryLayer,
+	HideHelpCommand: true,
+}
+
 var agentVariationsRemoveAssignment = cli.Command{
 	Name:    "remove-assignment",
 	Usage:   "Detaches an assignment from a variation, identified by the assignment ID\nreturned when it was added.",
@@ -314,6 +338,47 @@ var agentVariationsRemoveAssignment = cli.Command{
 		},
 	},
 	Action:          handleAgentVariationsRemoveAssignment,
+	HideHelpCommand: true,
+}
+
+var agentVariationsRemoveMemoryLayer = cli.Command{
+	Name:    "remove-memory-layer",
+	Usage:   "Detaches a memory layer assignment from a variation, identified by the\nassignment id.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "agent-variation-id",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "id",
+			Required: true,
+		},
+	},
+	Action:          handleAgentVariationsRemoveMemoryLayer,
+	HideHelpCommand: true,
+}
+
+var agentVariationsUpdateMemoryLayer = cli.Command{
+	Name:    "update-memory-layer",
+	Usage:   "Updates the position of a memory layer assignment on a variation.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "agent-variation-id",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "id",
+			Required: true,
+		},
+		&requestflag.Flag[int64]{
+			Name:     "position",
+			Usage:    "New position. Only field currently updatable on an assignment.",
+			BodyPath: "position",
+		},
+	},
+	Action:          handleAgentVariationsUpdateMemoryLayer,
 	HideHelpCommand: true,
 }
 
@@ -622,6 +687,55 @@ func handleAgentVariationsAddAssignment(ctx context.Context, cmd *cli.Command) e
 	})
 }
 
+func handleAgentVariationsAddMemoryLayer(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-variation-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-variation-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := cadenya.AgentVariationAddMemoryLayerParams{}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		ApplicationJSON,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.AgentVariations.AddMemoryLayer(
+		ctx,
+		cmd.Value("agent-variation-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agent-variations add-memory-layer",
+		Transform:      transform,
+	})
+}
+
 func handleAgentVariationsRemoveAssignment(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -654,4 +768,92 @@ func handleAgentVariationsRemoveAssignment(ctx context.Context, cmd *cli.Command
 		cmd.Value("id").(string),
 		options...,
 	)
+}
+
+func handleAgentVariationsRemoveMemoryLayer(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-variation-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-variation-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	return client.AgentVariations.RemoveMemoryLayer(
+		ctx,
+		cmd.Value("agent-variation-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
+}
+
+func handleAgentVariationsUpdateMemoryLayer(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-variation-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-variation-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := cadenya.AgentVariationUpdateMemoryLayerParams{}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		ApplicationJSON,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.AgentVariations.UpdateMemoryLayer(
+		ctx,
+		cmd.Value("agent-variation-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agent-variations update-memory-layer",
+		Transform:      transform,
+	})
 }

@@ -128,7 +128,10 @@ func init() {
 					&agentVariationsList,
 					&agentVariationsDelete,
 					&agentVariationsAddAssignment,
+					&agentVariationsAddMemoryLayer,
 					&agentVariationsRemoveAssignment,
+					&agentVariationsRemoveMemoryLayer,
+					&agentVariationsUpdateMemoryLayer,
 				},
 			},
 			{
