@@ -18,7 +18,7 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			"memory-layers:entries", "create",
 			"--memory-layer-id", "memoryLayerId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{key: key, content: content, description: description, title: title, uploadId: uploadId}",
+			"--spec", "{key: key, content: content, description: description, uploadId: uploadId}",
 		)
 	})
 
@@ -38,7 +38,6 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			"--spec.key", "key",
 			"--spec.content", "content",
 			"--spec.description", "description",
-			"--spec.title", "title",
 			"--spec.upload-id", "uploadId",
 		)
 	})
@@ -55,7 +54,6 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			"  key: key\n" +
 			"  content: content\n" +
 			"  description: description\n" +
-			"  title: title\n" +
 			"  uploadId: uploadId\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -89,7 +87,7 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			"--memory-layer-id", "memoryLayerId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{content: content, description: description, key: key, title: title, uploadId: uploadId}",
+			"--spec", "{content: content, description: description, key: key, uploadId: uploadId}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -111,7 +109,6 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			"--spec.content", "content",
 			"--spec.description", "description",
 			"--spec.key", "key",
-			"--spec.title", "title",
 			"--spec.upload-id", "uploadId",
 			"--update-mask", "updateMask",
 		)
@@ -129,7 +126,6 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			"  content: content\n" +
 			"  description: description\n" +
 			"  key: key\n" +
-			"  title: title\n" +
 			"  uploadId: uploadId\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
