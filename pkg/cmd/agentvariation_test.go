@@ -247,6 +247,33 @@ func TestAgentVariationsAddAssignment(t *testing.T) {
 	})
 }
 
+func TestAgentVariationsAddMemoryLayer(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agent-variations", "add-memory-layer",
+			"--agent-variation-id", "agentVariationId",
+			"--memory-layer-id", "memoryLayerId",
+			"--position", "0",
+		)
+	})
+
+	t.Run("piping data", func(t *testing.T) {
+		// Test piping YAML data over stdin
+		pipeData := []byte("" +
+			"memoryLayerId: memoryLayerId\n" +
+			"position: 0\n")
+		mocktest.TestRunMockTestWithPipeAndFlags(
+			t, pipeData,
+			"--api-key", "string",
+			"agent-variations", "add-memory-layer",
+			"--agent-variation-id", "agentVariationId",
+		)
+	})
+}
+
 func TestAgentVariationsRemoveAssignment(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -254,6 +281,45 @@ func TestAgentVariationsRemoveAssignment(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agent-variations", "remove-assignment",
+			"--agent-variation-id", "agentVariationId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestAgentVariationsRemoveMemoryLayer(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agent-variations", "remove-memory-layer",
+			"--agent-variation-id", "agentVariationId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestAgentVariationsUpdateMemoryLayer(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agent-variations", "update-memory-layer",
+			"--agent-variation-id", "agentVariationId",
+			"--id", "id",
+			"--position", "0",
+		)
+	})
+
+	t.Run("piping data", func(t *testing.T) {
+		// Test piping YAML data over stdin
+		pipeData := []byte("position: 0")
+		mocktest.TestRunMockTestWithPipeAndFlags(
+			t, pipeData,
+			"--api-key", "string",
+			"agent-variations", "update-memory-layer",
 			"--agent-variation-id", "agentVariationId",
 			"--id", "id",
 		)

@@ -17,7 +17,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "create",
 			"--agent-id", "agentId",
-			"--data", "{data: {}, initialMessage: initialMessage, secrets: [{name: name, value: value}]}",
+			"--data", "{data: {}, initialMessage: initialMessage, memoryStack: [{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}], secrets: [{name: name, value: value}]}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
 			"--variation-id", "variationId",
 		)
@@ -35,6 +35,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"--agent-id", "agentId",
 			"--data.data", "{}",
 			"--data.initial-message", "initialMessage",
+			"--data.memory-stack", "[{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}]",
 			"--data.secrets", "[{name: name, value: value}]",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -49,6 +50,9 @@ func TestObjectivesCreate(t *testing.T) {
 			"data:\n" +
 			"  data: {}\n" +
 			"  initialMessage: initialMessage\n" +
+			"  memoryStack:\n" +
+			"    - memoryEntryId: memoryEntryId\n" +
+			"      memoryLayerId: memoryLayerId\n" +
 			"  secrets:\n" +
 			"    - name: name\n" +
 			"      value: value\n" +

@@ -60,6 +60,11 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "The initial message sent to the agent. This becomes the first user message in the LLM chat history.",
 			InnerField: "initialMessage",
 		},
+		&requestflag.InnerFlag[[]map[string]any]{
+			Name:       "data.memory-stack",
+			Usage:      "Memory layers/entries to push onto this objective's memory stack on\n top of the baseline stack inherited from the selected variation.\n\n See \"Memory stack composition\" in memory.proto for lookup semantics.\n\n Array order is push order: the first element sits lower in the\n objective's contribution to the stack; the LAST element ends up on\n top of the effective stack. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically via the runtime based on\n episodic_key.\n\n Stack size cap: the TOTAL effective stack (variation's memory layers\n + this field) must not exceed 10 entries. A request that would\n produce an effective stack larger than 10 is rejected with\n InvalidArgument. Variations themselves are capped at 10 memory layer\n assignments, so a variation that is already \"full\" leaves no room\n for objective-level references.",
+			InnerField: "memoryStack",
+		},
 		&requestflag.InnerFlag[string]{
 			Name:       "data.parent-objective-id",
 			Usage:      "A parent objective means the objective was spawned off using a separate agent to complete an objective",
