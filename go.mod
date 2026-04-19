@@ -3,7 +3,7 @@ module github.com/cadenya/cadenya-cli
 go 1.25
 
 require (
-	github.com/cadenya/cadenya-go v0.5.0
+	github.com/cadenya/cadenya-go v0.6.0
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/lipgloss v1.1.0
@@ -37,6 +37,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/standard-webhooks/standard-webhooks/libraries v0.0.0-20260309172517-425968d811b9 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
