@@ -295,6 +295,7 @@ func init() {
 					&workspacesGet,
 				},
 			},
+			configCommand,
 			{
 				Name:            "@manpages",
 				Usage:           "Generate documentation for 'man'",
