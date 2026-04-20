@@ -320,7 +320,7 @@ var agentsVariationsAddMemoryLayer = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "memory-layer-id",
-			Usage:    "Layer to attach. Accepts memlyr_… or external_id:… form.",
+			Usage:    "Layer to attach. Accepts canonical memlyr_… form or external_id:<value>\n form (see common.proto \"Path-parameter ID resolution\").",
 			BodyPath: "memoryLayerId",
 		},
 		&requestflag.Flag[int64]{
