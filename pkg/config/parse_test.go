@@ -233,3 +233,38 @@ func TestParseTrivialConfig(t *testing.T) {
 		t.Errorf("expected no resources, got: %+v", cfg)
 	}
 }
+
+// TestParseErrorRedactsSecretsInContextSnippet makes sure YAML parse-error
+// context lines — which goccy/go-yaml includes in the error message — don't
+// leak substituted env-var values into user-visible errors (and onward into
+// CI logs).
+func TestParseErrorRedactsSecretsInContextSnippet(t *testing.T) {
+	// `version` expects int; the substituted string value will fail to parse,
+	// and goccy will include the offending source line in the error.
+	src := "version: $MY_SECRET\n"
+	_, _, err := Parse(strings.NewReader(src), map[string]string{
+		"MY_SECRET": "long_enough_secret_value",
+	})
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+	if strings.Contains(err.Error(), "long_enough_secret_value") {
+		t.Errorf("parse error leaked secret value:\n%s", err.Error())
+	}
+	if !strings.Contains(err.Error(), "<$MY_SECRET>") {
+		t.Errorf("expected <$MY_SECRET> placeholder in error:\n%s", err.Error())
+	}
+}
+
+// Short substitutions (<8 chars) pass through because the redactor skips
+// them; the test documents that tradeoff so behavior changes are deliberate.
+func TestParseErrorKeepsShortValuesAsIs(t *testing.T) {
+	src := "version: $TINY\n"
+	_, _, err := Parse(strings.NewReader(src), map[string]string{"TINY": "abc"})
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+	if !strings.Contains(err.Error(), "abc") {
+		t.Errorf("short value should appear as-is (redaction skipped for <8 chars):\n%s", err.Error())
+	}
+}

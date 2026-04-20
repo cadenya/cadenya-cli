@@ -55,9 +55,15 @@ func parseBytes(data []byte, env map[string]string) (*Config, []Secret, error) {
 		return nil, nil, err
 	}
 
+	// yaml.Strict errors include source-line context snippets from the
+	// substituted bytes. If the offending line contains a secret that came
+	// in via $VAR, we'd leak it through the error message into CI logs.
+	// Redact through the same helper used by the --debug middleware.
+	redactor := newSecretRedactor(secrets)
+
 	var cfg Config
 	if err := yaml.UnmarshalWithOptions(substituted, &cfg, yaml.Strict()); err != nil {
-		return nil, nil, fmt.Errorf("config: parse YAML: %w", err)
+		return nil, nil, fmt.Errorf("config: parse YAML: %s", redactor.Redact([]byte(err.Error())))
 	}
 
 	if cfg.Version != 0 && cfg.Version != 1 {
