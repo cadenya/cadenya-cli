@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 
 	"github.com/cadenya/cadenya-go"
 	"github.com/cadenya/cadenya-go/option"
@@ -13,18 +14,8 @@ import (
 )
 
 // Plan is the output of the read-only phase of `config apply`.
-//
-// Canonicals carries every parent resource's canonical id that's known at
-// plan time — populated from the GETs we do during Build. Apply extends it
-// with canonical ids learned from create responses. Sub-resource dispatchers
-// read from Canonicals to resolve the parent segment of their URL, since the
-// server's nested-collection POST routes accept only canonical ids.
-//
-// Keys are "<kind>:<ext_id>" for top-level resources and
-// "variation:<agent_ext>/<var_ext>" for variations.
 type Plan struct {
-	Ops        []Op
-	Canonicals map[string]string
+	Ops []Op
 }
 
 // Op is one intended action against one resource.
@@ -118,10 +109,9 @@ type ChangeSet struct {
 	Body       map[string]any
 
 	// For list reconciliation ops (assignments, memory-layer links, entries):
-	TargetKind        string // "tool" | "tool_set" | "agent" | "memory_layer"
-	TargetExternalID  string // YAML-declared external_id of the target
-	TargetCanonicalID string // resolved at plan time if target already exists; empty means "will be created — look up at apply time"
-	Position          int    // memory-layer link position (add or reorder)
+	TargetKind       string // "tool" | "tool_set" | "agent" | "memory_layer"
+	TargetExternalID string // YAML-declared external_id of the target — sent as "external_id:<ext>" in the wire body
+	Position         int    // memory-layer link position (add or reorder)
 }
 
 // planBuilder carries state across the multi-pass Build.
@@ -134,6 +124,12 @@ type planBuilder struct {
 	// Resolver cache: kind + ":" + external_id → lookup result (canonical id,
 	// raw JSON, or "does not exist").
 	resolved map[string]lookupResult
+
+	// Reference errors collected across the whole Build pass. Unresolvable
+	// YAML refs don't short-circuit; they accumulate and are joined into a
+	// single error at the end so the user sees every broken reference in one
+	// round-trip instead of fixing them one at a time.
+	refErrors []error
 }
 
 type lookupResult struct {
@@ -149,7 +145,7 @@ func Build(ctx context.Context, client *cadenya.Client, cfg *Config) (*Plan, err
 		ctx:      ctx,
 		client:   client,
 		cfg:      cfg,
-		plan:     &Plan{Canonicals: map[string]string{}},
+		plan:     &Plan{},
 		resolved: map[string]lookupResult{},
 	}
 	if err := b.buildToolSetOps(); err != nil {
@@ -161,6 +157,9 @@ func Build(ctx context.Context, client *cadenya.Client, cfg *Config) (*Plan, err
 	if err := b.buildAgentOps(); err != nil {
 		return nil, err
 	}
+	if len(b.refErrors) > 0 {
+		return nil, errors.Join(b.refErrors...)
+	}
 	return b.plan, nil
 }
 
@@ -169,7 +168,7 @@ func Build(ctx context.Context, client *cadenya.Client, cfg *Config) (*Plan, err
 // -----------------------------------------------------------------------------
 
 func (b *planBuilder) buildToolSetOps() error {
-	for _, extID := range sortedStringKeys(b.cfg.ToolSets) {
+	for _, extID := range slices.Sorted(maps.Keys(b.cfg.ToolSets)) {
 		ts := b.cfg.ToolSets[extID]
 		ref := ResourceRef{Kind: KindToolSet, ExternalID: extID}
 
@@ -180,13 +179,13 @@ func (b *planBuilder) buildToolSetOps() error {
 		op := planResourceSpec(ref, ts.Name, ts.Labels, ts.Spec, extID, lr)
 		b.plan.Ops = append(b.plan.Ops, op)
 
-		for _, tExtID := range sortedStringKeys(ts.Tools) {
+		for _, tExtID := range slices.Sorted(maps.Keys(ts.Tools)) {
 			tool := ts.Tools[tExtID]
 			tref := ResourceRef{Kind: KindTool, Parent: extID, ExternalID: tExtID}
 
 			var tlr lookupResult
 			if lr.Exists {
-				tlr, err = b.lookupTool(lr.CanonicalID, extID, tExtID)
+				tlr, err = b.lookupTool(extID, tExtID)
 				if err != nil {
 					return err
 				}
@@ -203,7 +202,7 @@ func (b *planBuilder) buildToolSetOps() error {
 // -----------------------------------------------------------------------------
 
 func (b *planBuilder) buildMemoryLayerOps() error {
-	for _, extID := range sortedStringKeys(b.cfg.MemoryLayers) {
+	for _, extID := range slices.Sorted(maps.Keys(b.cfg.MemoryLayers)) {
 		ml := b.cfg.MemoryLayers[extID]
 		ref := ResourceRef{Kind: KindMemoryLayer, ExternalID: extID}
 
@@ -243,7 +242,7 @@ func (b *planBuilder) buildEntryOps(layerExtID string, ml *MemoryLayerNode, laye
 		}
 	}
 
-	for _, key := range sortedStringKeys(desired) {
+	for _, key := range slices.Sorted(maps.Keys(desired)) {
 		entry := desired[key]
 		ref := ResourceRef{Kind: KindMemoryEntry, Parent: layerExtID, ExternalID: key}
 		cur, found := currentByKey[key]
@@ -282,7 +281,7 @@ func (b *planBuilder) buildEntryOps(layerExtID string, ml *MemoryLayerNode, laye
 	}
 
 	// Anything in currentByKey now is being deleted.
-	for _, key := range sortedStringKeys(currentByKey) {
+	for _, key := range slices.Sorted(maps.Keys(currentByKey)) {
 		cur := currentByKey[key]
 		b.plan.Ops = append(b.plan.Ops, Op{
 			Kind:   OpDelete,
@@ -297,7 +296,7 @@ func (b *planBuilder) buildEntryOps(layerExtID string, ml *MemoryLayerNode, laye
 // -----------------------------------------------------------------------------
 
 func (b *planBuilder) buildAgentOps() error {
-	for _, extID := range sortedStringKeys(b.cfg.Agents) {
+	for _, extID := range slices.Sorted(maps.Keys(b.cfg.Agents)) {
 		a := b.cfg.Agents[extID]
 		ref := ResourceRef{Kind: KindAgent, ExternalID: extID}
 
@@ -308,13 +307,13 @@ func (b *planBuilder) buildAgentOps() error {
 		op := planResourceSpec(ref, a.Name, a.Labels, a.Spec, extID, lr)
 		b.plan.Ops = append(b.plan.Ops, op)
 
-		for _, vExtID := range sortedStringKeys(a.Variations) {
+		for _, vExtID := range slices.Sorted(maps.Keys(a.Variations)) {
 			v := a.Variations[vExtID]
 			vref := ResourceRef{Kind: KindVariation, Parent: extID, ExternalID: vExtID}
 
 			var vlr lookupResult
 			if lr.Exists {
-				vlr, err = b.lookupVariation(lr.CanonicalID, extID, vExtID)
+				vlr, err = b.lookupVariation(extID, vExtID)
 				if err != nil {
 					return err
 				}
@@ -376,11 +375,13 @@ func (b *planBuilder) buildAssignmentOps(parent string, v *VariationNode, vLooku
 	for i, ref := range *v.Assignments {
 		kind, ext := classifyAssignment(ref)
 		if kind == "" {
-			return fmt.Errorf("config: agents.%s.assignments[%d]: empty ref", parent, i)
+			b.refErrors = append(b.refErrors, fmt.Errorf("config: agents.%s.assignments[%d]: empty ref", parent, i))
+			continue
 		}
 		canon, err := b.resolveForAssignment(kind, ext)
 		if err != nil {
-			return err
+			b.refErrors = append(b.refErrors, err)
+			continue
 		}
 		desired = append(desired, desiredAssn{Kind: kind, ExternalID: ext, CanonID: canon})
 	}
@@ -407,9 +408,8 @@ func (b *planBuilder) buildAssignmentOps(parent string, v *VariationNode, vLooku
 				Kind:   OpCreate,
 				Target: ResourceRef{Kind: KindVariationAssignment, Parent: parent, ExternalID: d.Kind + ":" + d.ExternalID},
 				Change: ChangeSet{
-					TargetKind:        d.Kind,
-					TargetExternalID:  d.ExternalID,
-					TargetCanonicalID: d.CanonID,
+					TargetKind:       d.Kind,
+					TargetExternalID: d.ExternalID,
 				},
 			})
 		}
@@ -456,11 +456,13 @@ func (b *planBuilder) buildMemoryLayerLinkOps(parent string, v *VariationNode, v
 	var desired []desiredLink
 	for i, extID := range *v.MemoryLayers {
 		if extID == "" {
-			return fmt.Errorf("config: agents.%s.memory_layers[%d]: empty", parent, i)
+			b.refErrors = append(b.refErrors, fmt.Errorf("config: agents.%s.memory_layers[%d]: empty", parent, i))
+			continue
 		}
 		canon, err := b.resolveMemoryLayer(extID)
 		if err != nil {
-			return err
+			b.refErrors = append(b.refErrors, err)
+			continue
 		}
 		desired = append(desired, desiredLink{ExternalID: extID, Position: i, CanonID: canon})
 	}
@@ -484,10 +486,9 @@ func (b *planBuilder) buildMemoryLayerLinkOps(parent string, v *VariationNode, v
 				Kind:   OpCreate,
 				Target: ref,
 				Change: ChangeSet{
-					TargetKind:        "memory_layer",
-					TargetExternalID:  d.ExternalID,
-					TargetCanonicalID: d.CanonID,
-					Position:          d.Position,
+					TargetKind:       "memory_layer",
+					TargetExternalID: d.ExternalID,
+					Position:         d.Position,
 				},
 			})
 		} else if match.Position != d.Position {
@@ -565,7 +566,7 @@ func declaredFieldPaths(name string, labels map[string]string, spec map[string]a
 	for k := range spec {
 		paths = append(paths, "spec."+k)
 	}
-	sort.Strings(paths)
+	slices.Sort(paths)
 	return paths
 }
 
@@ -583,35 +584,81 @@ func desiredValue(path string, name string, labels map[string]string, spec map[s
 	return nil
 }
 
+// fieldEqual reports whether the desired value at `path` matches the current
+// server state. Proto3 servers elide zero-valued scalars and empty collections
+// from their JSON responses (standard protojson behavior), so the comparison
+// normalizes both sides by recursively stripping default-valued keys and
+// treats a missing path as equivalent to a root-level default.
 func fieldEqual(path string, desired any, current gjson.Result) bool {
-	desiredJSON, err := json.Marshal(desired)
-	if err != nil {
-		return false
-	}
 	cr := current.Get(path)
 	if !cr.Exists() {
+		// Server didn't echo the field. Match iff desired is a default
+		// scalar/empty container or an object whose fields are all defaults.
+		return isDefault(stripDefaults(desired))
+	}
+	var currentVal any
+	if err := json.Unmarshal([]byte(cr.Raw), &currentVal); err != nil {
 		return false
 	}
-	return jsonBytesEqual(desiredJSON, []byte(cr.Raw))
+	dj, err := json.Marshal(stripDefaults(desired))
+	if err != nil {
+		return false
+	}
+	cj, err := json.Marshal(stripDefaults(currentVal))
+	if err != nil {
+		return false
+	}
+	return string(dj) == string(cj)
 }
 
-func jsonBytesEqual(a, b []byte) bool {
-	var av, bv any
-	if err := json.Unmarshal(a, &av); err != nil {
-		return false
+// stripDefaults walks `v` recursively and removes any map keys whose values
+// are proto3 defaults: false, 0, "", nil, empty array, empty object. The
+// result is a canonicalized form that matches what a protojson-serialized
+// server response (with default-elision) will look like.
+func stripDefaults(v any) any {
+	switch t := v.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(t))
+		for k, val := range t {
+			if isDefault(val) {
+				continue
+			}
+			out[k] = stripDefaults(val)
+		}
+		return out
+	case []any:
+		out := make([]any, 0, len(t))
+		for _, e := range t {
+			out = append(out, stripDefaults(e))
+		}
+		return out
+	default:
+		return v
 	}
-	if err := json.Unmarshal(b, &bv); err != nil {
-		return false
+}
+
+// isDefault reports whether v is a proto3 zero value that servers elide from
+// JSON responses.
+//
+// Numeric values arrive as float64 because the inputs to this helper are
+// always JSON-unmarshaled into `any` (see fieldEqual). If a caller ever
+// passes a typed Go int directly, fold it in here — but today none do.
+func isDefault(v any) bool {
+	switch t := v.(type) {
+	case nil:
+		return true
+	case bool:
+		return !t
+	case string:
+		return t == ""
+	case float64:
+		return t == 0
+	case map[string]any:
+		return len(t) == 0
+	case []any:
+		return len(t) == 0
 	}
-	ar, err := json.Marshal(av)
-	if err != nil {
-		return false
-	}
-	br, err := json.Marshal(bv)
-	if err != nil {
-		return false
-	}
-	return string(ar) == string(br)
+	return false
 }
 
 func buildCreateBody(externalID, name string, labels map[string]string, spec map[string]any) map[string]any {
@@ -699,12 +746,12 @@ func (b *planBuilder) lookupToolSet(extID string) (lookupResult, error) {
 	})
 }
 
-func (b *planBuilder) lookupTool(toolSetCanonicalID, toolSetExtID, toolExtID string) (lookupResult, error) {
+func (b *planBuilder) lookupTool(toolSetExtID, toolExtID string) (lookupResult, error) {
 	return b.lookup("tool", toolSetExtID+"/"+toolExtID, func() ([]byte, error) {
 		var raw []byte
 		_, err := b.client.ToolSets.Tools.Get(
 			b.ctx,
-			toolSetCanonicalID,
+			"external_id:"+toolSetExtID,
 			"external_id:"+toolExtID,
 			option.WithResponseBodyInto(&raw),
 		)
@@ -728,12 +775,12 @@ func (b *planBuilder) lookupAgent(extID string) (lookupResult, error) {
 	})
 }
 
-func (b *planBuilder) lookupVariation(agentCanonicalID, agentExtID, varExtID string) (lookupResult, error) {
+func (b *planBuilder) lookupVariation(agentExtID, varExtID string) (lookupResult, error) {
 	return b.lookup("variation", agentExtID+"/"+varExtID, func() ([]byte, error) {
 		var raw []byte
-		_, err := b.client.AgentVariations.Get(
+		_, err := b.client.Agents.Variations.Get(
 			b.ctx,
-			agentCanonicalID,
+			"external_id:"+agentExtID,
 			"external_id:"+varExtID,
 			option.WithResponseBodyInto(&raw),
 		)
@@ -761,27 +808,17 @@ func (b *planBuilder) lookup(kind, cacheKey string, do func() ([]byte, error)) (
 		CanonicalID: gjson.GetBytes(raw, "metadata.id").String(),
 	}
 	b.resolved[k] = lr
-	if lr.CanonicalID != "" {
-		b.plan.Canonicals[k] = lr.CanonicalID
-	}
 	return lr, nil
 }
 
 // listEntries paginates all memory entries of a layer and returns their
 // (key, description, content, row_id). content is fetched via a per-entry GET
 // since List returns only summaries.
-//
-// Uses the layer's canonical id (which is already cached — callers only reach
-// this code path when lookupMemoryLayer returned Exists=true), since the
-// server's nested-collection routes reject the external_id: form.
 func (b *planBuilder) listEntries(layerExtID string) ([]currentEntry, error) {
-	layerID := b.plan.Canonicals["memory_layer:"+layerExtID]
-	if layerID == "" {
-		return nil, fmt.Errorf("config: internal: listEntries called with unresolved layer %q", layerExtID)
-	}
+	parent := "external_id:" + layerExtID
 	iter := b.client.MemoryLayers.Entries.ListAutoPaging(
 		b.ctx,
-		layerID,
+		parent,
 		cadenya.MemoryLayerEntryListParams{},
 	)
 
@@ -801,7 +838,7 @@ func (b *planBuilder) listEntries(layerExtID string) ([]currentEntry, error) {
 		var raw []byte
 		_, err := b.client.MemoryLayers.Entries.Get(
 			b.ctx,
-			layerID,
+			parent,
 			out[i].RowID,
 			option.WithResponseBodyInto(&raw),
 		)
@@ -830,95 +867,93 @@ type currentEntry struct {
 func (b *planBuilder) resolveForAssignment(kind, extID string) (string, error) {
 	switch kind {
 	case "tool_set":
-		return b.resolveRef(KindToolSet, extID, b.lookupToolSet, "tool_sets")
+		return b.resolveRef(extID, b.configHasToolSet, b.lookupToolSet, "tool_sets")
 	case "tool":
-		// The plan's YAML assignment form is { tool: <tool_external_id> }, which
-		// doesn't include the parent tool set. We scan our YAML to find which
-		// tool_set owns the tool, then look it up scoped to that tool set.
-		var parentExt string
-		for tsExt, ts := range b.cfg.ToolSets {
-			if _, ok := ts.Tools[extID]; ok {
-				parentExt = tsExt
-				break
-			}
-		}
-		if parentExt == "" {
-			return "", fmt.Errorf("config: assignment references tool %q but it is not declared under any tool_set in this config", extID)
-		}
-		parentCanon := b.plan.Canonicals["tool_set:"+parentExt]
-		if parentCanon == "" {
-			// Parent tool_set is being created in this plan; tool can't exist yet.
-			return "", nil
-		}
-		lr, err := b.lookupTool(parentCanon, parentExt, extID)
-		if err != nil {
-			return "", err
-		}
-		if !lr.Exists {
-			return "", nil
-		}
-		return lr.CanonicalID, nil
+		return b.resolveToolRef(extID)
 	case "agent":
-		return b.resolveRef(KindAgent, extID, b.lookupAgent, "agents")
+		return b.resolveRef(extID, b.configHasAgent, b.lookupAgent, "agents")
 	}
 	return "", fmt.Errorf("config: unknown assignment kind %q", kind)
 }
 
 // resolveMemoryLayer resolves a YAML memory_layer external_id reference.
 func (b *planBuilder) resolveMemoryLayer(extID string) (string, error) {
-	return b.resolveRef(KindMemoryLayer, extID, b.lookupMemoryLayer, "memory_layers")
+	return b.resolveRef(extID, b.configHasMemoryLayer, b.lookupMemoryLayer, "memory_layers")
 }
 
-// resolveRef is the shared resolver for any kind with a single-arg lookup
-// helper (tool_set, memory_layer, agent). Returns ("", nil) if the target is
-// being created in this plan (will-create); (canon, nil) if it already exists
-// in the workspace; or ("", err) if it's not findable at all.
-func (b *planBuilder) resolveRef(_ ResourceKind, extID string, lookup func(string) (lookupResult, error), mapKey string) (string, error) {
-	// Is it in our YAML with plan op != Create (i.e. already exists)?
-	switch mapKey {
-	case "tool_sets":
-		if _, ok := b.cfg.ToolSets[extID]; ok {
-			lr, err := lookup(extID)
-			if err != nil {
-				return "", err
-			}
-			if lr.Exists {
-				return lr.CanonicalID, nil
-			}
-			return "", nil // will-create
-		}
-	case "memory_layers":
-		if _, ok := b.cfg.MemoryLayers[extID]; ok {
-			lr, err := lookup(extID)
-			if err != nil {
-				return "", err
-			}
-			if lr.Exists {
-				return lr.CanonicalID, nil
-			}
-			return "", nil // will-create
-		}
-	case "agents":
-		if _, ok := b.cfg.Agents[extID]; ok {
-			lr, err := lookup(extID)
-			if err != nil {
-				return "", err
-			}
-			if lr.Exists {
-				return lr.CanonicalID, nil
-			}
-			return "", nil
-		}
-	}
-	// Not in our YAML — must already exist in workspace.
+// resolveRef is the shared resolver for any workspace-scoped, single-level
+// resource (tool_set, memory_layer, agent). Returns:
+//   - (canon, nil) when the target already exists in the workspace.
+//   - ("", nil) when the target is in our YAML but doesn't yet exist in the
+//     workspace — i.e. it will be created in this plan. Callers treat this
+//     sentinel as "definitely an add" during diff.
+//   - ("", err) when the target is neither in the YAML nor in the workspace.
+//
+// `inConfig` checks the YAML presence. `lookup` does the workspace GET.
+// `kindLabel` feeds the error message ("tool_sets", "agents", …).
+func (b *planBuilder) resolveRef(
+	extID string,
+	inConfig func(string) bool,
+	lookup func(string) (lookupResult, error),
+	kindLabel string,
+) (string, error) {
 	lr, err := lookup(extID)
 	if err != nil {
 		return "", err
 	}
+	if lr.Exists {
+		return lr.CanonicalID, nil
+	}
+	if inConfig(extID) {
+		return "", nil // will-create
+	}
+	return "", fmt.Errorf("config: reference to %s.%s is not in this config and does not exist in workspace", kindLabel, extID)
+}
+
+// resolveToolRef handles the two-level case: YAML writes { tool: <ext> }
+// without naming the parent tool_set. We scan our YAML to find the owning
+// tool_set, then apply the same will-create / exists / missing semantics as
+// resolveRef — with an extra step that propagates parent-being-created down
+// to the tool.
+func (b *planBuilder) resolveToolRef(extID string) (string, error) {
+	var parentExt string
+	for tsExt, ts := range b.cfg.ToolSets {
+		if _, ok := ts.Tools[extID]; ok {
+			parentExt = tsExt
+			break
+		}
+	}
+	if parentExt == "" {
+		return "", fmt.Errorf("config: assignment references tool %q but it is not declared under any tool_set in this config", extID)
+	}
+	// If the parent tool_set is being created in this plan, the tool can't
+	// exist yet — propagate the will-create sentinel.
+	if tsLR, ok := b.resolved["tool_set:"+parentExt]; ok && !tsLR.Exists {
+		return "", nil
+	}
+	lr, err := b.lookupTool(parentExt, extID)
+	if err != nil {
+		return "", err
+	}
 	if !lr.Exists {
-		return "", fmt.Errorf("config: reference to %s.%s is not in this config and does not exist in workspace", mapKey, extID)
+		return "", nil // parent exists; tool will be created alongside
 	}
 	return lr.CanonicalID, nil
+}
+
+func (b *planBuilder) configHasToolSet(extID string) bool {
+	_, ok := b.cfg.ToolSets[extID]
+	return ok
+}
+
+func (b *planBuilder) configHasMemoryLayer(extID string) bool {
+	_, ok := b.cfg.MemoryLayers[extID]
+	return ok
+}
+
+func (b *planBuilder) configHasAgent(extID string) bool {
+	_, ok := b.cfg.Agents[extID]
+	return ok
 }
 
 func classifyAssignment(ref *AssignmentRef) (kind, extID string) {
@@ -946,11 +981,3 @@ func isNotFound(err error) bool {
 	return false
 }
 
-func sortedStringKeys[V any](m map[string]V) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}

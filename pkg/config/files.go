@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/adrg/frontmatter"
+	"github.com/bmatcuk/doublestar/v4"
 )
 
 // maxInlineContentBytes mirrors MemoryEntryCreateSpec.content's 1 MiB cap.
@@ -62,7 +62,7 @@ func expandGlob(block *EntriesFromFilesBlock, baseDir string) (map[string]*Entry
 	}
 
 	full := filepath.Join(baseDir, block.Glob)
-	matches, err := doublestarGlob(full)
+	matches, err := doublestar.FilepathGlob(full)
 	if err != nil {
 		return nil, fmt.Errorf("glob %q: %w", block.Glob, err)
 	}
@@ -168,65 +168,3 @@ func splitFrontmatter(raw []byte, sourcePath string) (desc string, body []byte, 
 	return meta.Description, rest, nil
 }
 
-// doublestarGlob returns matches for a glob pattern that may contain `**`.
-// For now, we only support the single-`*` glob surface that Go's filepath.Glob
-// supports; patterns with `**` fall back to a file-walk from the first
-// non-wildcard prefix, filtered by a suffix check.
-//
-// This is adequate for the plan doc's canonical example (`skills/**/*.md`) and
-// simple single-star patterns. More sophisticated glob needs can be added
-// later by pulling in github.com/bmatcuk/doublestar.
-func doublestarGlob(pattern string) ([]string, error) {
-	if !strings.Contains(pattern, "**") {
-		return filepath.Glob(pattern)
-	}
-	// Split at the first `**` occurrence.
-	idx := strings.Index(pattern, "**")
-	head := pattern[:idx]           // e.g. "<base>/skills/"
-	tail := pattern[idx+len("**"):] // e.g. "/*.md"
-
-	// Walk head, collecting files that match tail via filepath.Match after
-	// stripping the head prefix.
-	root := head
-	// Trim trailing separator so Walk uses a directory.
-	root = strings.TrimRight(root, string(filepath.Separator))
-	root = strings.TrimRight(root, "/")
-	if root == "" {
-		root = "."
-	}
-
-	var matches []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		if !strings.HasPrefix(path, root) {
-			return nil
-		}
-		suffixPart := strings.TrimPrefix(path, root)
-		suffixPart = strings.TrimLeft(suffixPart, string(filepath.Separator))
-		// The tail pattern likely starts with "/" — trim it.
-		trimmedTail := strings.TrimLeft(tail, "/")
-		trimmedTail = strings.TrimLeft(trimmedTail, string(filepath.Separator))
-		// Match the full suffix against a pattern that allows zero-or-more
-		// intermediate directories before trimmedTail. Use filepath.Match only
-		// on the final segment.
-		base := filepath.Base(path)
-		ok, err := filepath.Match(trimmedTail, base)
-		if err != nil {
-			return err
-		}
-		if ok {
-			matches = append(matches, path)
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	sort.Strings(matches)
-	return matches, nil
-}

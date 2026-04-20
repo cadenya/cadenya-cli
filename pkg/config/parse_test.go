@@ -1,8 +1,11 @@
 package config
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/tidwall/gjson"
 )
 
 func TestParseToolSets(t *testing.T) {
@@ -25,7 +28,7 @@ tool_sets:
           description: "Look up a customer by email"
           requires_approval: false
 `
-	cfg, err := Parse(strings.NewReader(src), map[string]string{})
+	cfg, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
@@ -65,7 +68,7 @@ tool_sets:
           headers:
             authorization: "Bearer $LINEAR_TOKEN"
 `
-	cfg, err := Parse(strings.NewReader(src), map[string]string{
+	cfg, _, err := Parse(strings.NewReader(src), map[string]string{
 		"LINEAR_TOKEN": "secret123",
 	})
 	if err != nil {
@@ -90,7 +93,7 @@ tool_sets:
     spec:
       description: "$UNSET_VARIABLE"
 `
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil {
 		t.Fatal("expected error for unset env var")
 	}
@@ -103,7 +106,7 @@ func TestParseVersionValidation(t *testing.T) {
 	src := `version: 2
 tool_sets: {}
 `
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil || !strings.Contains(err.Error(), "version") {
 		t.Errorf("expected version error, got: %v", err)
 	}
@@ -118,7 +121,7 @@ agents:
         assignments:
           - {}
 `
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil || !strings.Contains(err.Error(), "tool/tool_set/agent") {
 		t.Errorf("expected empty-assignment error, got: %v", err)
 	}
@@ -132,8 +135,136 @@ agents:
           - tool: foo
             tool_set: bar
 `
-	_, err = Parse(strings.NewReader(src2), map[string]string{})
+	_, _, err = Parse(strings.NewReader(src2), map[string]string{})
 	if err == nil || !strings.Contains(err.Error(), "exactly one") {
 		t.Errorf("expected multi-target error, got: %v", err)
+	}
+}
+
+func TestFieldEqualMatchesProto3DefaultElision(t *testing.T) {
+	cases := []struct {
+		name    string
+		desired any
+		current string
+		path    string
+		want    bool
+	}{
+		{"bool false matches missing", false, `{"spec":{}}`, "spec.requiresApproval", true},
+		{"bool true missing does not match", true, `{"spec":{}}`, "spec.requiresApproval", false},
+		{"empty string matches missing", "", `{"spec":{}}`, "spec.name", true},
+		{"non-empty string missing does not match", "foo", `{"spec":{}}`, "spec.name", false},
+		{"empty map matches missing", map[string]any{}, `{"metadata":{}}`, "metadata.labels", true},
+		{"non-empty map missing does not match", map[string]any{"a": "b"}, `{"metadata":{}}`, "metadata.labels", false},
+		{"nested default stripped",
+			map[string]any{"enabled": false, "name": "foo"},
+			`{"spec":{"cfg":{"name":"foo"}}}`, "spec.cfg", true},
+		{"nested non-default differs",
+			map[string]any{"enabled": true, "name": "foo"},
+			`{"spec":{"cfg":{"name":"foo"}}}`, "spec.cfg", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := fieldEqual(c.path, c.desired, gjson.Parse(c.current))
+			if got != c.want {
+				dj, _ := json.Marshal(c.desired)
+				t.Errorf("fieldEqual(%s, %s, %s) = %v, want %v", c.path, dj, c.current, got, c.want)
+			}
+		})
+	}
+}
+
+// -----------------------------------------------------------------------------
+// Unhappy-path parse tests
+// -----------------------------------------------------------------------------
+
+func TestParseMalformedYAML(t *testing.T) {
+	src := "version: 1\n  tool_sets: {\n"
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
+	if err == nil {
+		t.Fatal("expected parse error on malformed YAML")
+	}
+	if !strings.Contains(err.Error(), "config: parse YAML") {
+		t.Errorf("error should be wrapped with 'config: parse YAML', got: %v", err)
+	}
+}
+
+func TestParseUnknownTopLevelKey(t *testing.T) {
+	src := "version: 1\ntool_set: {}\n" // typo: missing `s`
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
+	if err == nil {
+		t.Fatal("expected parse error on unknown top-level key")
+	}
+	// goccy/go-yaml with Strict() reports the unknown field by name.
+	if !strings.Contains(err.Error(), "tool_set") {
+		t.Errorf("error should name the unknown field, got: %v", err)
+	}
+}
+
+func TestParseWrongScalarType(t *testing.T) {
+	src := "version: one\n" // string where int expected
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
+	if err == nil {
+		t.Fatal("expected parse error on non-int version")
+	}
+	if !strings.Contains(err.Error(), "int") {
+		t.Errorf("error should mention int type mismatch, got: %v", err)
+	}
+}
+
+func TestParseWrongShape(t *testing.T) {
+	// tool_sets is declared as a map, YAML provides a sequence.
+	src := "version: 1\ntool_sets:\n  - a\n"
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
+	if err == nil {
+		t.Fatal("expected parse error on wrong shape")
+	}
+}
+
+func TestParseTrivialConfig(t *testing.T) {
+	// Only a version, no resources. Valid — apply is a no-op.
+	cfg, _, err := Parse(strings.NewReader("version: 1\n"), map[string]string{})
+	if err != nil {
+		t.Fatalf("expected trivial config to parse, got: %v", err)
+	}
+	if cfg.Version != 1 {
+		t.Errorf("version = %d, want 1", cfg.Version)
+	}
+	if len(cfg.ToolSets) != 0 || len(cfg.MemoryLayers) != 0 || len(cfg.Agents) != 0 {
+		t.Errorf("expected no resources, got: %+v", cfg)
+	}
+}
+
+// TestParseErrorRedactsSecretsInContextSnippet makes sure YAML parse-error
+// context lines — which goccy/go-yaml includes in the error message — don't
+// leak substituted env-var values into user-visible errors (and onward into
+// CI logs).
+func TestParseErrorRedactsSecretsInContextSnippet(t *testing.T) {
+	// `version` expects int; the substituted string value will fail to parse,
+	// and goccy will include the offending source line in the error.
+	src := "version: $MY_SECRET\n"
+	_, _, err := Parse(strings.NewReader(src), map[string]string{
+		"MY_SECRET": "long_enough_secret_value",
+	})
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+	if strings.Contains(err.Error(), "long_enough_secret_value") {
+		t.Errorf("parse error leaked secret value:\n%s", err.Error())
+	}
+	if !strings.Contains(err.Error(), "<$MY_SECRET>") {
+		t.Errorf("expected <$MY_SECRET> placeholder in error:\n%s", err.Error())
+	}
+}
+
+// Short substitutions (<8 chars) pass through because the redactor skips
+// them; the test documents that tradeoff so behavior changes are deliberate.
+func TestParseErrorKeepsShortValuesAsIs(t *testing.T) {
+	src := "version: $TINY\n"
+	_, _, err := Parse(strings.NewReader(src), map[string]string{"TINY": "abc"})
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+	if !strings.Contains(err.Error(), "abc") {
+		t.Errorf("short value should appear as-is (redaction skipped for <8 chars):\n%s", err.Error())
 	}
 }

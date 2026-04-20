@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cadenya/cadenya-cli/internal/debugmiddleware"
 	"github.com/cadenya/cadenya-cli/pkg/config"
 	"github.com/cadenya/cadenya-go"
 	"github.com/cadenya/cadenya-go/option"
@@ -30,16 +29,12 @@ import (
 var configApply = cli.Command{
 	Name:      "apply",
 	Usage:     "Apply a workspace configuration from a YAML file",
-	UsageText: "cadenya config apply <config.yaml> [--plan] [--diff]",
+	UsageText: "cadenya config apply <config.yaml> [--plan]",
 	Suggest:   true,
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:  "plan",
 			Usage: "Show the plan but do not apply any changes",
-		},
-		&cli.BoolFlag{
-			Name:  "diff",
-			Usage: "Show field-level diffs for updates",
 		},
 	},
 	Action:          handleConfigApply,
@@ -56,8 +51,10 @@ func handleConfigApply(ctx context.Context, cmd *cli.Command) error {
 	}
 	path := args[0]
 
-	// 1. Parse.
-	cfg, baseDir, err := config.ParseFile(path)
+	// 1. Parse. `secrets` captures env-var substitutions so the --debug
+	// middleware can redact their values from logged request/response bodies
+	// before they leak into CI logs.
+	cfg, baseDir, secrets, err := config.ParseFile(path)
 	if err != nil {
 		return exitWith(2, err)
 	}
@@ -70,7 +67,7 @@ func handleConfigApply(ctx context.Context, cmd *cli.Command) error {
 	// 3. Plan.
 	opts := getDefaultRequestOptions(cmd)
 	if cmd.Bool("debug") {
-		opts = append(opts, option.WithMiddleware(debugmiddleware.NewRequestLogger().Middleware()))
+		opts = append(opts, option.WithMiddleware(config.NewDebugMiddleware(secrets)))
 	}
 	client := cadenya.NewClient(opts...)
 	plan, err := config.Build(ctx, client, cfg)

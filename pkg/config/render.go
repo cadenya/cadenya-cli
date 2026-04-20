@@ -7,6 +7,10 @@ import (
 )
 
 // RenderPlan prints a Terraform-style plan summary to w.
+//
+// Reorder ops (currently only memory-layer link position changes) are
+// counted as updates for the summary, since they mutate existing state,
+// but get their own line prefix ("will reorder → position=N") for clarity.
 func RenderPlan(w io.Writer, plan *Plan) error {
 	var creates, updates, unchanged, deletes int
 	fmt.Fprintln(w, "Planning changes…")
@@ -19,6 +23,9 @@ func RenderPlan(w io.Writer, plan *Plan) error {
 		case OpUpdate:
 			updates++
 			line += "will update (" + strings.Join(op.Change.FieldPaths, ", ") + ")"
+		case OpReorder:
+			updates++
+			line += fmt.Sprintf("will reorder → position=%d", op.Change.Position)
 		case OpNoChange:
 			unchanged++
 			line += "no change"
@@ -62,13 +69,6 @@ func RenderSummary(w io.Writer, result *Result) {
 		result.Applied, result.Unchanged, result.Failed)
 }
 
-// RenderDiff is not implemented for the tool_sets vertical.
-func RenderDiff(w io.Writer, op Op) error {
-	_ = w
-	_ = op
-	return fmt.Errorf("config.RenderDiff: not implemented")
-}
-
 func opGerund(k OpKind) string {
 	switch k {
 	case OpCreate:
@@ -77,6 +77,8 @@ func opGerund(k OpKind) string {
 		return "updating"
 	case OpDelete:
 		return "deleting"
+	case OpReorder:
+		return "reordering"
 	}
 	return ""
 }
