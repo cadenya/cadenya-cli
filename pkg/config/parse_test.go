@@ -172,3 +172,64 @@ func TestFieldEqualMatchesProto3DefaultElision(t *testing.T) {
 		})
 	}
 }
+
+// -----------------------------------------------------------------------------
+// Unhappy-path parse tests
+// -----------------------------------------------------------------------------
+
+func TestParseMalformedYAML(t *testing.T) {
+	src := "version: 1\n  tool_sets: {\n"
+	_, err := Parse(strings.NewReader(src), map[string]string{})
+	if err == nil {
+		t.Fatal("expected parse error on malformed YAML")
+	}
+	if !strings.Contains(err.Error(), "config: parse YAML") {
+		t.Errorf("error should be wrapped with 'config: parse YAML', got: %v", err)
+	}
+}
+
+func TestParseUnknownTopLevelKey(t *testing.T) {
+	src := "version: 1\ntool_set: {}\n" // typo: missing `s`
+	_, err := Parse(strings.NewReader(src), map[string]string{})
+	if err == nil {
+		t.Fatal("expected parse error on unknown top-level key")
+	}
+	// goccy/go-yaml with Strict() reports the unknown field by name.
+	if !strings.Contains(err.Error(), "tool_set") {
+		t.Errorf("error should name the unknown field, got: %v", err)
+	}
+}
+
+func TestParseWrongScalarType(t *testing.T) {
+	src := "version: one\n" // string where int expected
+	_, err := Parse(strings.NewReader(src), map[string]string{})
+	if err == nil {
+		t.Fatal("expected parse error on non-int version")
+	}
+	if !strings.Contains(err.Error(), "int") {
+		t.Errorf("error should mention int type mismatch, got: %v", err)
+	}
+}
+
+func TestParseWrongShape(t *testing.T) {
+	// tool_sets is declared as a map, YAML provides a sequence.
+	src := "version: 1\ntool_sets:\n  - a\n"
+	_, err := Parse(strings.NewReader(src), map[string]string{})
+	if err == nil {
+		t.Fatal("expected parse error on wrong shape")
+	}
+}
+
+func TestParseTrivialConfig(t *testing.T) {
+	// Only a version, no resources. Valid — apply is a no-op.
+	cfg, err := Parse(strings.NewReader("version: 1\n"), map[string]string{})
+	if err != nil {
+		t.Fatalf("expected trivial config to parse, got: %v", err)
+	}
+	if cfg.Version != 1 {
+		t.Errorf("version = %d, want 1", cfg.Version)
+	}
+	if len(cfg.ToolSets) != 0 || len(cfg.MemoryLayers) != 0 || len(cfg.Agents) != 0 {
+		t.Errorf("expected no resources, got: %+v", cfg)
+	}
+}

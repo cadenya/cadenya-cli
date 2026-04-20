@@ -123,6 +123,12 @@ type planBuilder struct {
 	// Resolver cache: kind + ":" + external_id → lookup result (canonical id,
 	// raw JSON, or "does not exist").
 	resolved map[string]lookupResult
+
+	// Reference errors collected across the whole Build pass. Unresolvable
+	// YAML refs don't short-circuit; they accumulate and are joined into a
+	// single error at the end so the user sees every broken reference in one
+	// round-trip instead of fixing them one at a time.
+	refErrors []error
 }
 
 type lookupResult struct {
@@ -149,6 +155,9 @@ func Build(ctx context.Context, client *cadenya.Client, cfg *Config) (*Plan, err
 	}
 	if err := b.buildAgentOps(); err != nil {
 		return nil, err
+	}
+	if len(b.refErrors) > 0 {
+		return nil, errors.Join(b.refErrors...)
 	}
 	return b.plan, nil
 }
@@ -365,11 +374,13 @@ func (b *planBuilder) buildAssignmentOps(parent string, v *VariationNode, vLooku
 	for i, ref := range *v.Assignments {
 		kind, ext := classifyAssignment(ref)
 		if kind == "" {
-			return fmt.Errorf("config: agents.%s.assignments[%d]: empty ref", parent, i)
+			b.refErrors = append(b.refErrors, fmt.Errorf("config: agents.%s.assignments[%d]: empty ref", parent, i))
+			continue
 		}
 		canon, err := b.resolveForAssignment(kind, ext)
 		if err != nil {
-			return err
+			b.refErrors = append(b.refErrors, err)
+			continue
 		}
 		desired = append(desired, desiredAssn{Kind: kind, ExternalID: ext, CanonID: canon})
 	}
@@ -444,11 +455,13 @@ func (b *planBuilder) buildMemoryLayerLinkOps(parent string, v *VariationNode, v
 	var desired []desiredLink
 	for i, extID := range *v.MemoryLayers {
 		if extID == "" {
-			return fmt.Errorf("config: agents.%s.memory_layers[%d]: empty", parent, i)
+			b.refErrors = append(b.refErrors, fmt.Errorf("config: agents.%s.memory_layers[%d]: empty", parent, i))
+			continue
 		}
 		canon, err := b.resolveMemoryLayer(extID)
 		if err != nil {
-			return err
+			b.refErrors = append(b.refErrors, err)
+			continue
 		}
 		desired = append(desired, desiredLink{ExternalID: extID, Position: i, CanonID: canon})
 	}

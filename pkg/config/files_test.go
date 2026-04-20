@@ -146,3 +146,82 @@ func mapKeys[V any](m map[string]V) []string {
 	}
 	return out
 }
+
+// -----------------------------------------------------------------------------
+// Unhappy-path file expansion tests
+// -----------------------------------------------------------------------------
+
+func TestExpandFromFilesLargeContentFails(t *testing.T) {
+	dir := t.TempDir()
+	// 1 MiB + 1 byte — one byte over the inline cap.
+	big := make([]byte, (1<<20)+1)
+	for i := range big {
+		big[i] = 'a'
+	}
+	writeFile(t, filepath.Join(dir, "big.md"), string(big))
+
+	cfg := &Config{
+		MemoryLayers: map[string]*MemoryLayerNode{
+			"x": {
+				ExternalID: "x",
+				EntriesFromFiles: []*EntriesFromFilesBlock{
+					{Glob: "big.md", KeyFrom: "{basename_without_ext}"},
+				},
+			},
+		},
+	}
+	err := ExpandFromFiles(cfg, dir)
+	if err == nil {
+		t.Fatal("expected error for >1 MiB file")
+	}
+	if !strings.Contains(err.Error(), "1 MiB") || !strings.Contains(err.Error(), "not yet implemented") {
+		t.Errorf("error should mention the 1 MiB cap and not-implemented upload path, got: %v", err)
+	}
+}
+
+func TestExpandFromFilesStripPrefixMismatch(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "a.md"), "hi")
+
+	cfg := &Config{
+		MemoryLayers: map[string]*MemoryLayerNode{
+			"x": {
+				ExternalID: "x",
+				EntriesFromFiles: []*EntriesFromFilesBlock{
+					{Glob: "a.md", KeyFrom: "{basename}", StripPrefix: "not_matching/"},
+				},
+			},
+		},
+	}
+	err := ExpandFromFiles(cfg, dir)
+	if err == nil {
+		t.Fatal("expected error when strip_prefix does not match path")
+	}
+	if !strings.Contains(err.Error(), "strip_prefix") {
+		t.Errorf("error should mention strip_prefix, got: %v", err)
+	}
+}
+
+func TestExpandFromFilesMalformedFrontmatter(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "bad.md"),
+		"---\ndescription: [unterminated\n---\nbody\n")
+
+	cfg := &Config{
+		MemoryLayers: map[string]*MemoryLayerNode{
+			"x": {
+				ExternalID: "x",
+				EntriesFromFiles: []*EntriesFromFilesBlock{
+					{Glob: "bad.md", KeyFrom: "{basename_without_ext}"},
+				},
+			},
+		},
+	}
+	err := ExpandFromFiles(cfg, dir)
+	if err == nil {
+		t.Fatal("expected error for malformed frontmatter")
+	}
+	if !strings.Contains(err.Error(), "frontmatter") {
+		t.Errorf("error should mention frontmatter, got: %v", err)
+	}
+}
