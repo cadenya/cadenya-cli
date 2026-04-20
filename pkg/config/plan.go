@@ -638,6 +638,10 @@ func stripDefaults(v any) any {
 
 // isDefault reports whether v is a proto3 zero value that servers elide from
 // JSON responses.
+//
+// Numeric values arrive as float64 because the inputs to this helper are
+// always JSON-unmarshaled into `any` (see fieldEqual). If a caller ever
+// passes a typed Go int directly, fold it in here — but today none do.
 func isDefault(v any) bool {
 	switch t := v.(type) {
 	case nil:
@@ -648,8 +652,6 @@ func isDefault(v any) bool {
 		return t == ""
 	case float64:
 		return t == 0
-	case int, int32, int64:
-		return v == 0
 	case map[string]any:
 		return len(t) == 0
 	case []any:
@@ -864,95 +866,93 @@ type currentEntry struct {
 func (b *planBuilder) resolveForAssignment(kind, extID string) (string, error) {
 	switch kind {
 	case "tool_set":
-		return b.resolveRef(KindToolSet, extID, b.lookupToolSet, "tool_sets")
+		return b.resolveRef(extID, b.configHasToolSet, b.lookupToolSet, "tool_sets")
 	case "tool":
-		// The plan's YAML assignment form is { tool: <tool_external_id> }, which
-		// doesn't include the parent tool set. We scan our YAML to find which
-		// tool_set owns the tool, then look it up scoped to that tool set.
-		var parentExt string
-		for tsExt, ts := range b.cfg.ToolSets {
-			if _, ok := ts.Tools[extID]; ok {
-				parentExt = tsExt
-				break
-			}
-		}
-		if parentExt == "" {
-			return "", fmt.Errorf("config: assignment references tool %q but it is not declared under any tool_set in this config", extID)
-		}
-		// If the parent tool_set is being created in this plan, the tool can't
-		// exist yet. Skip the lookup and mark as will-create.
-		if tsLR, ok := b.resolved["tool_set:"+parentExt]; ok && !tsLR.Exists {
-			return "", nil
-		}
-		lr, err := b.lookupTool(parentExt, extID)
-		if err != nil {
-			return "", err
-		}
-		if !lr.Exists {
-			return "", nil
-		}
-		return lr.CanonicalID, nil
+		return b.resolveToolRef(extID)
 	case "agent":
-		return b.resolveRef(KindAgent, extID, b.lookupAgent, "agents")
+		return b.resolveRef(extID, b.configHasAgent, b.lookupAgent, "agents")
 	}
 	return "", fmt.Errorf("config: unknown assignment kind %q", kind)
 }
 
 // resolveMemoryLayer resolves a YAML memory_layer external_id reference.
 func (b *planBuilder) resolveMemoryLayer(extID string) (string, error) {
-	return b.resolveRef(KindMemoryLayer, extID, b.lookupMemoryLayer, "memory_layers")
+	return b.resolveRef(extID, b.configHasMemoryLayer, b.lookupMemoryLayer, "memory_layers")
 }
 
-// resolveRef is the shared resolver for any kind with a single-arg lookup
-// helper (tool_set, memory_layer, agent). Returns ("", nil) if the target is
-// being created in this plan (will-create); (canon, nil) if it already exists
-// in the workspace; or ("", err) if it's not findable at all.
-func (b *planBuilder) resolveRef(_ ResourceKind, extID string, lookup func(string) (lookupResult, error), mapKey string) (string, error) {
-	// Is it in our YAML with plan op != Create (i.e. already exists)?
-	switch mapKey {
-	case "tool_sets":
-		if _, ok := b.cfg.ToolSets[extID]; ok {
-			lr, err := lookup(extID)
-			if err != nil {
-				return "", err
-			}
-			if lr.Exists {
-				return lr.CanonicalID, nil
-			}
-			return "", nil // will-create
-		}
-	case "memory_layers":
-		if _, ok := b.cfg.MemoryLayers[extID]; ok {
-			lr, err := lookup(extID)
-			if err != nil {
-				return "", err
-			}
-			if lr.Exists {
-				return lr.CanonicalID, nil
-			}
-			return "", nil // will-create
-		}
-	case "agents":
-		if _, ok := b.cfg.Agents[extID]; ok {
-			lr, err := lookup(extID)
-			if err != nil {
-				return "", err
-			}
-			if lr.Exists {
-				return lr.CanonicalID, nil
-			}
-			return "", nil
-		}
-	}
-	// Not in our YAML — must already exist in workspace.
+// resolveRef is the shared resolver for any workspace-scoped, single-level
+// resource (tool_set, memory_layer, agent). Returns:
+//   - (canon, nil) when the target already exists in the workspace.
+//   - ("", nil) when the target is in our YAML but doesn't yet exist in the
+//     workspace — i.e. it will be created in this plan. Callers treat this
+//     sentinel as "definitely an add" during diff.
+//   - ("", err) when the target is neither in the YAML nor in the workspace.
+//
+// `inConfig` checks the YAML presence. `lookup` does the workspace GET.
+// `kindLabel` feeds the error message ("tool_sets", "agents", …).
+func (b *planBuilder) resolveRef(
+	extID string,
+	inConfig func(string) bool,
+	lookup func(string) (lookupResult, error),
+	kindLabel string,
+) (string, error) {
 	lr, err := lookup(extID)
 	if err != nil {
 		return "", err
 	}
+	if lr.Exists {
+		return lr.CanonicalID, nil
+	}
+	if inConfig(extID) {
+		return "", nil // will-create
+	}
+	return "", fmt.Errorf("config: reference to %s.%s is not in this config and does not exist in workspace", kindLabel, extID)
+}
+
+// resolveToolRef handles the two-level case: YAML writes { tool: <ext> }
+// without naming the parent tool_set. We scan our YAML to find the owning
+// tool_set, then apply the same will-create / exists / missing semantics as
+// resolveRef — with an extra step that propagates parent-being-created down
+// to the tool.
+func (b *planBuilder) resolveToolRef(extID string) (string, error) {
+	var parentExt string
+	for tsExt, ts := range b.cfg.ToolSets {
+		if _, ok := ts.Tools[extID]; ok {
+			parentExt = tsExt
+			break
+		}
+	}
+	if parentExt == "" {
+		return "", fmt.Errorf("config: assignment references tool %q but it is not declared under any tool_set in this config", extID)
+	}
+	// If the parent tool_set is being created in this plan, the tool can't
+	// exist yet — propagate the will-create sentinel.
+	if tsLR, ok := b.resolved["tool_set:"+parentExt]; ok && !tsLR.Exists {
+		return "", nil
+	}
+	lr, err := b.lookupTool(parentExt, extID)
+	if err != nil {
+		return "", err
+	}
 	if !lr.Exists {
-		return "", fmt.Errorf("config: reference to %s.%s is not in this config and does not exist in workspace", mapKey, extID)
+		return "", nil // parent exists; tool will be created alongside
 	}
 	return lr.CanonicalID, nil
+}
+
+func (b *planBuilder) configHasToolSet(extID string) bool {
+	_, ok := b.cfg.ToolSets[extID]
+	return ok
+}
+
+func (b *planBuilder) configHasMemoryLayer(extID string) bool {
+	_, ok := b.cfg.MemoryLayers[extID]
+	return ok
+}
+
+func (b *planBuilder) configHasAgent(extID string) bool {
+	_, ok := b.cfg.Agents[extID]
+	return ok
 }
 
 func classifyAssignment(ref *AssignmentRef) (kind, extID string) {

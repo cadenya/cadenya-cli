@@ -7,6 +7,10 @@ import (
 )
 
 // RenderPlan prints a Terraform-style plan summary to w.
+//
+// Reorder ops (currently only memory-layer link position changes) are
+// counted as updates for the summary, since they mutate existing state,
+// but get their own line prefix ("will reorder → position=N") for clarity.
 func RenderPlan(w io.Writer, plan *Plan) error {
 	var creates, updates, unchanged, deletes int
 	fmt.Fprintln(w, "Planning changes…")
@@ -19,6 +23,9 @@ func RenderPlan(w io.Writer, plan *Plan) error {
 		case OpUpdate:
 			updates++
 			line += "will update (" + strings.Join(op.Change.FieldPaths, ", ") + ")"
+		case OpReorder:
+			updates++
+			line += fmt.Sprintf("will reorder → position=%d", op.Change.Position)
 		case OpNoChange:
 			unchanged++
 			line += "no change"
@@ -77,6 +84,8 @@ func opGerund(k OpKind) string {
 		return "updating"
 	case OpDelete:
 		return "deleting"
+	case OpReorder:
+		return "reordering"
 	}
 	return ""
 }

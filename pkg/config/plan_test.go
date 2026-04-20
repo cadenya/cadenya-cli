@@ -9,15 +9,10 @@ import (
 // error path of resolveRef — invoked without a network because the lookup
 // callback is injectable.
 func TestResolveRefMissingFailsWithDiagnostic(t *testing.T) {
-	b := &planBuilder{
-		cfg:      &Config{},
-		plan:     &Plan{},
-		resolved: map[string]lookupResult{},
-	}
-	notFound := func(_ string) (lookupResult, error) {
-		return lookupResult{Exists: false}, nil
-	}
-	_, err := b.resolveRef(KindToolSet, "nowhere_ts", notFound, "tool_sets")
+	b := &planBuilder{cfg: &Config{}, plan: &Plan{}, resolved: map[string]lookupResult{}}
+	notInConfig := func(string) bool { return false }
+	notFound := func(_ string) (lookupResult, error) { return lookupResult{Exists: false}, nil }
+	_, err := b.resolveRef("nowhere_ts", notInConfig, notFound, "tool_sets")
 	if err == nil {
 		t.Fatal("expected error for unresolvable ref")
 	}
@@ -34,17 +29,14 @@ func TestResolveRefMissingFailsWithDiagnostic(t *testing.T) {
 func TestResolveRefUsesConfigPresence(t *testing.T) {
 	b := &planBuilder{
 		cfg: &Config{
-			ToolSets: map[string]*ToolSetNode{
-				"in_config": {ExternalID: "in_config"},
-			},
+			ToolSets: map[string]*ToolSetNode{"in_config": {ExternalID: "in_config"}},
 		},
 		plan:     &Plan{},
 		resolved: map[string]lookupResult{},
 	}
-	notFound := func(_ string) (lookupResult, error) {
-		return lookupResult{Exists: false}, nil
-	}
-	got, err := b.resolveRef(KindToolSet, "in_config", notFound, "tool_sets")
+	inConfig := b.configHasToolSet
+	notFound := func(_ string) (lookupResult, error) { return lookupResult{Exists: false}, nil }
+	got, err := b.resolveRef("in_config", inConfig, notFound, "tool_sets")
 	if err != nil {
 		t.Fatalf("expected nil error for in-config will-create ref, got: %v", err)
 	}
