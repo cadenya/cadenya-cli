@@ -18,7 +18,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"tool-sets:tools", "create",
 			"--tool-set-id", "toolSetId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {http: {requestMethod: GET, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}, description: description, parameters: {foo: bar}, status: TOOL_STATUS_UNSPECIFIED, requiresApproval: true}",
+			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}, description: description, parameters: {foo: bar}, status: TOOL_STATUS_UNSPECIFIED, requiresApproval: true}",
 		)
 	})
 
@@ -35,7 +35,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.config", "{http: {requestMethod: GET, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}",
+			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}",
 			"--spec.description", "description",
 			"--spec.parameters", "{foo: bar}",
 			"--spec.status", "TOOL_STATUS_UNSPECIFIED",
@@ -54,7 +54,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"spec:\n" +
 			"  config:\n" +
 			"    http:\n" +
-			"      requestMethod: GET\n" +
+			"      requestMethod: HTTP_METHOD_UNSPECIFIED\n" +
 			"      headers:\n" +
 			"        foo: string\n" +
 			"      path: path\n" +
@@ -103,7 +103,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {http: {requestMethod: GET, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}, description: description, parameters: {foo: bar}, status: TOOL_STATUS_UNSPECIFIED, requiresApproval: true}",
+			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}, description: description, parameters: {foo: bar}, status: TOOL_STATUS_UNSPECIFIED, requiresApproval: true}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -122,7 +122,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.config", "{http: {requestMethod: GET, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}",
+			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}",
 			"--spec.description", "description",
 			"--spec.parameters", "{foo: bar}",
 			"--spec.status", "TOOL_STATUS_UNSPECIFIED",
@@ -142,7 +142,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"spec:\n" +
 			"  config:\n" +
 			"    http:\n" +
-			"      requestMethod: GET\n" +
+			"      requestMethod: HTTP_METHOD_UNSPECIFIED\n" +
 			"      headers:\n" +
 			"        foo: string\n" +
 			"      path: path\n" +
