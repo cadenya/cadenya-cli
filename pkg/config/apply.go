@@ -14,15 +14,12 @@ import (
 
 // Apply executes a Plan against the Cadenya API. Best-effort: stops on the
 // first runtime failure and returns the partial Result.
+//
+// All parent/target ids are sent in the `external_id:<ext>` form — the server
+// resolves them on every route (nested CRUD and nested subresource routes per
+// AIP-122), so no client-side canonical-id plumbing is needed.
 func Apply(ctx context.Context, client *cadenya.Client, plan *Plan, out io.Writer) (*Result, error) {
-	ac := &applyContext{
-		ctx:        ctx,
-		client:     client,
-		canonicals: map[string]string{},
-	}
-	for k, v := range plan.Canonicals {
-		ac.canonicals[k] = v
-	}
+	ac := &applyContext{ctx: ctx, client: client}
 
 	result := &Result{}
 	for _, op := range plan.Ops {
@@ -72,49 +69,9 @@ type Outcome struct {
 	Error error
 }
 
-// applyContext carries per-run state: the SDK client and a canonical-id
-// cache. The cache is seeded from Plan.Canonicals (parents that already
-// existed at plan time) and extended as create ops complete.
 type applyContext struct {
-	ctx        context.Context
-	client     *cadenya.Client
-	canonicals map[string]string
-}
-
-// recordCanonical extracts metadata.id from a create response and stores it
-// for later sub-resource dispatches.
-func (ac *applyContext) recordCanonical(kindKey string, raw []byte) string {
-	id := gjson.GetBytes(raw, "metadata.id").String()
-	if id != "" {
-		ac.canonicals[kindKey] = id
-	}
-	return id
-}
-
-// parentID resolves a sub-resource's parent to a canonical id. Used when the
-// server's nested-collection routes don't accept the `external_id:` form.
-func (ac *applyContext) parentID(kindKey string) (string, error) {
-	if id, ok := ac.canonicals[kindKey]; ok && id != "" {
-		return id, nil
-	}
-	return "", fmt.Errorf("config: internal: no canonical id cached for %q (sub-resource dispatched before its parent was created?)", kindKey)
-}
-
-// resolveTargetID returns a canonical id for the target of an assignment or
-// memory-layer link. Prefer the plan-time resolution; fall back to the
-// apply-time canonicals cache (populated from create responses).
-//
-// Same-body `external_id:` resolution isn't supported by the server today,
-// so we always send canonical ids in these bodies.
-func (ac *applyContext) resolveTargetID(kind, extID, planTime string) (string, error) {
-	if planTime != "" {
-		return planTime, nil
-	}
-	key := kind + ":" + extID
-	if id, ok := ac.canonicals[key]; ok && id != "" {
-		return id, nil
-	}
-	return "", fmt.Errorf("config: internal: no canonical id cached for target %s (target created in same plan should have been recorded)", key)
+	ctx    context.Context
+	client *cadenya.Client
 }
 
 // -----------------------------------------------------------------------------
@@ -133,43 +90,22 @@ func (ac *applyContext) dispatchCreate(op Op) (string, error) {
 	switch op.Target.Kind {
 	case KindToolSet:
 		_, err = ac.client.ToolSets.New(ac.ctx, cadenya.ToolSetNewParams{}, opts...)
-		if err == nil {
-			ac.recordCanonical("tool_set:"+op.Target.ExternalID, raw)
-		}
 	case KindTool:
-		parent, perr := ac.parentID("tool_set:" + op.Target.Parent)
-		if perr != nil {
-			return "", perr
-		}
-		_, err = ac.client.ToolSets.Tools.New(ac.ctx, parent, cadenya.ToolSetToolNewParams{}, opts...)
-		if err == nil {
-			ac.recordCanonical("tool:"+op.Target.Parent+"/"+op.Target.ExternalID, raw)
-		}
+		_, err = ac.client.ToolSets.Tools.New(
+			ac.ctx, "external_id:"+op.Target.Parent,
+			cadenya.ToolSetToolNewParams{}, opts...)
 	case KindMemoryLayer:
 		_, err = ac.client.MemoryLayers.New(ac.ctx, cadenya.MemoryLayerNewParams{}, opts...)
-		if err == nil {
-			ac.recordCanonical("memory_layer:"+op.Target.ExternalID, raw)
-		}
 	case KindMemoryEntry:
-		parent, perr := ac.parentID("memory_layer:" + op.Target.Parent)
-		if perr != nil {
-			return "", perr
-		}
-		_, err = ac.client.MemoryLayers.Entries.New(ac.ctx, parent, cadenya.MemoryLayerEntryNewParams{}, opts...)
+		_, err = ac.client.MemoryLayers.Entries.New(
+			ac.ctx, "external_id:"+op.Target.Parent,
+			cadenya.MemoryLayerEntryNewParams{}, opts...)
 	case KindAgent:
 		_, err = ac.client.Agents.New(ac.ctx, cadenya.AgentNewParams{}, opts...)
-		if err == nil {
-			ac.recordCanonical("agent:"+op.Target.ExternalID, raw)
-		}
 	case KindVariation:
-		parent, perr := ac.parentID("agent:" + op.Target.Parent)
-		if perr != nil {
-			return "", perr
-		}
-		_, err = ac.client.AgentVariations.New(ac.ctx, parent, cadenya.AgentVariationNewParams{}, opts...)
-		if err == nil {
-			ac.recordCanonical("variation:"+op.Target.Parent+"/"+op.Target.ExternalID, raw)
-		}
+		_, err = ac.client.Agents.Variations.New(
+			ac.ctx, "external_id:"+op.Target.Parent,
+			cadenya.AgentVariationNewParams{}, opts...)
 	case KindVariationAssignment:
 		return ac.addAssignment(op)
 	case KindVariationMemoryLayer:
@@ -197,34 +133,31 @@ func (ac *applyContext) dispatchUpdate(op Op) (string, error) {
 
 	switch op.Target.Kind {
 	case KindToolSet:
-		_, err = ac.client.ToolSets.Update(ac.ctx, "external_id:"+op.Target.ExternalID, cadenya.ToolSetUpdateParams{}, opts...)
+		_, err = ac.client.ToolSets.Update(ac.ctx,
+			"external_id:"+op.Target.ExternalID,
+			cadenya.ToolSetUpdateParams{}, opts...)
 	case KindTool:
-		parent, perr := ac.parentID("tool_set:" + op.Target.Parent)
-		if perr != nil {
-			return "", perr
-		}
-		_, err = ac.client.ToolSets.Tools.Update(
-			ac.ctx, parent, "external_id:"+op.Target.ExternalID,
+		_, err = ac.client.ToolSets.Tools.Update(ac.ctx,
+			"external_id:"+op.Target.Parent,
+			"external_id:"+op.Target.ExternalID,
 			cadenya.ToolSetToolUpdateParams{}, opts...)
 	case KindMemoryLayer:
-		_, err = ac.client.MemoryLayers.Update(ac.ctx, "external_id:"+op.Target.ExternalID, cadenya.MemoryLayerUpdateParams{}, opts...)
+		_, err = ac.client.MemoryLayers.Update(ac.ctx,
+			"external_id:"+op.Target.ExternalID,
+			cadenya.MemoryLayerUpdateParams{}, opts...)
 	case KindMemoryEntry:
-		parent, perr := ac.parentID("memory_layer:" + op.Target.Parent)
-		if perr != nil {
-			return "", perr
-		}
-		_, err = ac.client.MemoryLayers.Entries.Update(
-			ac.ctx, parent, op.Target.ExternalID,
+		_, err = ac.client.MemoryLayers.Entries.Update(ac.ctx,
+			"external_id:"+op.Target.Parent,
+			op.Target.ExternalID,
 			cadenya.MemoryLayerEntryUpdateParams{}, opts...)
 	case KindAgent:
-		_, err = ac.client.Agents.Update(ac.ctx, "external_id:"+op.Target.ExternalID, cadenya.AgentUpdateParams{}, opts...)
+		_, err = ac.client.Agents.Update(ac.ctx,
+			"external_id:"+op.Target.ExternalID,
+			cadenya.AgentUpdateParams{}, opts...)
 	case KindVariation:
-		parent, perr := ac.parentID("agent:" + op.Target.Parent)
-		if perr != nil {
-			return "", perr
-		}
-		_, err = ac.client.AgentVariations.Update(
-			ac.ctx, parent, "external_id:"+op.Target.ExternalID,
+		_, err = ac.client.Agents.Variations.Update(ac.ctx,
+			"external_id:"+op.Target.Parent,
+			"external_id:"+op.Target.ExternalID,
 			cadenya.AgentVariationUpdateParams{}, opts...)
 	default:
 		return "", fmt.Errorf("config.dispatchUpdate: unsupported kind %v", op.Target.Kind)
@@ -238,31 +171,28 @@ func (ac *applyContext) dispatchUpdate(op Op) (string, error) {
 func (ac *applyContext) dispatchDelete(op Op) (string, error) {
 	switch op.Target.Kind {
 	case KindMemoryEntry:
-		parent, perr := ac.parentID("memory_layer:" + op.Target.Parent)
-		if perr != nil {
-			return "", perr
-		}
-		err := ac.client.MemoryLayers.Entries.Delete(ac.ctx, parent, op.Target.RowID)
+		err := ac.client.MemoryLayers.Entries.Delete(ac.ctx,
+			"external_id:"+op.Target.Parent, op.Target.RowID)
 		if err != nil {
 			return "", err
 		}
 		return "deleted", nil
 	case KindVariationAssignment:
-		variation, perr := ac.parentID("variation:" + op.Target.Parent)
-		if perr != nil {
-			return "", perr
-		}
-		err := ac.client.AgentVariations.RemoveAssignment(ac.ctx, variation, op.Target.RowID)
+		agent, variation := splitVariationParent(op.Target.Parent)
+		err := ac.client.Agents.Variations.RemoveAssignment(ac.ctx,
+			"external_id:"+agent,
+			"external_id:"+variation,
+			op.Target.RowID)
 		if err != nil {
 			return "", err
 		}
 		return "removed", nil
 	case KindVariationMemoryLayer:
-		variation, perr := ac.parentID("variation:" + op.Target.Parent)
-		if perr != nil {
-			return "", perr
-		}
-		err := ac.client.AgentVariations.RemoveMemoryLayer(ac.ctx, variation, op.Target.RowID)
+		agent, variation := splitVariationParent(op.Target.Parent)
+		err := ac.client.Agents.Variations.RemoveMemoryLayer(ac.ctx,
+			"external_id:"+agent,
+			"external_id:"+variation,
+			op.Target.RowID)
 		if err != nil {
 			return "", err
 		}
@@ -275,16 +205,15 @@ func (ac *applyContext) dispatchReorder(op Op) (string, error) {
 	if op.Target.Kind != KindVariationMemoryLayer {
 		return "", fmt.Errorf("config.dispatchReorder: unsupported kind %v", op.Target.Kind)
 	}
-	variation, err := ac.parentID("variation:" + op.Target.Parent)
-	if err != nil {
-		return "", err
-	}
+	agent, variation := splitVariationParent(op.Target.Parent)
 	payload, err := json.Marshal(map[string]any{"position": op.Change.Position})
 	if err != nil {
 		return "", err
 	}
-	_, err = ac.client.AgentVariations.UpdateMemoryLayer(
-		ac.ctx, variation, op.Target.RowID,
+	_, err = ac.client.Agents.Variations.UpdateMemoryLayer(ac.ctx,
+		"external_id:"+agent,
+		"external_id:"+variation,
+		op.Target.RowID,
 		cadenya.AgentVariationUpdateMemoryLayerParams{},
 		option.WithRequestBody("application/json", payload),
 	)
@@ -295,26 +224,20 @@ func (ac *applyContext) dispatchReorder(op Op) (string, error) {
 }
 
 // -----------------------------------------------------------------------------
-// variation-scoped add helpers
+// variation subresource add helpers
 // -----------------------------------------------------------------------------
 
 func (ac *applyContext) addAssignment(op Op) (string, error) {
-	variation, err := ac.parentID("variation:" + op.Target.Parent)
-	if err != nil {
-		return "", err
-	}
-	targetID, err := ac.resolveTargetID(op.Change.TargetKind, op.Change.TargetExternalID, op.Change.TargetCanonicalID)
-	if err != nil {
-		return "", err
-	}
+	agent, variation := splitVariationParent(op.Target.Parent)
 	body := map[string]any{}
+	target := "external_id:" + op.Change.TargetExternalID
 	switch op.Change.TargetKind {
 	case "tool":
-		body["toolId"] = targetID
+		body["toolId"] = target
 	case "tool_set":
-		body["toolSetId"] = targetID
+		body["toolSetId"] = target
 	case "agent":
-		body["subAgentId"] = targetID
+		body["subAgentId"] = target
 	default:
 		return "", fmt.Errorf("config.addAssignment: unknown target kind %q", op.Change.TargetKind)
 	}
@@ -323,8 +246,9 @@ func (ac *applyContext) addAssignment(op Op) (string, error) {
 		return "", err
 	}
 	var raw []byte
-	_, err = ac.client.AgentVariations.AddAssignment(
-		ac.ctx, variation,
+	_, err = ac.client.Agents.Variations.AddAssignment(ac.ctx,
+		"external_id:"+agent,
+		"external_id:"+variation,
 		cadenya.AgentVariationAddAssignmentParams{},
 		option.WithRequestBody("application/json", payload),
 		option.WithResponseBodyInto(&raw),
@@ -340,16 +264,9 @@ func (ac *applyContext) addAssignment(op Op) (string, error) {
 }
 
 func (ac *applyContext) addMemoryLayerLink(op Op) (string, error) {
-	variation, err := ac.parentID("variation:" + op.Target.Parent)
-	if err != nil {
-		return "", err
-	}
-	targetID, err := ac.resolveTargetID("memory_layer", op.Change.TargetExternalID, op.Change.TargetCanonicalID)
-	if err != nil {
-		return "", err
-	}
+	agent, variation := splitVariationParent(op.Target.Parent)
 	body := map[string]any{
-		"memoryLayerId": targetID,
+		"memoryLayerId": "external_id:" + op.Change.TargetExternalID,
 		"position":      op.Change.Position,
 	}
 	payload, err := json.Marshal(body)
@@ -357,8 +274,9 @@ func (ac *applyContext) addMemoryLayerLink(op Op) (string, error) {
 		return "", err
 	}
 	var raw []byte
-	_, err = ac.client.AgentVariations.AddMemoryLayer(
-		ac.ctx, variation,
+	_, err = ac.client.Agents.Variations.AddMemoryLayer(ac.ctx,
+		"external_id:"+agent,
+		"external_id:"+variation,
 		cadenya.AgentVariationAddMemoryLayerParams{},
 		option.WithRequestBody("application/json", payload),
 		option.WithResponseBodyInto(&raw),
@@ -371,6 +289,16 @@ func (ac *applyContext) addMemoryLayerLink(op Op) (string, error) {
 		return fmt.Sprintf("added (position=%d)", op.Change.Position), nil
 	}
 	return fmt.Sprintf("added %s (position=%d)", id, op.Change.Position), nil
+}
+
+// splitVariationParent splits "<agent_ext>/<variation_ext>" into (agent, variation).
+// A parent without a "/" is treated as a variation with no agent scope.
+func splitVariationParent(parent string) (agent, variation string) {
+	a, v, ok := strings.Cut(parent, "/")
+	if !ok {
+		return "", a
+	}
+	return a, v
 }
 
 func createdSummary(raw []byte) string {
