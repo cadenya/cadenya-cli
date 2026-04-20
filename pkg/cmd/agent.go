@@ -97,7 +97,7 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "default-variation.agent-id",
-			Usage:      "Agent ID (from path)",
+			Usage:      "Agent ID (from path). Accepts canonical agent_… form or external_id:<value>\n form (see common.proto \"Path-parameter ID resolution\").",
 			InnerField: "agentId",
 		},
 	},
