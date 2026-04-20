@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.4.0 (2026-04-20)
+
+Full Changelog: [v0.3.0...v0.4.0](https://github.com/cadenya/cadenya-cli/compare/v0.3.0...v0.4.0)
+
+### Features
+
+* **api:** api update ([c202aef](https://github.com/cadenya/cadenya-cli/commit/c202aefaddd4179a724ad49f3d97f6f1f98b9518))
+* **config:** add 'config apply' command for configuration-as-code ([#6](https://github.com/cadenya/cadenya-cli/issues/6)) ([65d6690](https://github.com/cadenya/cadenya-cli/commit/65d6690a5f55ad6aebb20da08b79e5c493489085))
+* Make agent variations API AIP-122 compliant ([f3408d5](https://github.com/cadenya/cadenya-cli/commit/f3408d5f45935513b3f5e576426c0f7c95adf8be))
+
+
+### Chores
+
+* **internal:** codegen related update ([50f9e0c](https://github.com/cadenya/cadenya-cli/commit/50f9e0c62699bc63905650f234c78dbd12d84714))
+* **internal:** codegen related update ([546f623](https://github.com/cadenya/cadenya-cli/commit/546f6230c8e55674b652c3a806d524752a9d8c09))
+
+
+### Refactors
+
+* **config:** drop canonical-id workarounds after server fixes ([#8](https://github.com/cadenya/cadenya-cli/issues/8)) ([494d34e](https://github.com/cadenya/cadenya-cli/commit/494d34e00cde23e032963342e1d5707cccd9592e))
+
 ## 0.3.0 (2026-04-18)
 
 Full Changelog: [v0.2.0...v0.3.0](https://github.com/cadenya/cadenya-cli/compare/v0.2.0...v0.3.0)
