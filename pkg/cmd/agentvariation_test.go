@@ -9,13 +9,13 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
 )
 
-func TestAgentVariationsCreate(t *testing.T) {
+func TestAgentsVariationsCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "create",
+			"agents:variations", "create",
 			"--agent-id", "agentId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
@@ -24,13 +24,13 @@ func TestAgentVariationsCreate(t *testing.T) {
 
 	t.Run("inner flags", func(t *testing.T) {
 		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(agentVariationsCreate)
+		requestflag.CheckInnerFlags(agentsVariationsCreate)
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "create",
+			"agents:variations", "create",
 			"--agent-id", "agentId",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
@@ -83,32 +83,32 @@ func TestAgentVariationsCreate(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"agent-variations", "create",
+			"agents:variations", "create",
 			"--agent-id", "agentId",
 		)
 	})
 }
 
-func TestAgentVariationsRetrieve(t *testing.T) {
+func TestAgentsVariationsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "retrieve",
+			"agents:variations", "retrieve",
 			"--agent-id", "agentId",
 			"--id", "id",
 		)
 	})
 }
 
-func TestAgentVariationsUpdate(t *testing.T) {
+func TestAgentsVariationsUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "update",
+			"agents:variations", "update",
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
@@ -119,13 +119,13 @@ func TestAgentVariationsUpdate(t *testing.T) {
 
 	t.Run("inner flags", func(t *testing.T) {
 		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(agentVariationsUpdate)
+		requestflag.CheckInnerFlags(agentsVariationsUpdate)
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "update",
+			"agents:variations", "update",
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata.name", "name",
@@ -181,20 +181,20 @@ func TestAgentVariationsUpdate(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"agent-variations", "update",
+			"agents:variations", "update",
 			"--agent-id", "agentId",
 			"--id", "id",
 		)
 	})
 }
 
-func TestAgentVariationsList(t *testing.T) {
+func TestAgentsVariationsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "list",
+			"agents:variations", "list",
 			"--max-items", "10",
 			"--agent-id", "agentId",
 			"--cursor", "cursor",
@@ -205,27 +205,28 @@ func TestAgentVariationsList(t *testing.T) {
 	})
 }
 
-func TestAgentVariationsDelete(t *testing.T) {
+func TestAgentsVariationsDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "delete",
+			"agents:variations", "delete",
 			"--agent-id", "agentId",
 			"--id", "id",
 		)
 	})
 }
 
-func TestAgentVariationsAddAssignment(t *testing.T) {
+func TestAgentsVariationsAddAssignment(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "add-assignment",
-			"--agent-variation-id", "agentVariationId",
+			"agents:variations", "add-assignment",
+			"--agent-id", "agentId",
+			"--variation-id", "variationId",
 			"--sub-agent-id", "subAgentId",
 			"--tool-id", "toolId",
 			"--tool-set-id", "toolSetId",
@@ -241,20 +242,22 @@ func TestAgentVariationsAddAssignment(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"agent-variations", "add-assignment",
-			"--agent-variation-id", "agentVariationId",
+			"agents:variations", "add-assignment",
+			"--agent-id", "agentId",
+			"--variation-id", "variationId",
 		)
 	})
 }
 
-func TestAgentVariationsAddMemoryLayer(t *testing.T) {
+func TestAgentsVariationsAddMemoryLayer(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "add-memory-layer",
-			"--agent-variation-id", "agentVariationId",
+			"agents:variations", "add-memory-layer",
+			"--agent-id", "agentId",
+			"--variation-id", "variationId",
 			"--memory-layer-id", "memoryLayerId",
 			"--position", "0",
 		)
@@ -268,46 +271,50 @@ func TestAgentVariationsAddMemoryLayer(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"agent-variations", "add-memory-layer",
-			"--agent-variation-id", "agentVariationId",
+			"agents:variations", "add-memory-layer",
+			"--agent-id", "agentId",
+			"--variation-id", "variationId",
 		)
 	})
 }
 
-func TestAgentVariationsRemoveAssignment(t *testing.T) {
+func TestAgentsVariationsRemoveAssignment(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "remove-assignment",
-			"--agent-variation-id", "agentVariationId",
+			"agents:variations", "remove-assignment",
+			"--agent-id", "agentId",
+			"--variation-id", "variationId",
 			"--id", "id",
 		)
 	})
 }
 
-func TestAgentVariationsRemoveMemoryLayer(t *testing.T) {
+func TestAgentsVariationsRemoveMemoryLayer(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "remove-memory-layer",
-			"--agent-variation-id", "agentVariationId",
+			"agents:variations", "remove-memory-layer",
+			"--agent-id", "agentId",
+			"--variation-id", "variationId",
 			"--id", "id",
 		)
 	})
 }
 
-func TestAgentVariationsUpdateMemoryLayer(t *testing.T) {
+func TestAgentsVariationsUpdateMemoryLayer(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"agent-variations", "update-memory-layer",
-			"--agent-variation-id", "agentVariationId",
+			"agents:variations", "update-memory-layer",
+			"--agent-id", "agentId",
+			"--variation-id", "variationId",
 			"--id", "id",
 			"--position", "0",
 		)
@@ -319,8 +326,9 @@ func TestAgentVariationsUpdateMemoryLayer(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"agent-variations", "update-memory-layer",
-			"--agent-variation-id", "agentVariationId",
+			"agents:variations", "update-memory-layer",
+			"--agent-id", "agentId",
+			"--variation-id", "variationId",
 			"--id", "id",
 		)
 	})
