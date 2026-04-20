@@ -1,8 +1,11 @@
 package config
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/tidwall/gjson"
 )
 
 func TestParseToolSets(t *testing.T) {
@@ -135,5 +138,37 @@ agents:
 	_, err = Parse(strings.NewReader(src2), map[string]string{})
 	if err == nil || !strings.Contains(err.Error(), "exactly one") {
 		t.Errorf("expected multi-target error, got: %v", err)
+	}
+}
+
+func TestFieldEqualMatchesProto3DefaultElision(t *testing.T) {
+	cases := []struct {
+		name    string
+		desired any
+		current string
+		path    string
+		want    bool
+	}{
+		{"bool false matches missing", false, `{"spec":{}}`, "spec.requiresApproval", true},
+		{"bool true missing does not match", true, `{"spec":{}}`, "spec.requiresApproval", false},
+		{"empty string matches missing", "", `{"spec":{}}`, "spec.name", true},
+		{"non-empty string missing does not match", "foo", `{"spec":{}}`, "spec.name", false},
+		{"empty map matches missing", map[string]any{}, `{"metadata":{}}`, "metadata.labels", true},
+		{"non-empty map missing does not match", map[string]any{"a": "b"}, `{"metadata":{}}`, "metadata.labels", false},
+		{"nested default stripped",
+			map[string]any{"enabled": false, "name": "foo"},
+			`{"spec":{"cfg":{"name":"foo"}}}`, "spec.cfg", true},
+		{"nested non-default differs",
+			map[string]any{"enabled": true, "name": "foo"},
+			`{"spec":{"cfg":{"name":"foo"}}}`, "spec.cfg", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := fieldEqual(c.path, c.desired, gjson.Parse(c.current))
+			if got != c.want {
+				dj, _ := json.Marshal(c.desired)
+				t.Errorf("fieldEqual(%s, %s, %s) = %v, want %v", c.path, dj, c.current, got, c.want)
+			}
+		})
 	}
 }

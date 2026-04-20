@@ -570,35 +570,79 @@ func desiredValue(path string, name string, labels map[string]string, spec map[s
 	return nil
 }
 
+// fieldEqual reports whether the desired value at `path` matches the current
+// server state. Proto3 servers elide zero-valued scalars and empty collections
+// from their JSON responses (standard protojson behavior), so the comparison
+// normalizes both sides by recursively stripping default-valued keys and
+// treats a missing path as equivalent to a root-level default.
 func fieldEqual(path string, desired any, current gjson.Result) bool {
-	desiredJSON, err := json.Marshal(desired)
-	if err != nil {
-		return false
-	}
 	cr := current.Get(path)
 	if !cr.Exists() {
+		// Server didn't echo the field. Match iff desired is a default
+		// scalar/empty container or an object whose fields are all defaults.
+		return isDefault(stripDefaults(desired))
+	}
+	var currentVal any
+	if err := json.Unmarshal([]byte(cr.Raw), &currentVal); err != nil {
 		return false
 	}
-	return jsonBytesEqual(desiredJSON, []byte(cr.Raw))
+	dj, err := json.Marshal(stripDefaults(desired))
+	if err != nil {
+		return false
+	}
+	cj, err := json.Marshal(stripDefaults(currentVal))
+	if err != nil {
+		return false
+	}
+	return string(dj) == string(cj)
 }
 
-func jsonBytesEqual(a, b []byte) bool {
-	var av, bv any
-	if err := json.Unmarshal(a, &av); err != nil {
-		return false
+// stripDefaults walks `v` recursively and removes any map keys whose values
+// are proto3 defaults: false, 0, "", nil, empty array, empty object. The
+// result is a canonicalized form that matches what a protojson-serialized
+// server response (with default-elision) will look like.
+func stripDefaults(v any) any {
+	switch t := v.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(t))
+		for k, val := range t {
+			if isDefault(val) {
+				continue
+			}
+			out[k] = stripDefaults(val)
+		}
+		return out
+	case []any:
+		out := make([]any, 0, len(t))
+		for _, e := range t {
+			out = append(out, stripDefaults(e))
+		}
+		return out
+	default:
+		return v
 	}
-	if err := json.Unmarshal(b, &bv); err != nil {
-		return false
+}
+
+// isDefault reports whether v is a proto3 zero value that servers elide from
+// JSON responses.
+func isDefault(v any) bool {
+	switch t := v.(type) {
+	case nil:
+		return true
+	case bool:
+		return !t
+	case string:
+		return t == ""
+	case float64:
+		return t == 0
+	case int, int32, int64:
+		return v == 0
+	case map[string]any:
+		return len(t) == 0
+	case []any:
+		return len(t) == 0
 	}
-	ar, err := json.Marshal(av)
-	if err != nil {
-		return false
-	}
-	br, err := json.Marshal(bv)
-	if err != nil {
-		return false
-	}
-	return string(ar) == string(br)
+	return false
 }
 
 func buildCreateBody(externalID, name string, labels map[string]string, spec map[string]any) map[string]any {
