@@ -69,13 +69,6 @@ func RenderSummary(w io.Writer, result *Result) {
 		result.Applied, result.Unchanged, result.Failed)
 }
 
-// RenderDiff is not implemented for the tool_sets vertical.
-func RenderDiff(w io.Writer, op Op) error {
-	_ = w
-	_ = op
-	return fmt.Errorf("config.RenderDiff: not implemented")
-}
-
 func opGerund(k OpKind) string {
 	switch k {
 	case OpCreate:

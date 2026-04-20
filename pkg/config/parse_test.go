@@ -28,7 +28,7 @@ tool_sets:
           description: "Look up a customer by email"
           requires_approval: false
 `
-	cfg, err := Parse(strings.NewReader(src), map[string]string{})
+	cfg, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
@@ -68,7 +68,7 @@ tool_sets:
           headers:
             authorization: "Bearer $LINEAR_TOKEN"
 `
-	cfg, err := Parse(strings.NewReader(src), map[string]string{
+	cfg, _, err := Parse(strings.NewReader(src), map[string]string{
 		"LINEAR_TOKEN": "secret123",
 	})
 	if err != nil {
@@ -93,7 +93,7 @@ tool_sets:
     spec:
       description: "$UNSET_VARIABLE"
 `
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil {
 		t.Fatal("expected error for unset env var")
 	}
@@ -106,7 +106,7 @@ func TestParseVersionValidation(t *testing.T) {
 	src := `version: 2
 tool_sets: {}
 `
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil || !strings.Contains(err.Error(), "version") {
 		t.Errorf("expected version error, got: %v", err)
 	}
@@ -121,7 +121,7 @@ agents:
         assignments:
           - {}
 `
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil || !strings.Contains(err.Error(), "tool/tool_set/agent") {
 		t.Errorf("expected empty-assignment error, got: %v", err)
 	}
@@ -135,7 +135,7 @@ agents:
           - tool: foo
             tool_set: bar
 `
-	_, err = Parse(strings.NewReader(src2), map[string]string{})
+	_, _, err = Parse(strings.NewReader(src2), map[string]string{})
 	if err == nil || !strings.Contains(err.Error(), "exactly one") {
 		t.Errorf("expected multi-target error, got: %v", err)
 	}
@@ -179,7 +179,7 @@ func TestFieldEqualMatchesProto3DefaultElision(t *testing.T) {
 
 func TestParseMalformedYAML(t *testing.T) {
 	src := "version: 1\n  tool_sets: {\n"
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil {
 		t.Fatal("expected parse error on malformed YAML")
 	}
@@ -190,7 +190,7 @@ func TestParseMalformedYAML(t *testing.T) {
 
 func TestParseUnknownTopLevelKey(t *testing.T) {
 	src := "version: 1\ntool_set: {}\n" // typo: missing `s`
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil {
 		t.Fatal("expected parse error on unknown top-level key")
 	}
@@ -202,7 +202,7 @@ func TestParseUnknownTopLevelKey(t *testing.T) {
 
 func TestParseWrongScalarType(t *testing.T) {
 	src := "version: one\n" // string where int expected
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil {
 		t.Fatal("expected parse error on non-int version")
 	}
@@ -214,7 +214,7 @@ func TestParseWrongScalarType(t *testing.T) {
 func TestParseWrongShape(t *testing.T) {
 	// tool_sets is declared as a map, YAML provides a sequence.
 	src := "version: 1\ntool_sets:\n  - a\n"
-	_, err := Parse(strings.NewReader(src), map[string]string{})
+	_, _, err := Parse(strings.NewReader(src), map[string]string{})
 	if err == nil {
 		t.Fatal("expected parse error on wrong shape")
 	}
@@ -222,7 +222,7 @@ func TestParseWrongShape(t *testing.T) {
 
 func TestParseTrivialConfig(t *testing.T) {
 	// Only a version, no resources. Valid — apply is a no-op.
-	cfg, err := Parse(strings.NewReader("version: 1\n"), map[string]string{})
+	cfg, _, err := Parse(strings.NewReader("version: 1\n"), map[string]string{})
 	if err != nil {
 		t.Fatalf("expected trivial config to parse, got: %v", err)
 	}
