@@ -3,9 +3,10 @@ package config
 import (
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
-	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/goccy/go-yaml"
@@ -62,39 +63,26 @@ func parseBytes(data []byte, env map[string]string) (*Config, error) {
 	return &cfg, nil
 }
 
-// envVarPattern matches $VAR and ${VAR}. Names are [A-Za-z_][A-Za-z0-9_]*.
-var envVarPattern = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)`)
-
 // substituteEnv replaces $VAR and ${VAR} occurrences in data using env. It
 // returns an error listing every unset variable (not just the first) so the
 // user can fix all of them in one round-trip.
 //
-// This is a raw-text substitution, done before YAML parse. Users who need a
-// literal $ in a YAML string can write $$ or \$ — both forms pass through
-// since only names matching [A-Za-z_][A-Za-z0-9_]* are recognized.
+// Uses os.Expand for the substitution pass — same syntax rules as shell
+// parameter expansion ($name and ${name}, name = [A-Za-z_][A-Za-z0-9_]*).
 func substituteEnv(data []byte, env map[string]string) ([]byte, error) {
 	missing := map[string]struct{}{}
-	result := envVarPattern.ReplaceAllFunc(data, func(match []byte) []byte {
-		m := envVarPattern.FindSubmatch(match)
-		name := string(m[1])
-		if name == "" {
-			name = string(m[2])
+	out := os.Expand(string(data), func(name string) string {
+		if v, ok := env[name]; ok {
+			return v
 		}
-		val, ok := env[name]
-		if !ok {
-			missing[name] = struct{}{}
-			return match
-		}
-		return []byte(val)
+		missing[name] = struct{}{}
+		return "${" + name + "}" // preserve the literal so the error message can point at it
 	})
 	if len(missing) > 0 {
-		names := make([]string, 0, len(missing))
-		for n := range missing {
-			names = append(names, n)
-		}
-		return nil, fmt.Errorf("config: unset environment variable(s): %s", strings.Join(sortedStrings(names), ", "))
+		names := slices.Sorted(maps.Keys(missing))
+		return nil, fmt.Errorf("config: unset environment variable(s): %s", strings.Join(names, ", "))
 	}
-	return result, nil
+	return []byte(out), nil
 }
 
 // populateExternalIDs walks the parsed Config and fills ExternalID / Key
@@ -201,13 +189,3 @@ func envFromOSEnviron() map[string]string {
 	return env
 }
 
-func sortedStrings(xs []string) []string {
-	out := make([]string, len(xs))
-	copy(out, xs)
-	for i := 1; i < len(out); i++ {
-		for j := i; j > 0 && out[j-1] > out[j]; j-- {
-			out[j-1], out[j] = out[j], out[j-1]
-		}
-	}
-	return out
-}

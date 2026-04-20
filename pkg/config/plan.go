@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 
 	"github.com/cadenya/cadenya-go"
 	"github.com/cadenya/cadenya-go/option"
@@ -167,7 +168,7 @@ func Build(ctx context.Context, client *cadenya.Client, cfg *Config) (*Plan, err
 // -----------------------------------------------------------------------------
 
 func (b *planBuilder) buildToolSetOps() error {
-	for _, extID := range sortedStringKeys(b.cfg.ToolSets) {
+	for _, extID := range slices.Sorted(maps.Keys(b.cfg.ToolSets)) {
 		ts := b.cfg.ToolSets[extID]
 		ref := ResourceRef{Kind: KindToolSet, ExternalID: extID}
 
@@ -178,7 +179,7 @@ func (b *planBuilder) buildToolSetOps() error {
 		op := planResourceSpec(ref, ts.Name, ts.Labels, ts.Spec, extID, lr)
 		b.plan.Ops = append(b.plan.Ops, op)
 
-		for _, tExtID := range sortedStringKeys(ts.Tools) {
+		for _, tExtID := range slices.Sorted(maps.Keys(ts.Tools)) {
 			tool := ts.Tools[tExtID]
 			tref := ResourceRef{Kind: KindTool, Parent: extID, ExternalID: tExtID}
 
@@ -201,7 +202,7 @@ func (b *planBuilder) buildToolSetOps() error {
 // -----------------------------------------------------------------------------
 
 func (b *planBuilder) buildMemoryLayerOps() error {
-	for _, extID := range sortedStringKeys(b.cfg.MemoryLayers) {
+	for _, extID := range slices.Sorted(maps.Keys(b.cfg.MemoryLayers)) {
 		ml := b.cfg.MemoryLayers[extID]
 		ref := ResourceRef{Kind: KindMemoryLayer, ExternalID: extID}
 
@@ -241,7 +242,7 @@ func (b *planBuilder) buildEntryOps(layerExtID string, ml *MemoryLayerNode, laye
 		}
 	}
 
-	for _, key := range sortedStringKeys(desired) {
+	for _, key := range slices.Sorted(maps.Keys(desired)) {
 		entry := desired[key]
 		ref := ResourceRef{Kind: KindMemoryEntry, Parent: layerExtID, ExternalID: key}
 		cur, found := currentByKey[key]
@@ -280,7 +281,7 @@ func (b *planBuilder) buildEntryOps(layerExtID string, ml *MemoryLayerNode, laye
 	}
 
 	// Anything in currentByKey now is being deleted.
-	for _, key := range sortedStringKeys(currentByKey) {
+	for _, key := range slices.Sorted(maps.Keys(currentByKey)) {
 		cur := currentByKey[key]
 		b.plan.Ops = append(b.plan.Ops, Op{
 			Kind:   OpDelete,
@@ -295,7 +296,7 @@ func (b *planBuilder) buildEntryOps(layerExtID string, ml *MemoryLayerNode, laye
 // -----------------------------------------------------------------------------
 
 func (b *planBuilder) buildAgentOps() error {
-	for _, extID := range sortedStringKeys(b.cfg.Agents) {
+	for _, extID := range slices.Sorted(maps.Keys(b.cfg.Agents)) {
 		a := b.cfg.Agents[extID]
 		ref := ResourceRef{Kind: KindAgent, ExternalID: extID}
 
@@ -306,7 +307,7 @@ func (b *planBuilder) buildAgentOps() error {
 		op := planResourceSpec(ref, a.Name, a.Labels, a.Spec, extID, lr)
 		b.plan.Ops = append(b.plan.Ops, op)
 
-		for _, vExtID := range sortedStringKeys(a.Variations) {
+		for _, vExtID := range slices.Sorted(maps.Keys(a.Variations)) {
 			v := a.Variations[vExtID]
 			vref := ResourceRef{Kind: KindVariation, Parent: extID, ExternalID: vExtID}
 
@@ -565,7 +566,7 @@ func declaredFieldPaths(name string, labels map[string]string, spec map[string]a
 	for k := range spec {
 		paths = append(paths, "spec."+k)
 	}
-	sort.Strings(paths)
+	slices.Sort(paths)
 	return paths
 }
 
@@ -980,11 +981,3 @@ func isNotFound(err error) bool {
 	return false
 }
 
-func sortedStringKeys[V any](m map[string]V) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}

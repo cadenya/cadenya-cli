@@ -292,12 +292,13 @@ func (ac *applyContext) addMemoryLayerLink(op Op) (string, error) {
 }
 
 // splitVariationParent splits "<agent_ext>/<variation_ext>" into (agent, variation).
+// A parent without a "/" is treated as a variation with no agent scope.
 func splitVariationParent(parent string) (agent, variation string) {
-	i := strings.IndexByte(parent, '/')
-	if i < 0 {
-		return "", parent
+	a, v, ok := strings.Cut(parent, "/")
+	if !ok {
+		return "", a
 	}
-	return parent[:i], parent[i+1:]
+	return a, v
 }
 
 func createdSummary(raw []byte) string {
