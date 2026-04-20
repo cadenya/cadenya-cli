@@ -5,7 +5,7 @@ go 1.25
 require (
 	github.com/adrg/frontmatter v0.2.0
 	github.com/bmatcuk/doublestar/v4 v4.10.0
-	github.com/cadenya/cadenya-go v0.7.0
+	github.com/cadenya/cadenya-go v0.8.0
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/lipgloss v1.1.0
