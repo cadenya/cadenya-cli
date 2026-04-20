@@ -13,18 +13,8 @@ import (
 )
 
 // Plan is the output of the read-only phase of `config apply`.
-//
-// Canonicals carries every parent resource's canonical id that's known at
-// plan time — populated from the GETs we do during Build. Apply extends it
-// with canonical ids learned from create responses. Sub-resource dispatchers
-// read from Canonicals to resolve the parent segment of their URL, since the
-// server's nested-collection POST routes accept only canonical ids.
-//
-// Keys are "<kind>:<ext_id>" for top-level resources and
-// "variation:<agent_ext>/<var_ext>" for variations.
 type Plan struct {
-	Ops        []Op
-	Canonicals map[string]string
+	Ops []Op
 }
 
 // Op is one intended action against one resource.
@@ -118,10 +108,9 @@ type ChangeSet struct {
 	Body       map[string]any
 
 	// For list reconciliation ops (assignments, memory-layer links, entries):
-	TargetKind        string // "tool" | "tool_set" | "agent" | "memory_layer"
-	TargetExternalID  string // YAML-declared external_id of the target
-	TargetCanonicalID string // resolved at plan time if target already exists; empty means "will be created — look up at apply time"
-	Position          int    // memory-layer link position (add or reorder)
+	TargetKind       string // "tool" | "tool_set" | "agent" | "memory_layer"
+	TargetExternalID string // YAML-declared external_id of the target — sent as "external_id:<ext>" in the wire body
+	Position         int    // memory-layer link position (add or reorder)
 }
 
 // planBuilder carries state across the multi-pass Build.
@@ -149,7 +138,7 @@ func Build(ctx context.Context, client *cadenya.Client, cfg *Config) (*Plan, err
 		ctx:      ctx,
 		client:   client,
 		cfg:      cfg,
-		plan:     &Plan{Canonicals: map[string]string{}},
+		plan:     &Plan{},
 		resolved: map[string]lookupResult{},
 	}
 	if err := b.buildToolSetOps(); err != nil {
@@ -186,7 +175,7 @@ func (b *planBuilder) buildToolSetOps() error {
 
 			var tlr lookupResult
 			if lr.Exists {
-				tlr, err = b.lookupTool(lr.CanonicalID, extID, tExtID)
+				tlr, err = b.lookupTool(extID, tExtID)
 				if err != nil {
 					return err
 				}
@@ -314,7 +303,7 @@ func (b *planBuilder) buildAgentOps() error {
 
 			var vlr lookupResult
 			if lr.Exists {
-				vlr, err = b.lookupVariation(lr.CanonicalID, extID, vExtID)
+				vlr, err = b.lookupVariation(extID, vExtID)
 				if err != nil {
 					return err
 				}
@@ -407,9 +396,8 @@ func (b *planBuilder) buildAssignmentOps(parent string, v *VariationNode, vLooku
 				Kind:   OpCreate,
 				Target: ResourceRef{Kind: KindVariationAssignment, Parent: parent, ExternalID: d.Kind + ":" + d.ExternalID},
 				Change: ChangeSet{
-					TargetKind:        d.Kind,
-					TargetExternalID:  d.ExternalID,
-					TargetCanonicalID: d.CanonID,
+					TargetKind:       d.Kind,
+					TargetExternalID: d.ExternalID,
 				},
 			})
 		}
@@ -484,10 +472,9 @@ func (b *planBuilder) buildMemoryLayerLinkOps(parent string, v *VariationNode, v
 				Kind:   OpCreate,
 				Target: ref,
 				Change: ChangeSet{
-					TargetKind:        "memory_layer",
-					TargetExternalID:  d.ExternalID,
-					TargetCanonicalID: d.CanonID,
-					Position:          d.Position,
+					TargetKind:       "memory_layer",
+					TargetExternalID: d.ExternalID,
+					Position:         d.Position,
 				},
 			})
 		} else if match.Position != d.Position {
@@ -699,12 +686,12 @@ func (b *planBuilder) lookupToolSet(extID string) (lookupResult, error) {
 	})
 }
 
-func (b *planBuilder) lookupTool(toolSetCanonicalID, toolSetExtID, toolExtID string) (lookupResult, error) {
+func (b *planBuilder) lookupTool(toolSetExtID, toolExtID string) (lookupResult, error) {
 	return b.lookup("tool", toolSetExtID+"/"+toolExtID, func() ([]byte, error) {
 		var raw []byte
 		_, err := b.client.ToolSets.Tools.Get(
 			b.ctx,
-			toolSetCanonicalID,
+			"external_id:"+toolSetExtID,
 			"external_id:"+toolExtID,
 			option.WithResponseBodyInto(&raw),
 		)
@@ -728,12 +715,12 @@ func (b *planBuilder) lookupAgent(extID string) (lookupResult, error) {
 	})
 }
 
-func (b *planBuilder) lookupVariation(agentCanonicalID, agentExtID, varExtID string) (lookupResult, error) {
+func (b *planBuilder) lookupVariation(agentExtID, varExtID string) (lookupResult, error) {
 	return b.lookup("variation", agentExtID+"/"+varExtID, func() ([]byte, error) {
 		var raw []byte
-		_, err := b.client.AgentVariations.Get(
+		_, err := b.client.Agents.Variations.Get(
 			b.ctx,
-			agentCanonicalID,
+			"external_id:"+agentExtID,
 			"external_id:"+varExtID,
 			option.WithResponseBodyInto(&raw),
 		)
@@ -761,27 +748,17 @@ func (b *planBuilder) lookup(kind, cacheKey string, do func() ([]byte, error)) (
 		CanonicalID: gjson.GetBytes(raw, "metadata.id").String(),
 	}
 	b.resolved[k] = lr
-	if lr.CanonicalID != "" {
-		b.plan.Canonicals[k] = lr.CanonicalID
-	}
 	return lr, nil
 }
 
 // listEntries paginates all memory entries of a layer and returns their
 // (key, description, content, row_id). content is fetched via a per-entry GET
 // since List returns only summaries.
-//
-// Uses the layer's canonical id (which is already cached — callers only reach
-// this code path when lookupMemoryLayer returned Exists=true), since the
-// server's nested-collection routes reject the external_id: form.
 func (b *planBuilder) listEntries(layerExtID string) ([]currentEntry, error) {
-	layerID := b.plan.Canonicals["memory_layer:"+layerExtID]
-	if layerID == "" {
-		return nil, fmt.Errorf("config: internal: listEntries called with unresolved layer %q", layerExtID)
-	}
+	parent := "external_id:" + layerExtID
 	iter := b.client.MemoryLayers.Entries.ListAutoPaging(
 		b.ctx,
-		layerID,
+		parent,
 		cadenya.MemoryLayerEntryListParams{},
 	)
 
@@ -801,7 +778,7 @@ func (b *planBuilder) listEntries(layerExtID string) ([]currentEntry, error) {
 		var raw []byte
 		_, err := b.client.MemoryLayers.Entries.Get(
 			b.ctx,
-			layerID,
+			parent,
 			out[i].RowID,
 			option.WithResponseBodyInto(&raw),
 		)
@@ -845,12 +822,12 @@ func (b *planBuilder) resolveForAssignment(kind, extID string) (string, error) {
 		if parentExt == "" {
 			return "", fmt.Errorf("config: assignment references tool %q but it is not declared under any tool_set in this config", extID)
 		}
-		parentCanon := b.plan.Canonicals["tool_set:"+parentExt]
-		if parentCanon == "" {
-			// Parent tool_set is being created in this plan; tool can't exist yet.
+		// If the parent tool_set is being created in this plan, the tool can't
+		// exist yet. Skip the lookup and mark as will-create.
+		if tsLR, ok := b.resolved["tool_set:"+parentExt]; ok && !tsLR.Exists {
 			return "", nil
 		}
-		lr, err := b.lookupTool(parentCanon, parentExt, extID)
+		lr, err := b.lookupTool(parentExt, extID)
 		if err != nil {
 			return "", err
 		}
