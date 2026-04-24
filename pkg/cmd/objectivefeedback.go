@@ -28,16 +28,17 @@ var objectivesFeedbackCreate = requestflag.WithInnerFlags(cli.Command{
 			Required: true,
 			BodyPath: "data",
 		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "metadata",
+			Usage:    "CreateOperationMetadata contains the user-provided fields for creating\n an operation. Read-only fields (id, account_id, workspace_id, created_at, profile_id)\n are excluded since they are set by the server.",
+			Required: true,
+			BodyPath: "metadata",
+		},
 	},
 	Action:          handleObjectivesFeedbackCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"data": {
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.attributes",
-			Usage:      "Arbitrary key-value pairs to identify the source of the feedback.\n Since the submitting profile is typically an API key, use this to pass through\n application-specific identifiers (e.g., {\"user_id\": \"usr_123\", \"session_id\": \"abc\"}).",
-			InnerField: "attributes",
-		},
 		&requestflag.InnerFlag[string]{
 			Name:       "data.comment",
 			Usage:      "Optional human-readable comment explaining the feedback",
@@ -47,6 +48,18 @@ var objectivesFeedbackCreate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "data.score",
 			Usage:      "A score between -1.0 and 1.0 representing the quality of the objective's execution.\n -1.0 is the worst possible score, 0.0 is neutral, and 1.0 is the best.",
 			InnerField: "score",
+		},
+	},
+	"metadata": {
+		&requestflag.InnerFlag[string]{
+			Name:       "metadata.external-id",
+			Usage:      "External ID for the operation (e.g., a workflow ID from an external system)",
+			InnerField: "externalId",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "metadata.labels",
+			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"priority\": \"high\", \"source\": \"api\", \"workflow\": \"onboarding\"}",
+			InnerField: "labels",
 		},
 	},
 })
