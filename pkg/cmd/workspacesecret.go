@@ -151,6 +151,11 @@ var workspaceSecretsList = cli.Command{
 			QueryPath: "prefix",
 		},
 		&requestflag.Flag[string]{
+			Name:      "query",
+			Usage:     "Free-form search query",
+			QueryPath: "query",
+		},
+		&requestflag.Flag[string]{
 			Name:      "sort-order",
 			Usage:     "Sort order for results (asc or desc by creation time)",
 			QueryPath: "sortOrder",

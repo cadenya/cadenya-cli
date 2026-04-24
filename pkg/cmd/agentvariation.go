@@ -86,14 +86,15 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "ModelConfig defines the model configuration for a variation",
 			InnerField: "modelConfig",
 		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "spec.progressive-discovery",
+			Usage:      "ProgressiveDiscovery is used to indicate that the agent should automatically discover tools that are not explicitly assigned to it.\n Max tools is the maximum number of tools that can be discovered per search.\n Hints are optional hints for tool search. These are used in conjunction with the context-aware tool search and can help select the best tools for the task.",
+			InnerField: "progressiveDiscovery",
+		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.prompt",
 			Usage:      "The system prompt for this variation",
 			InnerField: "prompt",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "spec.tool-selection",
-			InnerField: "toolSelection",
 		},
 		&requestflag.InnerFlag[int64]{
 			Name:       "spec.weight",
@@ -200,14 +201,15 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "ModelConfig defines the model configuration for a variation",
 			InnerField: "modelConfig",
 		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "spec.progressive-discovery",
+			Usage:      "ProgressiveDiscovery is used to indicate that the agent should automatically discover tools that are not explicitly assigned to it.\n Max tools is the maximum number of tools that can be discovered per search.\n Hints are optional hints for tool search. These are used in conjunction with the context-aware tool search and can help select the best tools for the task.",
+			InnerField: "progressiveDiscovery",
+		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.prompt",
 			Usage:      "The system prompt for this variation",
 			InnerField: "prompt",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "spec.tool-selection",
-			InnerField: "toolSelection",
 		},
 		&requestflag.InnerFlag[int64]{
 			Name:       "spec.weight",
@@ -318,7 +320,7 @@ var agentsVariationsAddMemoryLayer = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "memory-layer-id",
-			Usage:    "Layer to attach. Accepts memlyr_… or external_id:… form.",
+			Usage:    "Layer to attach. Accepts canonical memlyr_… form or external_id:<value>\n form (see common.proto \"Path-parameter ID resolution\").",
 			BodyPath: "memoryLayerId",
 		},
 		&requestflag.Flag[int64]{

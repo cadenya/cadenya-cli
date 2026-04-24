@@ -110,6 +110,14 @@ func init() {
 				},
 			},
 			{
+				Name:     "agents:feedback",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&agentsFeedbackList,
+				},
+			},
+			{
 				Name:     "agents:webhook-deliveries",
 				Category: "API RESOURCE",
 				Suggest:  true,

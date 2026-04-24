@@ -73,6 +73,11 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Description of the agent's purpose",
 			InnerField: "description",
 		},
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.input-data-schema",
+			Usage:      "InputDataSchema is used for enforcing a data input when objectives are created. This is valuable when using liquid formatting in agent variation\n prompts. Input data schema is also valuable when using an agent as a sub-agent, as the schema is used as the tool's input parameter schema. If omitted,\n the sub-agent schema will be loaded with a simple \"prompt\" free text string as its schema.",
+			InnerField: "inputDataSchema",
+		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.webhook-events-url",
 			Usage:      "The URL that Cadenya will send events for any objective assigned to the agent.",
@@ -92,7 +97,7 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "default-variation.agent-id",
-			Usage:      "Agent ID (from path)",
+			Usage:      "Agent ID (from path). Accepts canonical agent_… form or external_id:<value>\n form (see common.proto \"Path-parameter ID resolution\").",
 			InnerField: "agentId",
 		},
 	},
@@ -173,6 +178,11 @@ var agentsUpdate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Description of the agent's purpose",
 			InnerField: "description",
 		},
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.input-data-schema",
+			Usage:      "InputDataSchema is used for enforcing a data input when objectives are created. This is valuable when using liquid formatting in agent variation\n prompts. Input data schema is also valuable when using an agent as a sub-agent, as the schema is used as the tool's input parameter schema. If omitted,\n the sub-agent schema will be loaded with a simple \"prompt\" free text string as its schema.",
+			InnerField: "inputDataSchema",
+		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.webhook-events-url",
 			Usage:      "The URL that Cadenya will send events for any objective assigned to the agent.",
@@ -205,6 +215,11 @@ var agentsList = cli.Command{
 			Name:      "prefix",
 			Usage:     "Filter expression (query param: prefix)",
 			QueryPath: "prefix",
+		},
+		&requestflag.Flag[string]{
+			Name:      "query",
+			Usage:     "Free-form search query",
+			QueryPath: "query",
 		},
 		&requestflag.Flag[string]{
 			Name:      "sort-order",

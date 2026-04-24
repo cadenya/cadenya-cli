@@ -135,6 +135,7 @@ func TestMemoryLayersList(t *testing.T) {
 			"--include-info=true",
 			"--limit", "0",
 			"--prefix", "prefix",
+			"--query", "query",
 			"--sort-order", "sortOrder",
 			"--type", "MEMORY_LAYER_TYPE_UNSPECIFIED",
 		)

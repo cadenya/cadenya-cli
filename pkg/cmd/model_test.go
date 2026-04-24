@@ -31,6 +31,7 @@ func TestModelsList(t *testing.T) {
 			"--cursor", "cursor",
 			"--limit", "0",
 			"--prefix", "prefix",
+			"--query", "query",
 			"--sort-order", "sortOrder",
 			"--status", "MODEL_STATUS_UNSPECIFIED",
 		)

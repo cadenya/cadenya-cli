@@ -18,7 +18,7 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"agents:variations", "create",
 			"--agent-id", "agentId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
+			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}",
 		)
 	})
 
@@ -41,8 +41,8 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"--spec.enable-episodic-memory=true",
 			"--spec.episodic-memory-ttl", "0",
 			"--spec.model-config", "{modelId: modelId, temperature: 0}",
+			"--spec.progressive-discovery", "{hints: [string], maxTools: 0, rerankThreshold: 0}",
 			"--spec.prompt", "prompt",
-			"--spec.tool-selection", "{assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}",
 			"--spec.weight", "0",
 		)
 	})
@@ -71,14 +71,12 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"  modelConfig:\n" +
 			"    modelId: modelId\n" +
 			"    temperature: 0\n" +
+			"  progressiveDiscovery:\n" +
+			"    hints:\n" +
+			"      - string\n" +
+			"    maxTools: 0\n" +
+			"    rerankThreshold: 0\n" +
 			"  prompt: prompt\n" +
-			"  toolSelection:\n" +
-			"    assignedTools:\n" +
-			"      allowDiscovery: true\n" +
-			"    autoDiscovery:\n" +
-			"      hints:\n" +
-			"        - string\n" +
-			"      maxTools: 0\n" +
 			"  weight: 0\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -112,7 +110,7 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, prompt: prompt, toolSelection: {assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}, weight: 0}",
+			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -137,8 +135,8 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"--spec.enable-episodic-memory=true",
 			"--spec.episodic-memory-ttl", "0",
 			"--spec.model-config", "{modelId: modelId, temperature: 0}",
+			"--spec.progressive-discovery", "{hints: [string], maxTools: 0, rerankThreshold: 0}",
 			"--spec.prompt", "prompt",
-			"--spec.tool-selection", "{assignedTools: {allowDiscovery: true}, autoDiscovery: {hints: [string], maxTools: 0}}",
 			"--spec.weight", "0",
 			"--update-mask", "updateMask",
 		)
@@ -168,14 +166,12 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"  modelConfig:\n" +
 			"    modelId: modelId\n" +
 			"    temperature: 0\n" +
+			"  progressiveDiscovery:\n" +
+			"    hints:\n" +
+			"      - string\n" +
+			"    maxTools: 0\n" +
+			"    rerankThreshold: 0\n" +
 			"  prompt: prompt\n" +
-			"  toolSelection:\n" +
-			"    assignedTools:\n" +
-			"      allowDiscovery: true\n" +
-			"    autoDiscovery:\n" +
-			"      hints:\n" +
-			"        - string\n" +
-			"      maxTools: 0\n" +
 			"  weight: 0\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
