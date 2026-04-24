@@ -17,7 +17,8 @@ func TestObjectivesFeedbackCreate(t *testing.T) {
 			"--api-key", "string",
 			"objectives:feedback", "create",
 			"--objective-id", "objectiveId",
-			"--data", "{attributes: {foo: string}, comment: comment, score: 0}",
+			"--data", "{comment: comment, score: 0}",
+			"--metadata", "{externalId: externalId, labels: {foo: string}}",
 		)
 	})
 
@@ -31,9 +32,10 @@ func TestObjectivesFeedbackCreate(t *testing.T) {
 			"--api-key", "string",
 			"objectives:feedback", "create",
 			"--objective-id", "objectiveId",
-			"--data.attributes", "{foo: string}",
 			"--data.comment", "comment",
 			"--data.score", "0",
+			"--metadata.external-id", "externalId",
+			"--metadata.labels", "{foo: string}",
 		)
 	})
 
@@ -41,10 +43,12 @@ func TestObjectivesFeedbackCreate(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
 			"data:\n" +
-			"  attributes:\n" +
-			"    foo: string\n" +
 			"  comment: comment\n" +
-			"  score: 0\n")
+			"  score: 0\n" +
+			"metadata:\n" +
+			"  externalId: externalId\n" +
+			"  labels:\n" +
+			"    foo: string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
