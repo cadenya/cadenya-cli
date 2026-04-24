@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0 (2026-04-24)
+
+Full Changelog: [v0.4.0...v0.5.0](https://github.com/cadenya/cadenya-cli/compare/v0.4.0...v0.5.0)
+
+### Features
+
+* **api:** api update ([0a21057](https://github.com/cadenya/cadenya-cli/commit/0a21057214c183751f023324c377c30706b932d2))
+* **api:** api update ([2129353](https://github.com/cadenya/cadenya-cli/commit/21293530538e5f8fa94c11cb22eed46bf86954cc))
+* **api:** api update ([726f8fd](https://github.com/cadenya/cadenya-cli/commit/726f8fdbeddcbfd6d6463af1b2f9e87ad6f5d23a))
+* **api:** api update ([74ceaf8](https://github.com/cadenya/cadenya-cli/commit/74ceaf8cce55acfac6530f64ee8476d7dc62c25b))
+* **api:** api update ([1e0eeed](https://github.com/cadenya/cadenya-cli/commit/1e0eeedf2ccea397f2484c26ad26b52ae38c0ac5))
+
+
+### Chores
+
+* **internal:** more robust bootstrap script ([c5a0b28](https://github.com/cadenya/cadenya-cli/commit/c5a0b28bc2577aa9f2f3aba73e412d489ffc797c))
+
 ## 0.4.0 (2026-04-20)
 
 Full Changelog: [v0.3.0...v0.4.0](https://github.com/cadenya/cadenya-cli/compare/v0.3.0...v0.4.0)
