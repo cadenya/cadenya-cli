@@ -183,6 +183,7 @@ func TestToolSetsToolsList(t *testing.T) {
 			"--include-info=true",
 			"--limit", "0",
 			"--prefix", "prefix",
+			"--query", "query",
 			"--sort-order", "sortOrder",
 		)
 	})
