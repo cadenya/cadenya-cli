@@ -143,6 +143,18 @@ func init() {
 				},
 			},
 			{
+				Name:     "agents:schedules",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&agentsSchedulesCreate,
+					&agentsSchedulesRetrieve,
+					&agentsSchedulesUpdate,
+					&agentsSchedulesList,
+					&agentsSchedulesDelete,
+				},
+			},
+			{
 				Name:     "objectives",
 				Category: "API RESOURCE",
 				Suggest:  true,

@@ -76,6 +76,11 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "secrets",
 		},
 		&requestflag.InnerFlag[string]{
+			Name:       "data.source-schedule-id",
+			Usage:      "ID of the AgentSchedule that produced this objective, when applicable.\n Read-only; populated by the runtime when the objective is created from a\n schedule fire. Empty when the objective was created via CreateObjective directly.",
+			InnerField: "sourceScheduleId",
+		},
+		&requestflag.InnerFlag[string]{
 			Name:       "data.system-prompt",
 			Usage:      "system_prompt is read-only, derived from the selected variation's prompt",
 			InnerField: "systemPrompt",
