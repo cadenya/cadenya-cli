@@ -185,6 +185,7 @@ func TestToolSetsToolsList(t *testing.T) {
 			"--name", "string",
 			"--prefix", "prefix",
 			"--query", "query",
+			"--requires-approval=true",
 			"--sort-order", "sortOrder",
 			"--status", "TOOL_STATUS_UNSPECIFIED",
 		)
