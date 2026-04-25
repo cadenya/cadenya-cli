@@ -71,7 +71,7 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.status",
-			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_FILTERED", "TOOL_STATUS_ARCHIVED".`,
+			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_OMITTED", "TOOL_STATUS_ARCHIVED".`,
 			InnerField: "status",
 		},
 		&requestflag.InnerFlag[bool]{
@@ -162,7 +162,7 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.status",
-			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_FILTERED", "TOOL_STATUS_ARCHIVED".`,
+			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_OMITTED", "TOOL_STATUS_ARCHIVED".`,
 			InnerField: "status",
 		},
 		&requestflag.InnerFlag[bool]{
@@ -196,6 +196,11 @@ var toolSetsToolsList = cli.Command{
 			Usage:     "Maximum number of results to return",
 			QueryPath: "limit",
 		},
+		&requestflag.Flag[[]string]{
+			Name:      "name",
+			Usage:     "Filter by tool name (exact match). Multiple values are OR'd together.",
+			QueryPath: "names",
+		},
 		&requestflag.Flag[string]{
 			Name:      "prefix",
 			Usage:     "Filter expression (query param: prefix)",
@@ -210,6 +215,11 @@ var toolSetsToolsList = cli.Command{
 			Name:      "sort-order",
 			Usage:     "Sort order for results (asc or desc by creation time)",
 			QueryPath: "sortOrder",
+		},
+		&requestflag.Flag[[]string]{
+			Name:      "status",
+			Usage:     "Filter by tool status. Multiple values are OR'd together.",
+			QueryPath: "statuses",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
