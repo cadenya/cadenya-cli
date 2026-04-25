@@ -130,6 +130,11 @@ var objectivesList = cli.Command{
 			QueryPath: "agentId",
 		},
 		&requestflag.Flag[string]{
+			Name:      "agent-schedule-id",
+			Usage:     "Filter to objectives produced by a specific AgentSchedule. Matches\n ObjectiveData.source_schedule_id. Accepts canonical as_… form or\n external_id:<value> form (see common.proto \"Path-parameter ID resolution\").",
+			QueryPath: "agentScheduleId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
