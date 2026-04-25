@@ -211,6 +211,11 @@ var toolSetsToolsList = cli.Command{
 			Usage:     "Free-form search query",
 			QueryPath: "query",
 		},
+		&requestflag.Flag[bool]{
+			Name:      "requires-approval",
+			Usage:     "Filter by approval requirement. Omitted = no filter; true = only tools\n requiring approval; false = only tools not requiring approval.",
+			QueryPath: "requiresApproval",
+		},
 		&requestflag.Flag[string]{
 			Name:      "sort-order",
 			Usage:     "Sort order for results (asc or desc by creation time)",
