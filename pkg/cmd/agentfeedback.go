@@ -43,6 +43,11 @@ var agentsFeedbackList = cli.Command{
 			Usage:     "Pagination cursor from previous response.",
 			QueryPath: "cursor",
 		},
+		&requestflag.Flag[bool]{
+			Name:      "include-info",
+			Usage:     "When set to true you may use more of your alloted API rate-limit",
+			QueryPath: "includeInfo",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return.",
