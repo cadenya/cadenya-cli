@@ -226,6 +226,16 @@ var agentsList = cli.Command{
 			Usage:     "Sort order for results (asc or desc by creation time)",
 			QueryPath: "sortOrder",
 		},
+		&requestflag.Flag[string]{
+			Name:      "status",
+			Usage:     "Filter by agent publication status",
+			QueryPath: "status",
+		},
+		&requestflag.Flag[string]{
+			Name:      "variation-selection-mode",
+			Usage:     "Filter by variation selection mode",
+			QueryPath: "variationSelectionMode",
+		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
