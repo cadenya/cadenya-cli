@@ -20,8 +20,9 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -110,12 +111,14 @@ var agentsVariationsRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleAgentsVariationsRetrieve,
@@ -128,12 +131,14 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -225,8 +230,9 @@ var agentsVariationsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -263,12 +269,14 @@ var agentsVariationsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleAgentsVariationsDelete,
@@ -281,12 +289,14 @@ var agentsVariationsAddAssignment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "variation-id",
-			Required: true,
+			Name:      "variation-id",
+			Required:  true,
+			PathParam: "variationId",
 		},
 		&requestflag.Flag[string]{
 			Name:     "sub-agent-id",
@@ -311,12 +321,14 @@ var agentsVariationsAddMemoryLayer = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "variation-id",
-			Required: true,
+			Name:      "variation-id",
+			Required:  true,
+			PathParam: "variationId",
 		},
 		&requestflag.Flag[string]{
 			Name:     "memory-layer-id",
@@ -339,16 +351,19 @@ var agentsVariationsRemoveAssignment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "variation-id",
-			Required: true,
+			Name:      "variation-id",
+			Required:  true,
+			PathParam: "variationId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleAgentsVariationsRemoveAssignment,
@@ -361,16 +376,19 @@ var agentsVariationsRemoveMemoryLayer = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "variation-id",
-			Required: true,
+			Name:      "variation-id",
+			Required:  true,
+			PathParam: "variationId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleAgentsVariationsRemoveMemoryLayer,
@@ -383,16 +401,19 @@ var agentsVariationsUpdateMemoryLayer = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "variation-id",
-			Required: true,
+			Name:      "variation-id",
+			Required:  true,
+			PathParam: "variationId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 		&requestflag.Flag[int64]{
 			Name:     "position",
@@ -415,8 +436,6 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentVariationNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -427,6 +446,8 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentVariationNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -519,8 +540,6 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentVariationUpdateParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -531,6 +550,8 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentVariationUpdateParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -569,8 +590,6 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentVariationListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -581,6 +600,8 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentVariationListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -675,8 +696,6 @@ func handleAgentsVariationsAddAssignment(ctx context.Context, cmd *cli.Command) 
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentVariationAddAssignmentParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -687,6 +706,8 @@ func handleAgentsVariationsAddAssignment(ctx context.Context, cmd *cli.Command) 
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentVariationAddAssignmentParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -729,8 +750,6 @@ func handleAgentsVariationsAddMemoryLayer(ctx context.Context, cmd *cli.Command)
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentVariationAddMemoryLayerParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -741,6 +760,8 @@ func handleAgentsVariationsAddMemoryLayer(ctx context.Context, cmd *cli.Command)
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentVariationAddMemoryLayerParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -865,8 +886,6 @@ func handleAgentsVariationsUpdateMemoryLayer(ctx context.Context, cmd *cli.Comma
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentVariationUpdateMemoryLayerParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -877,6 +896,8 @@ func handleAgentsVariationsUpdateMemoryLayer(ctx context.Context, cmd *cli.Comma
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentVariationUpdateMemoryLayerParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))

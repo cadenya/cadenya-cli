@@ -20,8 +20,9 @@ var agentsFeedbackList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "agent-variation-id",
@@ -83,8 +84,6 @@ func handleAgentsFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentFeedbackListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -95,6 +94,8 @@ func handleAgentsFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentFeedbackListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")

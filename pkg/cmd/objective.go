@@ -111,8 +111,9 @@ var objectivesRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleObjectivesRetrieve,
@@ -183,8 +184,9 @@ var objectivesCancel = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
 			Name:     "reason",
@@ -202,8 +204,9 @@ var objectivesCompact = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "compaction-config",
@@ -239,8 +242,9 @@ var objectivesContinue = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[bool]{
 			Name:     "enqueue",
@@ -279,8 +283,9 @@ var objectivesListContextWindows = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -312,8 +317,9 @@ var objectivesListEvents = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -357,8 +363,6 @@ func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -369,6 +373,8 @@ func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -440,8 +446,6 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -452,6 +456,8 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -498,8 +504,6 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveCancelParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -510,6 +514,8 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveCancelParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -547,8 +553,6 @@ func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveCompactParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -559,6 +563,8 @@ func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveCompactParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -596,8 +602,6 @@ func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveContinueParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -608,6 +612,8 @@ func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveContinueParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -645,8 +651,6 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveListContextWindowsParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -657,6 +661,8 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveListContextWindowsParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -713,8 +719,6 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveListEventsParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -725,6 +729,8 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveListEventsParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")

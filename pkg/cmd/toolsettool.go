@@ -20,8 +20,9 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -87,12 +88,14 @@ var toolSetsToolsRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleToolSetsToolsRetrieve,
@@ -105,12 +108,14 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -178,8 +183,9 @@ var toolSetsToolsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -241,12 +247,14 @@ var toolSetsToolsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleToolSetsToolsDelete,
@@ -264,8 +272,6 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ToolSetToolNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -276,6 +282,8 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ToolSetToolNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -368,8 +376,6 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ToolSetToolUpdateParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -380,6 +386,8 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ToolSetToolUpdateParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -418,8 +426,6 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ToolSetToolListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -430,6 +436,8 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ToolSetToolListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")

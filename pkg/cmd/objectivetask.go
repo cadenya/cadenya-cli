@@ -20,12 +20,14 @@ var objectivesTasksRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleObjectivesTasksRetrieve,
@@ -38,8 +40,9 @@ var objectivesTasksList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -127,8 +130,6 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveTaskListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -139,6 +140,8 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveTaskListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")

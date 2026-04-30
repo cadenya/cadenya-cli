@@ -20,8 +20,9 @@ var agentsWebhookDeliveriesList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -63,8 +64,6 @@ func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) er
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentWebhookDeliveryListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -75,6 +74,8 @@ func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) er
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentWebhookDeliveryListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")

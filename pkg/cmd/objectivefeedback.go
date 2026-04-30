@@ -20,8 +20,9 @@ var objectivesFeedbackCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "data",
@@ -70,8 +71,9 @@ var objectivesFeedbackList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -103,8 +105,6 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveFeedbackNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -115,6 +115,8 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveFeedbackNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -152,8 +154,6 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveFeedbackListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -164,6 +164,8 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveFeedbackListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
