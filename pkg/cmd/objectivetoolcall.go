@@ -20,8 +20,9 @@ var objectivesToolCallsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -58,12 +59,14 @@ var objectivesToolCallsApprove = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "tool-call-id",
-			Required: true,
+			Name:      "tool-call-id",
+			Required:  true,
+			PathParam: "toolCallId",
 		},
 	},
 	Action:          handleObjectivesToolCallsApprove,
@@ -76,12 +79,14 @@ var objectivesToolCallsDeny = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "tool-call-id",
-			Required: true,
+			Name:      "tool-call-id",
+			Required:  true,
+			PathParam: "toolCallId",
 		},
 		&requestflag.Flag[string]{
 			Name:     "memo",
@@ -104,8 +109,6 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveToolCallListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -116,6 +119,8 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveToolCallListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -176,8 +181,6 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveToolCallApproveParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -188,6 +191,8 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveToolCallApproveParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -230,8 +235,6 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveToolCallDenyParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -242,6 +245,8 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveToolCallDenyParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))

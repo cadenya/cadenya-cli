@@ -20,8 +20,9 @@ var agentsSchedulesCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -96,12 +97,14 @@ var agentsSchedulesRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleAgentsSchedulesRetrieve,
@@ -114,12 +117,14 @@ var agentsSchedulesUpdate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -197,8 +202,9 @@ var agentsSchedulesList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -245,12 +251,14 @@ var agentsSchedulesDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "agent-id",
-			Required: true,
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleAgentsSchedulesDelete,
@@ -268,8 +276,6 @@ func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentScheduleNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -280,6 +286,8 @@ func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentScheduleNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -372,8 +380,6 @@ func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentScheduleUpdateParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -384,6 +390,8 @@ func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentScheduleUpdateParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -422,8 +430,6 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.AgentScheduleListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -434,6 +440,8 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.AgentScheduleListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
