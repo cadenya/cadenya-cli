@@ -315,7 +315,6 @@ func init() {
 					&workspacesGet,
 				},
 			},
-			configCommand,
 			{
 				Name:     "bulk-workspace-resources",
 				Category: "API RESOURCE",
