@@ -14,11 +14,16 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var toolSetsCreate = requestflag.WithInnerFlags(cli.Command{
+var agentsSchedulesCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
-	Usage:   "Creates a new tool set in the workspace",
+	Usage:   "Creates a new schedule for an agent",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
 			Usage:    "CreateResourceMetadata contains the user-provided fields for creating\n a workspace-scoped resource. Read-only fields (id, account_id, workspace_id, profile_id,\n created_at) are excluded since they are set by the server.",
@@ -27,11 +32,12 @@ var toolSetsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "spec",
+			Usage:    "AgentScheduleSpec is the user-provided configuration for a schedule.",
 			Required: true,
 			BodyPath: "spec",
 		},
 	},
-	Action:          handleToolSetsCreate,
+	Action:          handleAgentsSchedulesCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
@@ -52,37 +58,69 @@ var toolSetsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 	},
 	"spec": {
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.initial-message",
+			Usage:      "The initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history.",
+			InnerField: "initialMessage",
+		},
 		&requestflag.InnerFlag[map[string]any]{
-			Name:       "spec.adapter",
-			InnerField: "adapter",
+			Name:       "spec.schedule",
+			Usage:      "Schedule defines WHEN the schedule fires. Temporal-style structured form:\n a list of calendar rules (wall-clock) and/or interval rules (duration),\n OR'd together. At least one rule is required.",
+			InnerField: "schedule",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.data",
+			Usage:      "Optional input data passed to the objective. If the agent has an\n input_data_schema, this must satisfy it.",
+			InnerField: "data",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.description",
-			InnerField: "description",
+			Name:       "spec.overlap-policy",
+			Usage:      "What to do when the previous run is still in flight. Defaults to SKIP.",
+			InnerField: "overlapPolicy",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.status",
+			Usage:      "Lifecycle. Defaults to ACTIVE on create when unspecified.",
+			InnerField: "status",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.variation-id",
+			Usage:      "Optional explicit variation. When unset, the agent's variation_selection_mode\n chooses per fire.",
+			InnerField: "variationId",
 		},
 	},
 })
 
-var toolSetsRetrieve = cli.Command{
+var agentsSchedulesRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Retrieves a tool set by ID from the workspace",
+	Usage:   "Retrieves a schedule by ID from an agent",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
 			PathParam: "id",
 		},
 	},
-	Action:          handleToolSetsRetrieve,
+	Action:          handleAgentsSchedulesRetrieve,
 	HideHelpCommand: true,
 }
 
-var toolSetsUpdate = requestflag.WithInnerFlags(cli.Command{
+var agentsSchedulesUpdate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "update",
-	Usage:   "Updates a tool set in the workspace",
+	Usage:   "Updates a schedule for an agent",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
@@ -95,14 +133,16 @@ var toolSetsUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "spec",
+			Usage:    "AgentScheduleSpec is the user-provided configuration for a schedule.",
 			BodyPath: "spec",
 		},
 		&requestflag.Flag[string]{
 			Name:     "update-mask",
+			Usage:    "Fields to update.",
 			BodyPath: "updateMask",
 		},
 	},
-	Action:          handleToolSetsUpdate,
+	Action:          handleAgentsSchedulesUpdate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
@@ -123,50 +163,77 @@ var toolSetsUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 	},
 	"spec": {
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.initial-message",
+			Usage:      "The initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history.",
+			InnerField: "initialMessage",
+		},
 		&requestflag.InnerFlag[map[string]any]{
-			Name:       "spec.adapter",
-			InnerField: "adapter",
+			Name:       "spec.schedule",
+			Usage:      "Schedule defines WHEN the schedule fires. Temporal-style structured form:\n a list of calendar rules (wall-clock) and/or interval rules (duration),\n OR'd together. At least one rule is required.",
+			InnerField: "schedule",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.data",
+			Usage:      "Optional input data passed to the objective. If the agent has an\n input_data_schema, this must satisfy it.",
+			InnerField: "data",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.description",
-			InnerField: "description",
+			Name:       "spec.overlap-policy",
+			Usage:      "What to do when the previous run is still in flight. Defaults to SKIP.",
+			InnerField: "overlapPolicy",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.status",
+			Usage:      "Lifecycle. Defaults to ACTIVE on create when unspecified.",
+			InnerField: "status",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.variation-id",
+			Usage:      "Optional explicit variation. When unset, the agent's variation_selection_mode\n chooses per fire.",
+			InnerField: "variationId",
 		},
 	},
 })
 
-var toolSetsList = cli.Command{
+var agentsSchedulesList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists all tool sets in the workspace",
+	Usage:   "Lists all schedules for an agent",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "cursor",
-			Usage:     "Pagination cursor from previous response",
+			Usage:     "Pagination cursor from previous response.",
 			QueryPath: "cursor",
 		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",
-			Usage:     "When set to true you may use more of your alloted API rate-limit",
+			Usage:     "When set to true you may use more of your alloted API rate-limit.",
 			QueryPath: "includeInfo",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
-			Usage:     "Maximum number of results to return",
+			Usage:     "Maximum number of results to return.",
 			QueryPath: "limit",
 		},
 		&requestflag.Flag[string]{
 			Name:      "prefix",
-			Usage:     "Filter expression (query param: prefix)",
+			Usage:     "Filter expression (query param: prefix).",
 			QueryPath: "prefix",
 		},
 		&requestflag.Flag[string]{
 			Name:      "query",
-			Usage:     "Free-form search query",
+			Usage:     "Free-form search query.",
 			QueryPath: "query",
 		},
 		&requestflag.Flag[string]{
 			Name:      "sort-order",
-			Usage:     "Sort order for results (asc or desc by creation time)",
+			Usage:     "Sort order for results (asc or desc by creation time).",
 			QueryPath: "sortOrder",
 		},
 		&requestflag.Flag[int64]{
@@ -174,68 +241,37 @@ var toolSetsList = cli.Command{
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
 		},
 	},
-	Action:          handleToolSetsList,
+	Action:          handleAgentsSchedulesList,
 	HideHelpCommand: true,
 }
 
-var toolSetsDelete = cli.Command{
+var agentsSchedulesDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Deletes a tool set in the workspace",
+	Usage:   "Deletes a schedule from an agent",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
 			PathParam: "id",
 		},
 	},
-	Action:          handleToolSetsDelete,
+	Action:          handleAgentsSchedulesDelete,
 	HideHelpCommand: true,
 }
 
-var toolSetsListEvents = cli.Command{
-	Name:    "list-events",
-	Usage:   "Lists all events (including sync status) for a tool set",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "tool-set-id",
-			Required:  true,
-			PathParam: "toolSetId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "cursor",
-			Usage:     "Pagination cursor from previous response",
-			QueryPath: "cursor",
-		},
-		&requestflag.Flag[bool]{
-			Name:      "include-info",
-			Usage:     "When set to true you may use more of your alloted API rate-limit",
-			QueryPath: "includeInfo",
-		},
-		&requestflag.Flag[int64]{
-			Name:      "limit",
-			Usage:     "Maximum number of results to return",
-			QueryPath: "limit",
-		},
-		&requestflag.Flag[string]{
-			Name:      "sort-order",
-			Usage:     "Sort order for results (asc or desc by creation time)",
-			QueryPath: "sortOrder",
-		},
-		&requestflag.Flag[int64]{
-			Name:  "max-items",
-			Usage: "The maximum number of items to return (use -1 for unlimited).",
-		},
-	},
-	Action:          handleToolSetsListEvents,
-	HideHelpCommand: true,
-}
-
-func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
+func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -251,11 +287,16 @@ func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetNewParams{}
+	params := cadenya.AgentScheduleNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.New(ctx, params, options...)
+	_, err = client.Agents.Schedules.New(
+		ctx,
+		cmd.Value("agent-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -268,14 +309,18 @@ func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "tool-sets create",
+		Title:          "agents:schedules create",
 		Transform:      transform,
 	})
 }
 
-func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
+func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -297,7 +342,12 @@ func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.Get(ctx, cmd.Value("id").(string), options...)
+	_, err = client.Agents.Schedules.Get(
+		ctx,
+		cmd.Value("agent-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -310,14 +360,18 @@ func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "tool-sets retrieve",
+		Title:          "agents:schedules retrieve",
 		Transform:      transform,
 	})
 }
 
-func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
+func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -337,12 +391,13 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetUpdateParams{}
+	params := cadenya.AgentScheduleUpdateParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.Update(
+	_, err = client.Agents.Schedules.Update(
 		ctx,
+		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -359,15 +414,18 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "tool-sets update",
+		Title:          "agents:schedules update",
 		Transform:      transform,
 	})
 }
 
-func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
+func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -383,7 +441,7 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetListParams{}
+	params := cadenya.AgentScheduleListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -391,7 +449,12 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.ToolSets.List(ctx, params, options...)
+		_, err = client.Agents.Schedules.List(
+			ctx,
+			cmd.Value("agent-id").(string),
+			params,
+			options...,
+		)
 		if err != nil {
 			return err
 		}
@@ -400,11 +463,16 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "tool-sets list",
+			Title:          "agents:schedules list",
 			Transform:      transform,
 		})
 	} else {
-		iter := client.ToolSets.ListAutoPaging(ctx, params, options...)
+		iter := client.Agents.Schedules.ListAutoPaging(
+			ctx,
+			cmd.Value("agent-id").(string),
+			params,
+			options...,
+		)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -413,15 +481,19 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "tool-sets list",
+			Title:          "agents:schedules list",
 			Transform:      transform,
 		})
 	}
 }
 
-func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
+func handleAgentsSchedulesDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -441,73 +513,10 @@ func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.ToolSets.Delete(ctx, cmd.Value("id").(string), options...)
-}
-
-func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
-		cmd.Set("tool-set-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
+	return client.Agents.Schedules.Delete(
+		ctx,
+		cmd.Value("agent-id").(string),
+		cmd.Value("id").(string),
+		options...,
 	)
-	if err != nil {
-		return err
-	}
-
-	params := cadenya.ToolSetListEventsParams{}
-
-	format := cmd.Root().String("format")
-	explicitFormat := cmd.Root().IsSet("format")
-	transform := cmd.Root().String("transform")
-	if format == "raw" {
-		var res []byte
-		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.ToolSets.ListEvents(
-			ctx,
-			cmd.Value("tool-set-id").(string),
-			params,
-			options...,
-		)
-		if err != nil {
-			return err
-		}
-		obj := gjson.ParseBytes(res)
-		return ShowJSON(obj, ShowJSONOpts{
-			ExplicitFormat: explicitFormat,
-			Format:         format,
-			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "tool-sets list-events",
-			Transform:      transform,
-		})
-	} else {
-		iter := client.ToolSets.ListEventsAutoPaging(
-			ctx,
-			cmd.Value("tool-set-id").(string),
-			params,
-			options...,
-		)
-		maxItems := int64(-1)
-		if cmd.IsSet("max-items") {
-			maxItems = cmd.Value("max-items").(int64)
-		}
-		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
-			ExplicitFormat: explicitFormat,
-			Format:         format,
-			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "tool-sets list-events",
-			Transform:      transform,
-		})
-	}
 }

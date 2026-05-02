@@ -20,8 +20,9 @@ var memoryLayersEntriesCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "memory-layer-id",
-			Required: true,
+			Name:      "memory-layer-id",
+			Required:  true,
+			PathParam: "memoryLayerId",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -85,12 +86,14 @@ var memoryLayersEntriesRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "memory-layer-id",
-			Required: true,
+			Name:      "memory-layer-id",
+			Required:  true,
+			PathParam: "memoryLayerId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleMemoryLayersEntriesRetrieve,
@@ -103,12 +106,14 @@ var memoryLayersEntriesUpdate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "memory-layer-id",
-			Required: true,
+			Name:      "memory-layer-id",
+			Required:  true,
+			PathParam: "memoryLayerId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -171,8 +176,9 @@ var memoryLayersEntriesList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "memory-layer-id",
-			Required: true,
+			Name:      "memory-layer-id",
+			Required:  true,
+			PathParam: "memoryLayerId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -219,12 +225,14 @@ var memoryLayersEntriesDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "memory-layer-id",
-			Required: true,
+			Name:      "memory-layer-id",
+			Required:  true,
+			PathParam: "memoryLayerId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleMemoryLayersEntriesDelete,
@@ -242,8 +250,6 @@ func handleMemoryLayersEntriesCreate(ctx context.Context, cmd *cli.Command) erro
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.MemoryLayerEntryNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -254,6 +260,8 @@ func handleMemoryLayersEntriesCreate(ctx context.Context, cmd *cli.Command) erro
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.MemoryLayerEntryNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -346,8 +354,6 @@ func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) erro
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.MemoryLayerEntryUpdateParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -358,6 +364,8 @@ func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) erro
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.MemoryLayerEntryUpdateParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -396,8 +404,6 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.MemoryLayerEntryListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -408,6 +414,8 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.MemoryLayerEntryListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")

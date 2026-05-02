@@ -340,9 +340,9 @@ func (b *planBuilder) buildAssignmentOps(parent string, v *VariationNode, vLooku
 
 	// Current state — pull assignments out of the GET response's info.assignments.
 	type currentAssn struct {
-		RowID      string
-		Kind       string // "tool" | "tool_set" | "agent"
-		TargetID   string // canonical id
+		RowID    string
+		Kind     string // "tool" | "tool_set" | "agent"
+		TargetID string // canonical id
 	}
 	var current []currentAssn
 	if vLookup.Exists {
@@ -980,4 +980,3 @@ func isNotFound(err error) bool {
 	}
 	return false
 }
-

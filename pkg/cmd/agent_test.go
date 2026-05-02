@@ -181,6 +181,8 @@ func TestAgentsList(t *testing.T) {
 			"--prefix", "prefix",
 			"--query", "query",
 			"--sort-order", "sortOrder",
+			"--status", "AGENT_STATUS_UNSPECIFIED",
+			"--variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
 		)
 	})
 }

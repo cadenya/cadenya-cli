@@ -20,8 +20,9 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -71,7 +72,7 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.status",
-			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_FILTERED", "TOOL_STATUS_ARCHIVED".`,
+			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_OMITTED", "TOOL_STATUS_ARCHIVED".`,
 			InnerField: "status",
 		},
 		&requestflag.InnerFlag[bool]{
@@ -87,12 +88,14 @@ var toolSetsToolsRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleToolSetsToolsRetrieve,
@@ -105,12 +108,14 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -162,7 +167,7 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.status",
-			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_FILTERED", "TOOL_STATUS_ARCHIVED".`,
+			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_OMITTED", "TOOL_STATUS_ARCHIVED".`,
 			InnerField: "status",
 		},
 		&requestflag.InnerFlag[bool]{
@@ -178,8 +183,9 @@ var toolSetsToolsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -196,6 +202,11 @@ var toolSetsToolsList = cli.Command{
 			Usage:     "Maximum number of results to return",
 			QueryPath: "limit",
 		},
+		&requestflag.Flag[[]string]{
+			Name:      "name",
+			Usage:     "Filter by tool name (exact match). Multiple values are OR'd together.",
+			QueryPath: "names",
+		},
 		&requestflag.Flag[string]{
 			Name:      "prefix",
 			Usage:     "Filter expression (query param: prefix)",
@@ -206,10 +217,20 @@ var toolSetsToolsList = cli.Command{
 			Usage:     "Free-form search query",
 			QueryPath: "query",
 		},
+		&requestflag.Flag[bool]{
+			Name:      "requires-approval",
+			Usage:     "Filter by approval requirement. Omitted = no filter; true = only tools\n requiring approval; false = only tools not requiring approval.",
+			QueryPath: "requiresApproval",
+		},
 		&requestflag.Flag[string]{
 			Name:      "sort-order",
 			Usage:     "Sort order for results (asc or desc by creation time)",
 			QueryPath: "sortOrder",
+		},
+		&requestflag.Flag[[]string]{
+			Name:      "status",
+			Usage:     "Filter by tool status. Multiple values are OR'd together.",
+			QueryPath: "statuses",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
@@ -226,12 +247,14 @@ var toolSetsToolsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "tool-set-id",
-			Required: true,
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "id",
-			Required: true,
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
 	Action:          handleToolSetsToolsDelete,
@@ -249,8 +272,6 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ToolSetToolNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -261,6 +282,8 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ToolSetToolNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -353,8 +376,6 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ToolSetToolUpdateParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -365,6 +386,8 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ToolSetToolUpdateParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -403,8 +426,6 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ToolSetToolListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -415,6 +436,8 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ToolSetToolListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")

@@ -20,24 +20,26 @@ var objectivesFeedbackCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "data",
 			Required: true,
 			BodyPath: "data",
 		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "metadata",
+			Usage:    "CreateOperationMetadata contains the user-provided fields for creating\n an operation. Read-only fields (id, account_id, workspace_id, created_at, profile_id)\n are excluded since they are set by the server.",
+			Required: true,
+			BodyPath: "metadata",
+		},
 	},
 	Action:          handleObjectivesFeedbackCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"data": {
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.attributes",
-			Usage:      "Arbitrary key-value pairs to identify the source of the feedback.\n Since the submitting profile is typically an API key, use this to pass through\n application-specific identifiers (e.g., {\"user_id\": \"usr_123\", \"session_id\": \"abc\"}).",
-			InnerField: "attributes",
-		},
 		&requestflag.InnerFlag[string]{
 			Name:       "data.comment",
 			Usage:      "Optional human-readable comment explaining the feedback",
@@ -49,6 +51,18 @@ var objectivesFeedbackCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "score",
 		},
 	},
+	"metadata": {
+		&requestflag.InnerFlag[string]{
+			Name:       "metadata.external-id",
+			Usage:      "External ID for the operation (e.g., a workflow ID from an external system)",
+			InnerField: "externalId",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "metadata.labels",
+			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"priority\": \"high\", \"source\": \"api\", \"workflow\": \"onboarding\"}",
+			InnerField: "labels",
+		},
+	},
 })
 
 var objectivesFeedbackList = cli.Command{
@@ -57,8 +71,9 @@ var objectivesFeedbackList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "objective-id",
-			Required: true,
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
@@ -90,8 +105,6 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveFeedbackNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -102,6 +115,8 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveFeedbackNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -139,8 +154,6 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := cadenya.ObjectiveFeedbackListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -151,6 +164,8 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := cadenya.ObjectiveFeedbackListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")

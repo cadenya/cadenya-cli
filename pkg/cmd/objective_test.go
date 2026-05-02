@@ -90,6 +90,7 @@ func TestObjectivesList(t *testing.T) {
 			"objectives", "list",
 			"--max-items", "10",
 			"--agent-id", "agentId",
+			"--agent-schedule-id", "agentScheduleId",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",
