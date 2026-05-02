@@ -214,4 +214,3 @@ func envFromOSEnviron() map[string]string {
 	}
 	return env
 }
-

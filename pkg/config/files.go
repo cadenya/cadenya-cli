@@ -167,4 +167,3 @@ func splitFrontmatter(raw []byte, sourcePath string) (desc string, body []byte, 
 	}
 	return meta.Description, rest, nil
 }
-
