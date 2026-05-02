@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.0 (2026-05-02)
+
+Full Changelog: [v0.8.0...v0.9.0](https://github.com/cadenya/cadenya-cli/compare/v0.8.0...v0.9.0)
+
+### ⚠ BREAKING CHANGES
+
+* remove custom 'config apply' command ([#13](https://github.com/cadenya/cadenya-cli/issues/13))
+
+### Features
+
+* remove custom 'config apply' command ([#13](https://github.com/cadenya/cadenya-cli/issues/13)) ([f2f1eeb](https://github.com/cadenya/cadenya-cli/commit/f2f1eebc830f71a37148279ea9998144e790616f))
+
 ## 0.8.0 (2026-05-02)
 
 Full Changelog: [v0.7.0...v0.8.0](https://github.com/cadenya/cadenya-cli/compare/v0.7.0...v0.8.0)
