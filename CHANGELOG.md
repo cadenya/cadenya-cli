@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.6.0 (2026-05-02)
+
+Full Changelog: [v0.5.0...v0.6.0](https://github.com/cadenya/cadenya-cli/compare/v0.5.0...v0.6.0)
+
+### Features
+
+* **api:** api update ([78f18e9](https://github.com/cadenya/cadenya-cli/commit/78f18e9a6a06a90562961cbd162600feb2f3fc7c))
+* **api:** api update ([e4637c4](https://github.com/cadenya/cadenya-cli/commit/e4637c4f0deb417651a13a8ba48070a831095a5b))
+* **api:** api update ([3df42d7](https://github.com/cadenya/cadenya-cli/commit/3df42d7c5c63d8af1480dadd02e16a4a7ab97d20))
+* **api:** api update ([c37e25e](https://github.com/cadenya/cadenya-cli/commit/c37e25edc425a8822559db3ace97858b911435fb))
+* **api:** api update ([6ef297a](https://github.com/cadenya/cadenya-cli/commit/6ef297ae957c3324fd2b852f7607ce73f9813c38))
+* **api:** api update ([f04f00c](https://github.com/cadenya/cadenya-cli/commit/f04f00c357a448ca1e8d28eccc4c4da83f08fb54))
+* **api:** api update ([531f245](https://github.com/cadenya/cadenya-cli/commit/531f2458ce19323cf8b3add85711f8fa229c0020))
+* **api:** manual updates ([1037727](https://github.com/cadenya/cadenya-cli/commit/1037727251ad3c67152d029985ee523be06aae57))
+* support passing path and query params over stdin ([1ebb140](https://github.com/cadenya/cadenya-cli/commit/1ebb1401fdc330b9a0e553c44ac9595fe47ce88f))
+
+
+### Bug Fixes
+
+* **cli:** correctly load zsh autocompletion ([1f6010e](https://github.com/cadenya/cadenya-cli/commit/1f6010ef88733276a9c75e5942cd0af3c6579427))
+* flags for nullable body scalar fields are strictly typed ([a03b60e](https://github.com/cadenya/cadenya-cli/commit/a03b60e3c540f5decb2b6231e0557b86fa767499))
+
 ## 0.5.0 (2026-04-24)
 
 Full Changelog: [v0.4.0...v0.5.0](https://github.com/cadenya/cadenya-cli/compare/v0.4.0...v0.5.0)
