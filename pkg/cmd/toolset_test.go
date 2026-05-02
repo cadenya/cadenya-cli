@@ -16,7 +16,7 @@ func TestToolSetsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets", "create",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{adapter: {http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}, description: description}",
 		)
 	})
@@ -31,6 +31,7 @@ func TestToolSetsCreate(t *testing.T) {
 			"--api-key", "string",
 			"tool-sets", "create",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.adapter", "{http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}",
@@ -43,6 +44,7 @@ func TestToolSetsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -120,7 +122,7 @@ func TestToolSetsUpdate(t *testing.T) {
 			"--api-key", "string",
 			"tool-sets", "update",
 			"--id", "id",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{adapter: {http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}, description: description}",
 			"--update-mask", "updateMask",
 		)
@@ -137,6 +139,7 @@ func TestToolSetsUpdate(t *testing.T) {
 			"tool-sets", "update",
 			"--id", "id",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.adapter", "{http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}",
@@ -150,6 +153,7 @@ func TestToolSetsUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -217,6 +221,7 @@ func TestToolSetsList(t *testing.T) {
 			"--api-key", "string",
 			"tool-sets", "list",
 			"--max-items", "10",
+			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

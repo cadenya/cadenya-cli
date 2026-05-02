@@ -17,7 +17,7 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			"--api-key", "string",
 			"agents:schedules", "create",
 			"--agent-id", "agentId",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{initialMessage: initialMessage, schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, status: AGENT_SCHEDULE_STATUS_UNSPECIFIED, variationId: variationId}",
 		)
 	})
@@ -33,6 +33,7 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			"agents:schedules", "create",
 			"--agent-id", "agentId",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.initial-message", "initialMessage",
@@ -49,6 +50,7 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -120,7 +122,7 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			"agents:schedules", "update",
 			"--agent-id", "agentId",
 			"--id", "id",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{initialMessage: initialMessage, schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, status: AGENT_SCHEDULE_STATUS_UNSPECIFIED, variationId: variationId}",
 			"--update-mask", "updateMask",
 		)
@@ -138,6 +140,7 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.initial-message", "initialMessage",
@@ -155,6 +158,7 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -215,6 +219,7 @@ func TestAgentsSchedulesList(t *testing.T) {
 			"agents:schedules", "list",
 			"--max-items", "10",
 			"--agent-id", "agentId",
+			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",
