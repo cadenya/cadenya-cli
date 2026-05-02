@@ -16,7 +16,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "create",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 		)
 	})
@@ -31,6 +31,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			"--api-key", "string",
 			"workspace-secrets", "create",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.value", "value",
@@ -42,6 +43,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -75,7 +77,7 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			"--api-key", "string",
 			"workspace-secrets", "update",
 			"--id", "id",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 			"--update-mask", "updateMask",
 		)
@@ -92,6 +94,7 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			"workspace-secrets", "update",
 			"--id", "id",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.value", "value",
@@ -104,6 +107,7 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -127,6 +131,7 @@ func TestWorkspaceSecretsList(t *testing.T) {
 			"--api-key", "string",
 			"workspace-secrets", "list",
 			"--max-items", "10",
+			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

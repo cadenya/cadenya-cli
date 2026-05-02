@@ -14,9 +14,9 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var modelsRetrieve = cli.Command{
+var bulkWorkspaceResourcesRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Retrieves a model by ID from the workspace",
+	Usage:   "Retrieves a bulk workspace apply operation by ID.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -25,18 +25,18 @@ var modelsRetrieve = cli.Command{
 			PathParam: "id",
 		},
 	},
-	Action:          handleModelsRetrieve,
+	Action:          handleBulkWorkspaceResourcesRetrieve,
 	HideHelpCommand: true,
 }
 
-var modelsList = cli.Command{
+var bulkWorkspaceResourcesList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists all models in the workspace",
+	Usage:   "Lists past and in-flight bulk workspace apply operations in the workspace.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:      "bundle-key",
-			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
+			Usage:     "Filter by bundle_key — list every apply for a given bundle.",
 			QueryPath: "bundleKey",
 		},
 		&requestflag.Flag[string]{
@@ -50,55 +50,68 @@ var modelsList = cli.Command{
 			QueryPath: "limit",
 		},
 		&requestflag.Flag[string]{
-			Name:      "prefix",
-			Usage:     "Filter by name prefix",
-			QueryPath: "prefix",
-		},
-		&requestflag.Flag[string]{
-			Name:      "query",
-			Usage:     "Free-form search query",
-			QueryPath: "query",
-		},
-		&requestflag.Flag[string]{
 			Name:      "sort-order",
 			Usage:     "Sort order for results (asc or desc by creation time)",
 			QueryPath: "sortOrder",
 		},
 		&requestflag.Flag[string]{
-			Name:      "status",
-			Usage:     "Filter by model status",
-			QueryPath: "status",
+			Name:      "state",
+			Usage:     "Filter by lifecycle state.",
+			QueryPath: "state",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
 		},
 	},
-	Action:          handleModelsList,
+	Action:          handleBulkWorkspaceResourcesList,
 	HideHelpCommand: true,
 }
 
-var modelsSetStatus = cli.Command{
-	Name:    "set-status",
-	Usage:   "Enables or disables a model in the workspace",
+var bulkWorkspaceResourcesApply = requestflag.WithInnerFlags(cli.Command{
+	Name:    "apply",
+	Usage:   "Asynchronously applies a declarative bundle of workspace resources. Returns the\noperation immediately in PENDING; clients poll Get to track progress.",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "id",
-			Required:  true,
-			PathParam: "id",
-		},
-		&requestflag.Flag[string]{
-			Name:     "status",
-			Usage:    "The new status for the model",
-			BodyPath: "status",
+		&requestflag.Flag[map[string]any]{
+			Name:     "data",
+			Required: true,
+			BodyPath: "data",
 		},
 	},
-	Action:          handleModelsSetStatus,
+	Action:          handleBulkWorkspaceResourcesApply,
 	HideHelpCommand: true,
-}
+}, map[string][]requestflag.HasOuterFlag{
+	"data": {
+		&requestflag.InnerFlag[string]{
+			Name:       "data.bundle-key",
+			Usage:      "Required. Bundle ownership key. Resources created or updated by an\n Apply have their `metadata.bundle_key` set to this value. On\n subsequent applies with the same bundle_key, resources currently\n bearing this bundle_key but absent from the spec are soft-deleted.",
+			InnerField: "bundleKey",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "data.agents",
+			Usage:      "Agents to upsert, keyed by external_id.",
+			InnerField: "agents",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "data.memory-layers",
+			Usage:      "Memory layers to upsert, keyed by external_id.",
+			InnerField: "memoryLayers",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "data.source-url",
+			Usage:      "Optional URL pointing to the source of this apply (GitHub PR,\n Jenkins build, GitLab pipeline, etc.). Surfaced in the dashboard so\n users can jump from an apply back to the change that produced it.\n Free-form HTTPS URI; not interpreted by the server.",
+			InnerField: "sourceUrl",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "data.tool-sets",
+			Usage:      "Tool sets to upsert, keyed by external_id.",
+			InnerField: "toolSets",
+		},
+	},
+})
 
-func handleModelsRetrieve(ctx context.Context, cmd *cli.Command) error {
+func handleBulkWorkspaceResourcesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
@@ -122,7 +135,7 @@ func handleModelsRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Models.Get(ctx, cmd.Value("id").(string), options...)
+	_, err = client.BulkWorkspaceResources.Get(ctx, cmd.Value("id").(string), options...)
 	if err != nil {
 		return err
 	}
@@ -135,12 +148,12 @@ func handleModelsRetrieve(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "models retrieve",
+		Title:          "bulk-workspace-resources retrieve",
 		Transform:      transform,
 	})
 }
 
-func handleModelsList(ctx context.Context, cmd *cli.Command) error {
+func handleBulkWorkspaceResourcesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
@@ -159,7 +172,7 @@ func handleModelsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ModelListParams{}
+	params := cadenya.BulkWorkspaceResourceListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -167,7 +180,7 @@ func handleModelsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.Models.List(ctx, params, options...)
+		_, err = client.BulkWorkspaceResources.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -176,11 +189,11 @@ func handleModelsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "models list",
+			Title:          "bulk-workspace-resources list",
 			Transform:      transform,
 		})
 	} else {
-		iter := client.Models.ListAutoPaging(ctx, params, options...)
+		iter := client.BulkWorkspaceResources.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -189,19 +202,16 @@ func handleModelsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "models list",
+			Title:          "bulk-workspace-resources list",
 			Transform:      transform,
 		})
 	}
 }
 
-func handleModelsSetStatus(ctx context.Context, cmd *cli.Command) error {
+func handleBulkWorkspaceResourcesApply(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -217,16 +227,11 @@ func handleModelsSetStatus(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ModelSetStatusParams{}
+	params := cadenya.BulkWorkspaceResourceApplyParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Models.SetStatus(
-		ctx,
-		cmd.Value("id").(string),
-		params,
-		options...,
-	)
+	_, err = client.BulkWorkspaceResources.Apply(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -239,7 +244,7 @@ func handleModelsSetStatus(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "models set-status",
+		Title:          "bulk-workspace-resources apply",
 		Transform:      transform,
 	})
 }

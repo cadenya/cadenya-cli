@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0 (2026-05-02)
+
+Full Changelog: [v0.6.0...v0.7.0](https://github.com/cadenya/cadenya-cli/compare/v0.6.0...v0.7.0)
+
+### Features
+
+* **api:** api update ([a61920c](https://github.com/cadenya/cadenya-cli/commit/a61920c84e1b802221c25eca9ef816a04d98dab7))
+* **api:** BulkWorkspaceResources service for declarative workspace configuration ([d945b59](https://github.com/cadenya/cadenya-cli/commit/d945b592fe492dd22ab185f11e1e228b5abee0c5))
+
 ## 0.6.0 (2026-05-02)
 
 Full Changelog: [v0.5.0...v0.6.0](https://github.com/cadenya/cadenya-cli/compare/v0.5.0...v0.6.0)

@@ -16,9 +16,9 @@ func TestAgentsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "create",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, webhookEventsUrl: webhookEventsUrl}",
-			"--default-variation", "{metadata: {name: name, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}}",
+			"--default-variation", "{metadata: {name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}}",
 		)
 	})
 
@@ -32,6 +32,7 @@ func TestAgentsCreate(t *testing.T) {
 			"--api-key", "string",
 			"agents", "create",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.status", "AGENT_STATUS_UNSPECIFIED",
@@ -39,7 +40,7 @@ func TestAgentsCreate(t *testing.T) {
 			"--spec.description", "description",
 			"--spec.input-data-schema", "{}",
 			"--spec.webhook-events-url", "webhookEventsUrl",
-			"--default-variation.metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--default-variation.metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--default-variation.spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}",
 		)
 	})
@@ -49,6 +50,7 @@ func TestAgentsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -61,6 +63,7 @@ func TestAgentsCreate(t *testing.T) {
 			"defaultVariation:\n" +
 			"  metadata:\n" +
 			"    name: name\n" +
+			"    bundleKey: bundleKey\n" +
 			"    externalId: externalId\n" +
 			"    labels:\n" +
 			"      foo: string\n" +
@@ -115,7 +118,7 @@ func TestAgentsUpdate(t *testing.T) {
 			"--api-key", "string",
 			"agents", "update",
 			"--id", "id",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, webhookEventsUrl: webhookEventsUrl}",
 			"--update-mask", "updateMask",
 		)
@@ -132,6 +135,7 @@ func TestAgentsUpdate(t *testing.T) {
 			"agents", "update",
 			"--id", "id",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.status", "AGENT_STATUS_UNSPECIFIED",
@@ -148,6 +152,7 @@ func TestAgentsUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -175,6 +180,7 @@ func TestAgentsList(t *testing.T) {
 			"--api-key", "string",
 			"agents", "list",
 			"--max-items", "10",
+			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",
