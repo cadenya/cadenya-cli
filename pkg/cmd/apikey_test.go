@@ -16,7 +16,7 @@ func TestAPIKeysCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "create",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{description: description}",
 		)
 	})
@@ -31,6 +31,7 @@ func TestAPIKeysCreate(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "create",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.description", "description",
@@ -42,6 +43,7 @@ func TestAPIKeysCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -75,7 +77,7 @@ func TestAPIKeysUpdate(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "update",
 			"--id", "id",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{description: description}",
 			"--update-mask", "updateMask",
 		)
@@ -92,6 +94,7 @@ func TestAPIKeysUpdate(t *testing.T) {
 			"api-keys", "update",
 			"--id", "id",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.description", "description",
@@ -104,6 +107,7 @@ func TestAPIKeysUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -127,6 +131,7 @@ func TestAPIKeysList(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "list",
 			"--max-items", "10",
+			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

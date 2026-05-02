@@ -35,6 +35,11 @@ var bulkWorkspaceResourcesList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "bundle-key",
+			Usage:     "Filter by bundle_key — list every apply for a given bundle.",
+			QueryPath: "bundleKey",
+		},
+		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
@@ -43,11 +48,6 @@ var bulkWorkspaceResourcesList = cli.Command{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return",
 			QueryPath: "limit",
-		},
-		&requestflag.Flag[string]{
-			Name:      "managed-by-key",
-			Usage:     "Filter by managed_by_key — list every apply for a given bundle.",
-			QueryPath: "managedByKey",
 		},
 		&requestflag.Flag[string]{
 			Name:      "sort-order",
@@ -84,9 +84,9 @@ var bulkWorkspaceResourcesApply = requestflag.WithInnerFlags(cli.Command{
 }, map[string][]requestflag.HasOuterFlag{
 	"data": {
 		&requestflag.InnerFlag[string]{
-			Name:       "data.managed-by-key",
-			Usage:      "Required. Bundle ownership key. Resources created or updated by an\n Apply with this key are tagged with the reserved label\n `bulk.cadenya.com/managed-by=<managed_by_key>`; on subsequent applies\n with the same key, resources currently bearing the label but absent\n from the spec are soft-deleted.",
-			InnerField: "managedByKey",
+			Name:       "data.bundle-key",
+			Usage:      "Required. Bundle ownership key. Resources created or updated by an\n Apply have their `metadata.bundle_key` set to this value. On\n subsequent applies with the same bundle_key, resources currently\n bearing this bundle_key but absent from the spec are soft-deleted.",
+			InnerField: "bundleKey",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "data.agents",

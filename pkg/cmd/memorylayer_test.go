@@ -16,7 +16,7 @@ func TestMemoryLayersCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "create",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{type: MEMORY_LAYER_TYPE_UNSPECIFIED, description: description}",
 		)
 	})
@@ -31,6 +31,7 @@ func TestMemoryLayersCreate(t *testing.T) {
 			"--api-key", "string",
 			"memory-layers", "create",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.type", "MEMORY_LAYER_TYPE_UNSPECIFIED",
@@ -43,6 +44,7 @@ func TestMemoryLayersCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -77,7 +79,7 @@ func TestMemoryLayersUpdate(t *testing.T) {
 			"--api-key", "string",
 			"memory-layers", "update",
 			"--id", "id",
-			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{type: MEMORY_LAYER_TYPE_UNSPECIFIED, description: description}",
 			"--update-mask", "updateMask",
 		)
@@ -94,6 +96,7 @@ func TestMemoryLayersUpdate(t *testing.T) {
 			"memory-layers", "update",
 			"--id", "id",
 			"--metadata.name", "name",
+			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.type", "MEMORY_LAYER_TYPE_UNSPECIFIED",
@@ -107,6 +110,7 @@ func TestMemoryLayersUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
+			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -131,6 +135,7 @@ func TestMemoryLayersList(t *testing.T) {
 			"--api-key", "string",
 			"memory-layers", "list",
 			"--max-items", "10",
+			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

@@ -28,6 +28,7 @@ func TestModelsList(t *testing.T) {
 			"--api-key", "string",
 			"models", "list",
 			"--max-items", "10",
+			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--limit", "0",
 			"--prefix", "prefix",
