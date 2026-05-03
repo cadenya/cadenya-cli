@@ -20,6 +20,11 @@ var agentsFeedbackList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -76,6 +81,10 @@ var agentsFeedbackList = cli.Command{
 func handleAgentsFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -105,6 +114,7 @@ func handleAgentsFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Agents.Feedback.List(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -123,6 +133,7 @@ func handleAgentsFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Agents.Feedback.ListAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,

@@ -16,6 +16,7 @@ func TestAPIKeysCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{description: description}",
 		)
@@ -30,6 +31,7 @@ func TestAPIKeysCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
@@ -53,6 +55,7 @@ func TestAPIKeysCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"api-keys", "create",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -64,6 +67,7 @@ func TestAPIKeysRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -76,6 +80,7 @@ func TestAPIKeysUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{description: description}",
@@ -92,6 +97,7 @@ func TestAPIKeysUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
@@ -118,6 +124,7 @@ func TestAPIKeysUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"api-keys", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -131,6 +138,7 @@ func TestAPIKeysList(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
@@ -149,6 +157,7 @@ func TestAPIKeysDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "delete",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -161,6 +170,7 @@ func TestAPIKeysRotate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "rotate",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})

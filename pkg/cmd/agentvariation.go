@@ -20,6 +20,11 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -116,6 +121,11 @@ var agentsVariationsRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -135,6 +145,11 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Updates a variation for an agent",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
@@ -240,6 +255,11 @@ var agentsVariationsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -284,6 +304,11 @@ var agentsVariationsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -303,6 +328,11 @@ var agentsVariationsAddAssignment = cli.Command{
 	Usage:   "Assigns a tool, tool set, or sub-agent to a variation. Exactly one target ID\nmust be set.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
@@ -336,6 +366,11 @@ var agentsVariationsAddMemoryLayer = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -366,6 +401,11 @@ var agentsVariationsRemoveAssignment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -391,6 +431,11 @@ var agentsVariationsRemoveMemoryLayer = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -415,6 +460,11 @@ var agentsVariationsUpdateMemoryLayer = cli.Command{
 	Usage:   "Updates the position of a memory layer assignment on a variation.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
@@ -443,6 +493,10 @@ var agentsVariationsUpdateMemoryLayer = cli.Command{
 func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -468,6 +522,7 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.New(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		params,
 		options...,
@@ -492,6 +547,10 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -519,6 +578,7 @@ func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.Get(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		options...,
@@ -543,6 +603,10 @@ func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error
 func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -572,6 +636,7 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.Update(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -597,6 +662,10 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -626,6 +695,7 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Agents.Variations.List(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -644,6 +714,7 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Agents.Variations.ListAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -665,6 +736,10 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsVariationsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -690,6 +765,7 @@ func handleAgentsVariationsDelete(ctx context.Context, cmd *cli.Command) error {
 
 	return client.Agents.Variations.Delete(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		options...,
@@ -699,6 +775,10 @@ func handleAgentsVariationsDelete(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsVariationsAddAssignment(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -728,6 +808,7 @@ func handleAgentsVariationsAddAssignment(ctx context.Context, cmd *cli.Command) 
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.AddAssignment(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		params,
@@ -753,6 +834,10 @@ func handleAgentsVariationsAddAssignment(ctx context.Context, cmd *cli.Command) 
 func handleAgentsVariationsAddMemoryLayer(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -782,6 +867,7 @@ func handleAgentsVariationsAddMemoryLayer(ctx context.Context, cmd *cli.Command)
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.AddMemoryLayer(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		params,
@@ -807,6 +893,10 @@ func handleAgentsVariationsAddMemoryLayer(ctx context.Context, cmd *cli.Command)
 func handleAgentsVariationsRemoveAssignment(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -836,6 +926,7 @@ func handleAgentsVariationsRemoveAssignment(ctx context.Context, cmd *cli.Comman
 
 	return client.Agents.Variations.RemoveAssignment(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		cmd.Value("id").(string),
@@ -846,6 +937,10 @@ func handleAgentsVariationsRemoveAssignment(ctx context.Context, cmd *cli.Comman
 func handleAgentsVariationsRemoveMemoryLayer(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -875,6 +970,7 @@ func handleAgentsVariationsRemoveMemoryLayer(ctx context.Context, cmd *cli.Comma
 
 	return client.Agents.Variations.RemoveMemoryLayer(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		cmd.Value("id").(string),
@@ -885,6 +981,10 @@ func handleAgentsVariationsRemoveMemoryLayer(ctx context.Context, cmd *cli.Comma
 func handleAgentsVariationsUpdateMemoryLayer(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -918,6 +1018,7 @@ func handleAgentsVariationsUpdateMemoryLayer(ctx context.Context, cmd *cli.Comma
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.UpdateMemoryLayer(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		cmd.Value("id").(string),

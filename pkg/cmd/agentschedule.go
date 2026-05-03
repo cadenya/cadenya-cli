@@ -20,6 +20,11 @@ var agentsSchedulesCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -102,6 +107,11 @@ var agentsSchedulesRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -121,6 +131,11 @@ var agentsSchedulesUpdate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Updates a schedule for an agent",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
@@ -212,6 +227,11 @@ var agentsSchedulesList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -266,6 +286,11 @@ var agentsSchedulesDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "agent-id",
 			Required:  true,
 			PathParam: "agentId",
@@ -283,6 +308,10 @@ var agentsSchedulesDelete = cli.Command{
 func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -308,6 +337,7 @@ func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.New(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		params,
 		options...,
@@ -332,6 +362,10 @@ func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -359,6 +393,7 @@ func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error 
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.Get(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		options...,
@@ -383,6 +418,10 @@ func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error 
 func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -412,6 +451,7 @@ func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.Update(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -437,6 +477,10 @@ func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -466,6 +510,7 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Agents.Schedules.List(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -484,6 +529,7 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Agents.Schedules.ListAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -505,6 +551,10 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -530,6 +580,7 @@ func handleAgentsSchedulesDelete(ctx context.Context, cmd *cli.Command) error {
 
 	return client.Agents.Schedules.Delete(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		options...,

@@ -16,6 +16,7 @@ func TestObjectivesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "create",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--data", "{data: {}, initialMessage: initialMessage, memoryStack: [{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}], secrets: [{name: name, value: value}]}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
@@ -32,6 +33,7 @@ func TestObjectivesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "create",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--data.data", "{}",
 			"--data.initial-message", "initialMessage",
@@ -65,6 +67,7 @@ func TestObjectivesCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives", "create",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -76,6 +79,7 @@ func TestObjectivesRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -89,6 +93,7 @@ func TestObjectivesList(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--agent-schedule-id", "agentScheduleId",
 			"--cursor", "cursor",
@@ -109,6 +114,7 @@ func TestObjectivesCancel(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "cancel",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--reason", "reason",
 		)
@@ -121,6 +127,7 @@ func TestObjectivesCancel(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives", "cancel",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 		)
 	})
@@ -133,6 +140,7 @@ func TestObjectivesCompact(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "compact",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--compaction-config", "{summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
 		)
@@ -147,6 +155,7 @@ func TestObjectivesCompact(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "compact",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--compaction-config.summarization", "{instructions: instructions}",
 			"--compaction-config.tool-result-clearing", "{preserveRecentResults: 0}",
@@ -167,6 +176,7 @@ func TestObjectivesCompact(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives", "compact",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 		)
 	})
@@ -179,6 +189,7 @@ func TestObjectivesContinue(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "continue",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--enqueue=true",
 			"--message", "message",
@@ -195,6 +206,7 @@ func TestObjectivesContinue(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "continue",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--enqueue=true",
 			"--message", "message",
@@ -215,6 +227,7 @@ func TestObjectivesContinue(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives", "continue",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 		)
 	})
@@ -228,6 +241,7 @@ func TestObjectivesListContextWindows(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "list-context-windows",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--include-info=true",
@@ -244,6 +258,7 @@ func TestObjectivesListEvents(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "list-events",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--include-info=true",

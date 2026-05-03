@@ -16,6 +16,7 @@ func TestAgentsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, webhookEventsUrl: webhookEventsUrl}",
 			"--default-variation", "{metadata: {name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}}",
@@ -31,6 +32,7 @@ func TestAgentsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
@@ -94,6 +96,7 @@ func TestAgentsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents", "create",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -105,6 +108,7 @@ func TestAgentsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -117,6 +121,7 @@ func TestAgentsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, webhookEventsUrl: webhookEventsUrl}",
@@ -133,6 +138,7 @@ func TestAgentsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
@@ -167,6 +173,7 @@ func TestAgentsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -180,6 +187,7 @@ func TestAgentsList(t *testing.T) {
 			"--api-key", "string",
 			"agents", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
@@ -200,6 +208,7 @@ func TestAgentsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "delete",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})

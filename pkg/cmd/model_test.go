@@ -15,6 +15,7 @@ func TestModelsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"models", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -28,6 +29,7 @@ func TestModelsList(t *testing.T) {
 			"--api-key", "string",
 			"models", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--limit", "0",
@@ -46,6 +48,7 @@ func TestModelsSetStatus(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"models", "set-status",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--status", "MODEL_STATUS_UNSPECIFIED",
 		)
@@ -58,6 +61,7 @@ func TestModelsSetStatus(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"models", "set-status",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})

@@ -20,6 +20,11 @@ var memoryLayersEntriesCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "memory-layer-id",
 			Required:  true,
 			PathParam: "memoryLayerId",
@@ -91,6 +96,11 @@ var memoryLayersEntriesRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "memory-layer-id",
 			Required:  true,
 			PathParam: "memoryLayerId",
@@ -110,6 +120,11 @@ var memoryLayersEntriesUpdate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Updates a memory entry in a memory layer. Returns the detail view, including the\nresolved content body.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "memory-layer-id",
 			Required:  true,
@@ -186,6 +201,11 @@ var memoryLayersEntriesList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "memory-layer-id",
 			Required:  true,
 			PathParam: "memoryLayerId",
@@ -240,6 +260,11 @@ var memoryLayersEntriesDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "memory-layer-id",
 			Required:  true,
 			PathParam: "memoryLayerId",
@@ -257,6 +282,10 @@ var memoryLayersEntriesDelete = cli.Command{
 func handleMemoryLayersEntriesCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
 		cmd.Set("memory-layer-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -282,6 +311,7 @@ func handleMemoryLayersEntriesCreate(ctx context.Context, cmd *cli.Command) erro
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.MemoryLayers.Entries.New(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("memory-layer-id").(string),
 		params,
 		options...,
@@ -306,6 +336,10 @@ func handleMemoryLayersEntriesCreate(ctx context.Context, cmd *cli.Command) erro
 func handleMemoryLayersEntriesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
 		cmd.Set("memory-layer-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -333,6 +367,7 @@ func handleMemoryLayersEntriesRetrieve(ctx context.Context, cmd *cli.Command) er
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.MemoryLayers.Entries.Get(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("memory-layer-id").(string),
 		cmd.Value("id").(string),
 		options...,
@@ -357,6 +392,10 @@ func handleMemoryLayersEntriesRetrieve(ctx context.Context, cmd *cli.Command) er
 func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
 		cmd.Set("memory-layer-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -386,6 +425,7 @@ func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) erro
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.MemoryLayers.Entries.Update(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("memory-layer-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -411,6 +451,10 @@ func handleMemoryLayersEntriesUpdate(ctx context.Context, cmd *cli.Command) erro
 func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
 		cmd.Set("memory-layer-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -440,6 +484,7 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.MemoryLayers.Entries.List(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("memory-layer-id").(string),
 			params,
 			options...,
@@ -458,6 +503,7 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 	} else {
 		iter := client.MemoryLayers.Entries.ListAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("memory-layer-id").(string),
 			params,
 			options...,
@@ -479,6 +525,10 @@ func handleMemoryLayersEntriesList(ctx context.Context, cmd *cli.Command) error 
 func handleMemoryLayersEntriesDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("memory-layer-id") && len(unusedArgs) > 0 {
 		cmd.Set("memory-layer-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -504,6 +554,7 @@ func handleMemoryLayersEntriesDelete(ctx context.Context, cmd *cli.Command) erro
 
 	return client.MemoryLayers.Entries.Delete(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("memory-layer-id").(string),
 		cmd.Value("id").(string),
 		options...,

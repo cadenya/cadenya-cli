@@ -19,6 +19,11 @@ var toolSetsCreate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Creates a new tool set in the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
 			Usage:    "CreateResourceMetadata contains the user-provided fields for creating\n a workspace-scoped resource. Read-only fields (id, account_id, workspace_id, profile_id,\n created_at) are excluded since they are set by the server.",
@@ -74,6 +79,11 @@ var toolSetsRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
 			PathParam: "id",
@@ -88,6 +98,11 @@ var toolSetsUpdate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Updates a tool set in the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
@@ -150,6 +165,11 @@ var toolSetsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "bundle-key",
 			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
 			QueryPath: "bundleKey",
@@ -199,6 +219,11 @@ var toolSetsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
 			PathParam: "id",
@@ -213,6 +238,11 @@ var toolSetsListEvents = cli.Command{
 	Usage:   "Lists all events (including sync status) for a tool set",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "tool-set-id",
 			Required:  true,
@@ -250,7 +280,10 @@ var toolSetsListEvents = cli.Command{
 func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -270,7 +303,12 @@ func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.New(ctx, params, options...)
+	_, err = client.ToolSets.New(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -291,6 +329,10 @@ func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -312,7 +354,12 @@ func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.Get(ctx, cmd.Value("id").(string), options...)
+	_, err = client.ToolSets.Get(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -333,6 +380,10 @@ func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -358,6 +409,7 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Update(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -382,7 +434,10 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -406,7 +461,12 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.ToolSets.List(ctx, params, options...)
+		_, err = client.ToolSets.List(
+			ctx,
+			cmd.Value("workspace-id").(string),
+			params,
+			options...,
+		)
 		if err != nil {
 			return err
 		}
@@ -419,7 +479,12 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	} else {
-		iter := client.ToolSets.ListAutoPaging(ctx, params, options...)
+		iter := client.ToolSets.ListAutoPaging(
+			ctx,
+			cmd.Value("workspace-id").(string),
+			params,
+			options...,
+		)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -437,6 +502,10 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -456,12 +525,21 @@ func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.ToolSets.Delete(ctx, cmd.Value("id").(string), options...)
+	return client.ToolSets.Delete(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
 }
 
 func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -491,6 +569,7 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.ToolSets.ListEvents(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("tool-set-id").(string),
 			params,
 			options...,
@@ -509,6 +588,7 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.ToolSets.ListEventsAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("tool-set-id").(string),
 			params,
 			options...,

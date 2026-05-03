@@ -16,6 +16,7 @@ func TestObjectivesFeedbackCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:feedback", "create",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--data", "{comment: comment, score: 0}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
@@ -31,6 +32,7 @@ func TestObjectivesFeedbackCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:feedback", "create",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--data.comment", "comment",
 			"--data.score", "0",
@@ -53,6 +55,7 @@ func TestObjectivesFeedbackCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives:feedback", "create",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 		)
 	})
@@ -66,6 +69,7 @@ func TestObjectivesFeedbackList(t *testing.T) {
 			"--api-key", "string",
 			"objectives:feedback", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--limit", "0",

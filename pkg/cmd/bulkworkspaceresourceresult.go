@@ -20,6 +20,11 @@ var bulkWorkspaceResourcesResultsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "bulk-workspace-apply-id",
 			Required:  true,
 			PathParam: "bulkWorkspaceApplyId",
@@ -61,6 +66,10 @@ var bulkWorkspaceResourcesResultsList = cli.Command{
 func handleBulkWorkspaceResourcesResultsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("bulk-workspace-apply-id") && len(unusedArgs) > 0 {
 		cmd.Set("bulk-workspace-apply-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -90,6 +99,7 @@ func handleBulkWorkspaceResourcesResultsList(ctx context.Context, cmd *cli.Comma
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.BulkWorkspaceResources.Results.List(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("bulk-workspace-apply-id").(string),
 			params,
 			options...,
@@ -108,6 +118,7 @@ func handleBulkWorkspaceResourcesResultsList(ctx context.Context, cmd *cli.Comma
 	} else {
 		iter := client.BulkWorkspaceResources.Results.ListAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("bulk-workspace-apply-id").(string),
 			params,
 			options...,

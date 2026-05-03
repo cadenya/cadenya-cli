@@ -20,6 +20,11 @@ var searchSearchToolsOrToolSets = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "query",
 			QueryPath: "query",
 		},
@@ -31,7 +36,10 @@ var searchSearchToolsOrToolSets = cli.Command{
 func handleSearchSearchToolsOrToolSets(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -51,7 +59,12 @@ func handleSearchSearchToolsOrToolSets(ctx context.Context, cmd *cli.Command) er
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Search.SearchToolsOrToolSets(ctx, params, options...)
+	_, err = client.Search.SearchToolsOrToolSets(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
