@@ -15,6 +15,7 @@ func TestObjectivesTasksRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:tasks", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--id", "id",
 		)
@@ -29,6 +30,7 @@ func TestObjectivesTasksList(t *testing.T) {
 			"--api-key", "string",
 			"objectives:tasks", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--limit", "0",

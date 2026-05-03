@@ -20,6 +20,11 @@ var bulkWorkspaceResourcesRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
 			PathParam: "id",
@@ -34,6 +39,11 @@ var bulkWorkspaceResourcesList = cli.Command{
 	Usage:   "Lists past and in-flight bulk workspace apply operations in the workspace.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "bundle-key",
 			Usage:     "Filter by bundle_key — list every apply for a given bundle.",
@@ -73,6 +83,11 @@ var bulkWorkspaceResourcesApply = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Asynchronously applies a declarative bundle of workspace resources. Returns the\noperation immediately in PENDING; clients poll Get to track progress.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "data",
 			Required: true,
@@ -119,6 +134,10 @@ var bulkWorkspaceResourcesApply = requestflag.WithInnerFlags(cli.Command{
 func handleBulkWorkspaceResourcesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -140,7 +159,12 @@ func handleBulkWorkspaceResourcesRetrieve(ctx context.Context, cmd *cli.Command)
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.BulkWorkspaceResources.Get(ctx, cmd.Value("id").(string), options...)
+	_, err = client.BulkWorkspaceResources.Get(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -161,7 +185,10 @@ func handleBulkWorkspaceResourcesRetrieve(ctx context.Context, cmd *cli.Command)
 func handleBulkWorkspaceResourcesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -185,7 +212,12 @@ func handleBulkWorkspaceResourcesList(ctx context.Context, cmd *cli.Command) err
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.BulkWorkspaceResources.List(ctx, params, options...)
+		_, err = client.BulkWorkspaceResources.List(
+			ctx,
+			cmd.Value("workspace-id").(string),
+			params,
+			options...,
+		)
 		if err != nil {
 			return err
 		}
@@ -198,7 +230,12 @@ func handleBulkWorkspaceResourcesList(ctx context.Context, cmd *cli.Command) err
 			Transform:      transform,
 		})
 	} else {
-		iter := client.BulkWorkspaceResources.ListAutoPaging(ctx, params, options...)
+		iter := client.BulkWorkspaceResources.ListAutoPaging(
+			ctx,
+			cmd.Value("workspace-id").(string),
+			params,
+			options...,
+		)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -216,7 +253,10 @@ func handleBulkWorkspaceResourcesList(ctx context.Context, cmd *cli.Command) err
 func handleBulkWorkspaceResourcesApply(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -236,7 +276,12 @@ func handleBulkWorkspaceResourcesApply(ctx context.Context, cmd *cli.Command) er
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.BulkWorkspaceResources.Apply(ctx, params, options...)
+	_, err = client.BulkWorkspaceResources.Apply(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}

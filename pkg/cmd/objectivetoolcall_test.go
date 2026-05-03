@@ -16,6 +16,7 @@ func TestObjectivesToolCallsList(t *testing.T) {
 			"--api-key", "string",
 			"objectives:tool-calls", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--include-info=true",
@@ -32,6 +33,7 @@ func TestObjectivesToolCallsApprove(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:tool-calls", "approve",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--tool-call-id", "toolCallId",
 		)
@@ -45,6 +47,7 @@ func TestObjectivesToolCallsDeny(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:tool-calls", "deny",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--tool-call-id", "toolCallId",
 			"--memo", "memo",
@@ -58,6 +61,7 @@ func TestObjectivesToolCallsDeny(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives:tool-calls", "deny",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--tool-call-id", "toolCallId",
 		)

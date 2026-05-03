@@ -16,6 +16,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "create",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}, description: description, parameters: {foo: bar}, status: TOOL_STATUS_UNSPECIFIED, requiresApproval: true}",
@@ -31,6 +32,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "create",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
@@ -77,6 +79,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"tool-sets:tools", "create",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 		)
 	})
@@ -89,6 +92,7 @@ func TestToolSetsToolsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 		)
@@ -102,6 +106,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "update",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
@@ -119,6 +124,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "update",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 			"--metadata.name", "name",
@@ -168,6 +174,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"tool-sets:tools", "update",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 		)
@@ -182,6 +189,7 @@ func TestToolSetsToolsList(t *testing.T) {
 			"--api-key", "string",
 			"tool-sets:tools", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
@@ -204,6 +212,7 @@ func TestToolSetsToolsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "delete",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 		)

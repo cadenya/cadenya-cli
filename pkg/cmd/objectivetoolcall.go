@@ -20,6 +20,11 @@ var objectivesToolCallsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "objective-id",
 			Required:  true,
 			PathParam: "objectiveId",
@@ -59,6 +64,11 @@ var objectivesToolCallsApprove = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "objective-id",
 			Required:  true,
 			PathParam: "objectiveId",
@@ -78,6 +88,11 @@ var objectivesToolCallsDeny = cli.Command{
 	Usage:   "When an agent attempts to use a tool that requires approval, use this endpoint\nto mark it as denied. Use a memo to steer the LLM to a different decision or\nusage of the tool.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "objective-id",
 			Required:  true,
@@ -101,6 +116,10 @@ var objectivesToolCallsDeny = cli.Command{
 func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -130,6 +149,7 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Objectives.ToolCalls.List(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -148,6 +168,7 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 	} else {
 		iter := client.Objectives.ToolCalls.ListAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -169,6 +190,10 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -198,6 +223,7 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.ToolCalls.Approve(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		cmd.Value("tool-call-id").(string),
 		params,
@@ -223,6 +249,10 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -252,6 +282,7 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.ToolCalls.Deny(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		cmd.Value("tool-call-id").(string),
 		params,

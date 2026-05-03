@@ -16,6 +16,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 		)
@@ -30,6 +31,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
@@ -53,6 +55,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"workspace-secrets", "create",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -64,6 +67,7 @@ func TestWorkspaceSecretsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -76,6 +80,7 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
@@ -92,6 +97,7 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
@@ -118,6 +124,7 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"workspace-secrets", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -131,6 +138,7 @@ func TestWorkspaceSecretsList(t *testing.T) {
 			"--api-key", "string",
 			"workspace-secrets", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
@@ -149,6 +157,7 @@ func TestWorkspaceSecretsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "delete",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})

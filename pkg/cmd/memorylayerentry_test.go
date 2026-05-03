@@ -16,6 +16,7 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "create",
+			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{key: key, content: content, description: description, uploadId: uploadId}",
@@ -31,6 +32,7 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "create",
+			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
@@ -61,6 +63,7 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"memory-layers:entries", "create",
+			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 		)
 	})
@@ -73,6 +76,7 @@ func TestMemoryLayersEntriesRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--id", "id",
 		)
@@ -86,6 +90,7 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "update",
+			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
@@ -103,6 +108,7 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "update",
+			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--id", "id",
 			"--metadata.name", "name",
@@ -136,6 +142,7 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"memory-layers:entries", "update",
+			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--id", "id",
 		)
@@ -150,6 +157,7 @@ func TestMemoryLayersEntriesList(t *testing.T) {
 			"--api-key", "string",
 			"memory-layers:entries", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
@@ -169,6 +177,7 @@ func TestMemoryLayersEntriesDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "delete",
+			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--id", "id",
 		)

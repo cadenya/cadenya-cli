@@ -20,6 +20,11 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "tool-set-id",
 			Required:  true,
 			PathParam: "toolSetId",
@@ -93,6 +98,11 @@ var toolSetsToolsRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "tool-set-id",
 			Required:  true,
 			PathParam: "toolSetId",
@@ -112,6 +122,11 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Updates a tool in the tool set",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "tool-set-id",
 			Required:  true,
@@ -193,6 +208,11 @@ var toolSetsToolsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "tool-set-id",
 			Required:  true,
 			PathParam: "toolSetId",
@@ -262,6 +282,11 @@ var toolSetsToolsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "tool-set-id",
 			Required:  true,
 			PathParam: "toolSetId",
@@ -279,6 +304,10 @@ var toolSetsToolsDelete = cli.Command{
 func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -304,6 +333,7 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Tools.New(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		params,
 		options...,
@@ -328,6 +358,10 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -355,6 +389,7 @@ func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Tools.Get(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
 		options...,
@@ -379,6 +414,10 @@ func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -408,6 +447,7 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Tools.Update(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -433,6 +473,10 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -462,6 +506,7 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.ToolSets.Tools.List(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("tool-set-id").(string),
 			params,
 			options...,
@@ -480,6 +525,7 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.ToolSets.Tools.ListAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("tool-set-id").(string),
 			params,
 			options...,
@@ -501,6 +547,10 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -526,6 +576,7 @@ func handleToolSetsToolsDelete(ctx context.Context, cmd *cli.Command) error {
 
 	return client.ToolSets.Tools.Delete(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
 		options...,

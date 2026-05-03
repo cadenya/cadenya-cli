@@ -16,6 +16,7 @@ func TestAgentsFeedbackList(t *testing.T) {
 			"--api-key", "string",
 			"agents:feedback", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--agent-variation-id", "agentVariationId",
 			"--created-after", "'2019-12-27T18:11:19.117Z'",
