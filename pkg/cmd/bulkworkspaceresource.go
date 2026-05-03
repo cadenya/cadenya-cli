@@ -93,6 +93,11 @@ var bulkWorkspaceResourcesApply = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Agents to upsert, keyed by external_id.",
 			InnerField: "agents",
 		},
+		&requestflag.InnerFlag[bool]{
+			Name:       "data.automatically-publish-agents",
+			Usage:      "When true, every agent created or updated by this Apply has its\n status forced to AGENT_STATUS_PUBLISHED, regardless of the status\n declared in the agent's AgentSpec. Useful when the bundle represents\n a production configuration and you want all of its agents live\n without setting status: AGENT_STATUS_PUBLISHED on each entry.\n\n Default false: each agent's AgentSpec.status controls (which is\n AGENT_STATUS_DRAFT on create when unspecified).",
+			InnerField: "automaticallyPublishAgents",
+		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "data.memory-layers",
 			Usage:      "Memory layers to upsert, keyed by external_id.",
