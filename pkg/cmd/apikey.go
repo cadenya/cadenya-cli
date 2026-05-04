@@ -32,7 +32,7 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "spec",
-			Usage:    "APIKeySpec contains the API Key-specific fields",
+			Usage:    "Configuration for an API key.",
 			Required: true,
 			BodyPath: "spec",
 		},
@@ -65,12 +65,12 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	"spec": {
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.token",
-			Usage:      "The actual token value (only returned on creation and rotation, read-only)",
+			Usage:      "The bearer token used to authenticate as this API key. Returned only on\n creation and rotation; subsequent reads omit this field.",
 			InnerField: "token",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
-			Usage:      "Description of what this API Key is used for",
+			Usage:      "Free-form description of what this API key is used for.",
 			InnerField: "description",
 		},
 	},
@@ -118,12 +118,12 @@ var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "spec",
-			Usage:    "APIKeySpec contains the API Key-specific fields",
+			Usage:    "Configuration for an API key.",
 			BodyPath: "spec",
 		},
 		&requestflag.Flag[string]{
 			Name:     "update-mask",
-			Usage:    "Fields to update",
+			Usage:    "Fields to update.",
 			BodyPath: "updateMask",
 		},
 	},
@@ -155,12 +155,12 @@ var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 	"spec": {
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.token",
-			Usage:      "The actual token value (only returned on creation and rotation, read-only)",
+			Usage:      "The bearer token used to authenticate as this API key. Returned only on\n creation and rotation; subsequent reads omit this field.",
 			InnerField: "token",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
-			Usage:      "Description of what this API Key is used for",
+			Usage:      "Free-form description of what this API key is used for.",
 			InnerField: "description",
 		},
 	},

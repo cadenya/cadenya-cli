@@ -67,7 +67,7 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[[]map[string]any]{
 			Name:       "data.memory-stack",
-			Usage:      "Memory layers/entries to push onto this objective's memory stack on\n top of the baseline stack inherited from the selected variation.\n\n See \"Memory stack composition\" in memory.proto for lookup semantics.\n\n Array order is push order: the first element sits lower in the\n objective's contribution to the stack; the LAST element ends up on\n top of the effective stack. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically via the runtime based on\n episodic_key.\n\n Stack size cap: the TOTAL effective stack (variation's memory layers\n + this field) must not exceed 10 entries. A request that would\n produce an effective stack larger than 10 is rejected with\n InvalidArgument. Variations themselves are capped at 10 memory layer\n assignments, so a variation that is already \"full\" leaves no room\n for objective-level references.",
+			Usage:      "Memory layers/entries to push onto this objective's memory stack on\n top of the baseline stack inherited from the selected variation.\n\n Array order is push order: the first element sits lower in the\n objective's contribution to the stack; the LAST element ends up on\n top of the effective stack. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically based on episodic_key.\n\n Stack size cap: the TOTAL effective stack (variation's memory layers\n + this field) must not exceed 10 entries. A request that would\n produce an effective stack larger than 10 is rejected with\n InvalidArgument.",
 			InnerField: "memoryStack",
 		},
 		&requestflag.InnerFlag[string]{
@@ -82,7 +82,7 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "data.source-schedule-id",
-			Usage:      "ID of the AgentSchedule that produced this objective, when applicable.\n Read-only; populated by the runtime when the objective is created from a\n schedule fire. Empty when the objective was created via CreateObjective directly.",
+			Usage:      "ID of the AgentSchedule that produced this objective, when applicable.\n Populated when the objective is created from a schedule fire; empty when\n the objective was created via CreateObjective directly.",
 			InnerField: "sourceScheduleId",
 		},
 		&requestflag.InnerFlag[string]{
@@ -147,7 +147,7 @@ var objectivesList = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:      "agent-schedule-id",
-			Usage:     "Filter to objectives produced by a specific AgentSchedule. Matches\n ObjectiveData.source_schedule_id. Accepts canonical as_… form or\n external_id:<value> form (see common.proto \"Path-parameter ID resolution\").",
+			Usage:     "Filter to objectives produced by a specific AgentSchedule. Accepts\n canonical as_… form or external_id:<value> form.",
 			QueryPath: "agentScheduleId",
 		},
 		&requestflag.Flag[string]{
