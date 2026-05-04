@@ -248,7 +248,7 @@ var agentsSchedulesList = cli.Command{
 		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",
-			Usage:     "When set to true you may use more of your alloted API rate-limit.",
+			Usage:     "When true, the `info` field on each returned schedule is populated.\n Requests with this flag count more against your rate limit.",
 			QueryPath: "includeInfo",
 		},
 		&requestflag.Flag[int64]{

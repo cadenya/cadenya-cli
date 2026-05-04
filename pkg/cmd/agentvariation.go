@@ -276,7 +276,7 @@ var agentsVariationsList = cli.Command{
 		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",
-			Usage:     "When set to true you may use more of your alloted API rate-limit",
+			Usage:     "When true, the `info` field on each returned variation is populated.\n Requests with this flag count more against your rate limit.",
 			QueryPath: "includeInfo",
 		},
 		&requestflag.Flag[int64]{
@@ -382,7 +382,7 @@ var agentsVariationsAddMemoryLayer = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "memory-layer-id",
-			Usage:    "Layer to attach. Accepts canonical memlyr_… form or external_id:<value>\n form (see common.proto \"Path-parameter ID resolution\").",
+			Usage:    "Layer to attach. Accepts the canonical `memlyr_…` form or the `external_id:<value>` form.",
 			BodyPath: "memoryLayerId",
 		},
 		&requestflag.Flag[int64]{

@@ -107,12 +107,12 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "default-variation.agent-id",
-			Usage:      "Agent ID (from path). Accepts canonical agent_… form or external_id:<value>\n form (see common.proto \"Path-parameter ID resolution\").",
+			Usage:      "Agent ID. Accepts the canonical `agent_…` form or the `external_id:<value>` form.",
 			InnerField: "agentId",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "default-variation.workspace-id",
-			Usage:      "Workspace ID (from path).",
+			Usage:      "Workspace ID.",
 			InnerField: "workspaceId",
 		},
 	},
@@ -245,7 +245,7 @@ var agentsList = cli.Command{
 		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",
-			Usage:     "When set to true you may use more of your alloted API rate-limit",
+			Usage:     "When true, the `info` field on each returned agent is populated. Requests\n with this flag count more against your rate limit.",
 			QueryPath: "includeInfo",
 		},
 		&requestflag.Flag[int64]{

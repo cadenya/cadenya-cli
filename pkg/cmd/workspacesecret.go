@@ -115,7 +115,7 @@ var workspaceSecretsUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "update-mask",
-			Usage:    "Fields to update",
+			Usage:    "Fields to update.",
 			BodyPath: "updateMask",
 		},
 	},
