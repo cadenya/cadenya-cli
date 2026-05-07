@@ -16,6 +16,7 @@ func TestUploadsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"uploads", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{contentType: contentType, filename: filename, sizeBytes: sizeBytes}",
 		)
@@ -30,6 +31,7 @@ func TestUploadsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"uploads", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
@@ -57,6 +59,7 @@ func TestUploadsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"uploads", "create",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -68,6 +71,7 @@ func TestUploadsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"uploads", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})

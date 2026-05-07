@@ -16,6 +16,7 @@ func TestMemoryLayersCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{type: MEMORY_LAYER_TYPE_UNSPECIFIED, description: description}",
 		)
@@ -30,6 +31,7 @@ func TestMemoryLayersCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
@@ -55,6 +57,7 @@ func TestMemoryLayersCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"memory-layers", "create",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -66,6 +69,7 @@ func TestMemoryLayersRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -78,6 +82,7 @@ func TestMemoryLayersUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{type: MEMORY_LAYER_TYPE_UNSPECIFIED, description: description}",
@@ -94,6 +99,7 @@ func TestMemoryLayersUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
@@ -122,6 +128,7 @@ func TestMemoryLayersUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"memory-layers", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -135,6 +142,7 @@ func TestMemoryLayersList(t *testing.T) {
 			"--api-key", "string",
 			"memory-layers", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
@@ -154,6 +162,7 @@ func TestMemoryLayersDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "delete",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})

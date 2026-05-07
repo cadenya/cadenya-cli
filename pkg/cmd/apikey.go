@@ -16,20 +16,25 @@ import (
 
 var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
-	Usage:   "Creates a new API key in the workspace.",
+	Usage:   "Creates a new API key on the account. Optionally grants the key access to one or\nmore workspaces via initial_workspace_ids.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
-			Usage:    "CreateResourceMetadata contains the user-provided fields for creating\n a workspace-scoped resource. Read-only fields (id, account_id, workspace_id, profile_id,\n created_at) are excluded since they are set by the server.",
+			Usage:    "CreateAccountResourceMetadata contains the user-provided fields for creating\n an account-scoped resource. Read-only fields (id, account_id, profile_id) are excluded\n since they are set by the server.",
 			Required: true,
 			BodyPath: "metadata",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "spec",
-			Usage:    "APIKeySpec contains the API Key-specific fields",
+			Usage:    "Configuration for an API key.",
 			Required: true,
 			BodyPath: "spec",
+		},
+		&requestflag.Flag[[]string]{
+			Name:     "initial-workspace-id",
+			Usage:    "Workspaces this API key will have access to on creation. Optional —\n a key can be created with no workspace access and granted later via\n AddAPIKeyWorkspace.",
+			BodyPath: "initialWorkspaceIds",
 		},
 	},
 	Action:          handleAPIKeysCreate,
@@ -38,13 +43,8 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	"metadata": {
 		&requestflag.InnerFlag[string]{
 			Name:       "metadata.name",
-			Usage:      `Human-readable name for the resource (e.g., "Customer Support Agent", "Email Tool")`,
+			Usage:      `Human-readable name for the resource (e.g., "Production API Key", "Staging Workspace")`,
 			InnerField: "name",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
@@ -60,20 +60,30 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	"spec": {
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.token",
-			Usage:      "The actual token value (only returned on creation and rotation, read-only)",
+			Usage:      "The bearer token used to authenticate as this API key. Returned only on\n creation and rotation; subsequent reads omit this field.",
 			InnerField: "token",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
-			Usage:      "Description of what this API Key is used for",
+			Usage:      "Free-form description of what this API key is used for.",
 			InnerField: "description",
+		},
+		&requestflag.InnerFlag[[]string]{
+			Name:       "spec.permissions",
+			Usage:      "Permissions granted to this key. Each entry is a colon-separated\n verb:resource string (e.g. \"manage:agents\"). Currently has no\n enforced effect; reserved for future fine-grained authorization.",
+			InnerField: "permissions",
+		},
+		&requestflag.InnerFlag[bool]{
+			Name:       "spec.system",
+			Usage:      "True when this key is managed by the system (e.g. the auto-provisioned\n global account key). System keys cannot be deleted but can be rotated.",
+			InnerField: "system",
 		},
 	},
 })
 
 var apiKeysRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Retrieves an API key by ID from the workspace",
+	Usage:   "Retrieves an API key by ID.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -88,7 +98,7 @@ var apiKeysRetrieve = cli.Command{
 
 var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "update",
-	Usage:   "Updates an API key in the workspace",
+	Usage:   "Updates an API key.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -98,17 +108,17 @@ var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
-			Usage:    "UpdateResourceMetadata contains the user-provided fields for updating\n a workspace-scoped resource. Read-only fields (id, account_id, workspace_id, profile_id,\n created_at) are excluded since they are set by the server.",
+			Usage:    "UpdateAccountResourceMetadata contains the user-provided fields for updating\n an account-scoped resource. Read-only fields (id, account_id, profile_id) are excluded\n since they are set by the server.",
 			BodyPath: "metadata",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "spec",
-			Usage:    "APIKeySpec contains the API Key-specific fields",
+			Usage:    "Configuration for an API key.",
 			BodyPath: "spec",
 		},
 		&requestflag.Flag[string]{
 			Name:     "update-mask",
-			Usage:    "Fields to update",
+			Usage:    "Fields to update.",
 			BodyPath: "updateMask",
 		},
 	},
@@ -118,13 +128,8 @@ var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 	"metadata": {
 		&requestflag.InnerFlag[string]{
 			Name:       "metadata.name",
-			Usage:      `Human-readable name for the resource (e.g., "Customer Support Agent", "Email Tool")`,
+			Usage:      `Human-readable name for the resource (e.g., "Production API Key", "Staging Workspace")`,
 			InnerField: "name",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
@@ -140,20 +145,30 @@ var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 	"spec": {
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.token",
-			Usage:      "The actual token value (only returned on creation and rotation, read-only)",
+			Usage:      "The bearer token used to authenticate as this API key. Returned only on\n creation and rotation; subsequent reads omit this field.",
 			InnerField: "token",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
-			Usage:      "Description of what this API Key is used for",
+			Usage:      "Free-form description of what this API key is used for.",
 			InnerField: "description",
+		},
+		&requestflag.InnerFlag[[]string]{
+			Name:       "spec.permissions",
+			Usage:      "Permissions granted to this key. Each entry is a colon-separated\n verb:resource string (e.g. \"manage:agents\"). Currently has no\n enforced effect; reserved for future fine-grained authorization.",
+			InnerField: "permissions",
+		},
+		&requestflag.InnerFlag[bool]{
+			Name:       "spec.system",
+			Usage:      "True when this key is managed by the system (e.g. the auto-provisioned\n global account key). System keys cannot be deleted but can be rotated.",
+			InnerField: "system",
 		},
 	},
 })
 
 var apiKeysList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists all API keys in the workspace",
+	Usage:   "Lists all API keys on the account.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -163,32 +178,32 @@ var apiKeysList = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
-			Usage:     "Pagination cursor from previous response",
+			Usage:     "Pagination cursor from previous response.",
 			QueryPath: "cursor",
 		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",
-			Usage:     "When set to true you may use more of your alloted API rate-limit",
+			Usage:     "When true, included info fields are populated. Requests with this\n flag count more against your rate limit.",
 			QueryPath: "includeInfo",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
-			Usage:     "Maximum number of results to return",
+			Usage:     "Maximum number of results to return.",
 			QueryPath: "limit",
 		},
 		&requestflag.Flag[string]{
 			Name:      "prefix",
-			Usage:     "Filter expression (query param: prefix)",
+			Usage:     "Filter by ID prefix.",
 			QueryPath: "prefix",
 		},
 		&requestflag.Flag[string]{
 			Name:      "query",
-			Usage:     "Free-form search query",
+			Usage:     "Free-form search query.",
 			QueryPath: "query",
 		},
 		&requestflag.Flag[string]{
 			Name:      "sort-order",
-			Usage:     "Sort order for results (asc or desc by creation time)",
+			Usage:     "Sort order for results (asc or desc by creation time).",
 			QueryPath: "sortOrder",
 		},
 		&requestflag.Flag[int64]{
@@ -202,7 +217,7 @@ var apiKeysList = cli.Command{
 
 var apiKeysDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Deletes an API key from the workspace",
+	Usage:   "Deletes an API key.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -217,7 +232,7 @@ var apiKeysDelete = cli.Command{
 
 var apiKeysRotate = cli.Command{
 	Name:    "rotate",
-	Usage:   "Rotates an API Key and returns a new token. All previous API Key tokens in use\nwill be invalidated.",
+	Usage:   "Rotates an API key and returns a new token. All previous tokens for this key are\ninvalidated.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

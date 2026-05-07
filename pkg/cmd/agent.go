@@ -19,6 +19,11 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Creates a new agent in the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
 			Usage:    "CreateResourceMetadata contains the user-provided fields for creating\n a workspace-scoped resource. Read-only fields (id, account_id, workspace_id, profile_id,\n created_at) are excluded since they are set by the server.",
@@ -102,8 +107,13 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "default-variation.agent-id",
-			Usage:      "Agent ID (from path). Accepts canonical agent_… form or external_id:<value>\n form (see common.proto \"Path-parameter ID resolution\").",
+			Usage:      "Agent ID. Accepts the canonical `agent_…` form or the `external_id:<value>` form.",
 			InnerField: "agentId",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "default-variation.workspace-id",
+			Usage:      "Workspace ID.",
+			InnerField: "workspaceId",
 		},
 	},
 })
@@ -113,6 +123,11 @@ var agentsRetrieve = cli.Command{
 	Usage:   "Retrieves an agent by ID from the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
@@ -128,6 +143,11 @@ var agentsUpdate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Updates an agent in the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
@@ -209,6 +229,11 @@ var agentsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "bundle-key",
 			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
 			QueryPath: "bundleKey",
@@ -220,7 +245,7 @@ var agentsList = cli.Command{
 		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",
-			Usage:     "When set to true you may use more of your alloted API rate-limit",
+			Usage:     "When true, the `info` field on each returned agent is populated. Requests\n with this flag count more against your rate limit.",
 			QueryPath: "includeInfo",
 		},
 		&requestflag.Flag[int64]{
@@ -268,6 +293,11 @@ var agentsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
 			PathParam: "id",
@@ -280,7 +310,10 @@ var agentsDelete = cli.Command{
 func handleAgentsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -300,7 +333,12 @@ func handleAgentsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Agents.New(ctx, params, options...)
+	_, err = client.Agents.New(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -321,6 +359,10 @@ func handleAgentsCreate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -342,7 +384,12 @@ func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Agents.Get(ctx, cmd.Value("id").(string), options...)
+	_, err = client.Agents.Get(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -363,6 +410,10 @@ func handleAgentsRetrieve(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -388,6 +439,7 @@ func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Update(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -412,7 +464,10 @@ func handleAgentsUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -436,7 +491,12 @@ func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.Agents.List(ctx, params, options...)
+		_, err = client.Agents.List(
+			ctx,
+			cmd.Value("workspace-id").(string),
+			params,
+			options...,
+		)
 		if err != nil {
 			return err
 		}
@@ -449,7 +509,12 @@ func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	} else {
-		iter := client.Agents.ListAutoPaging(ctx, params, options...)
+		iter := client.Agents.ListAutoPaging(
+			ctx,
+			cmd.Value("workspace-id").(string),
+			params,
+			options...,
+		)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -467,6 +532,10 @@ func handleAgentsList(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -486,5 +555,10 @@ func handleAgentsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.Agents.Delete(ctx, cmd.Value("id").(string), options...)
+	return client.Agents.Delete(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
 }

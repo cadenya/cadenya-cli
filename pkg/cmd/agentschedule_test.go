@@ -16,6 +16,7 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "create",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{initialMessage: initialMessage, schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, status: AGENT_SCHEDULE_STATUS_UNSPECIFIED, variationId: variationId}",
@@ -31,6 +32,7 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "create",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
@@ -95,6 +97,7 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents:schedules", "create",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 		)
 	})
@@ -107,6 +110,7 @@ func TestAgentsSchedulesRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--id", "id",
 		)
@@ -120,6 +124,7 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "update",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
@@ -137,6 +142,7 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "update",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata.name", "name",
@@ -204,6 +210,7 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents:schedules", "update",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--id", "id",
 		)
@@ -218,6 +225,7 @@ func TestAgentsSchedulesList(t *testing.T) {
 			"--api-key", "string",
 			"agents:schedules", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
@@ -237,6 +245,7 @@ func TestAgentsSchedulesDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "delete",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--id", "id",
 		)

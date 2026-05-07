@@ -16,6 +16,7 @@ func TestBulkWorkspaceResourcesResultsList(t *testing.T) {
 			"--api-key", "string",
 			"bulk-workspace-resources:results", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--bulk-workspace-apply-id", "bulkWorkspaceApplyId",
 			"--action", "ACTION_UNSPECIFIED",
 			"--cursor", "cursor",

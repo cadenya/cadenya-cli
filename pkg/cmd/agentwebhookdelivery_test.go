@@ -16,6 +16,7 @@ func TestAgentsWebhookDeliveriesList(t *testing.T) {
 			"--api-key", "string",
 			"agents:webhook-deliveries", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--cursor", "cursor",
 			"--event-type", "OBJECTIVE_EVENT_TYPE_UNSPECIFIED",

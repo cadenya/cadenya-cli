@@ -16,6 +16,7 @@ func TestBulkWorkspaceResourcesRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"bulk-workspace-resources", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -29,6 +30,7 @@ func TestBulkWorkspaceResourcesList(t *testing.T) {
 			"--api-key", "string",
 			"bulk-workspace-resources", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--limit", "0",
@@ -45,6 +47,7 @@ func TestBulkWorkspaceResourcesApply(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"bulk-workspace-resources", "apply",
+			"--workspace-id", "workspaceId",
 			"--data", "{bundleKey: bundleKey, agents: {foo: {name: name, spec: {status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, webhookEventsUrl: webhookEventsUrl}, labels: {foo: string}, schedules: {foo: {name: name, spec: {initialMessage: initialMessage, schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, status: AGENT_SCHEDULE_STATUS_UNSPECIFIED, variationId: variationId}, labels: {foo: string}}}, variations: {foo: {name: name, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}, assignments: [{subAgentId: subAgentId, toolId: toolId, toolSetId: toolSetId}], labels: {foo: string}, memoryLayers: [{memoryLayerId: memoryLayerId, position: 0}]}}}}, automaticallyPublishAgents: true, memoryLayers: {foo: {name: name, spec: {type: MEMORY_LAYER_TYPE_UNSPECIFIED, description: description}, entries: {foo: {key: key, content: content, description: description, uploadId: uploadId}}, labels: {foo: string}}}, sourceUrl: sourceUrl, toolSets: {foo: {name: name, spec: {adapter: {http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}, description: description}, labels: {foo: string}, tools: {foo: {name: name, spec: {config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}}, description: description, parameters: {foo: bar}, status: TOOL_STATUS_UNSPECIFIED, requiresApproval: true}, labels: {foo: string}}}}}}",
 		)
 	})
@@ -58,6 +61,7 @@ func TestBulkWorkspaceResourcesApply(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"bulk-workspace-resources", "apply",
+			"--workspace-id", "workspaceId",
 			"--data.bundle-key", "bundleKey",
 			"--data.agents", "{foo: {name: name, spec: {status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, webhookEventsUrl: webhookEventsUrl}, labels: {foo: string}, schedules: {foo: {name: name, spec: {initialMessage: initialMessage, schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, status: AGENT_SCHEDULE_STATUS_UNSPECIFIED, variationId: variationId}, labels: {foo: string}}}, variations: {foo: {name: name, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}, assignments: [{subAgentId: subAgentId, toolId: toolId, toolSetId: toolSetId}], labels: {foo: string}, memoryLayers: [{memoryLayerId: memoryLayerId, position: 0}]}}}}",
 			"--data.automatically-publish-agents=true",
@@ -256,6 +260,7 @@ func TestBulkWorkspaceResourcesApply(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"bulk-workspace-resources", "apply",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }

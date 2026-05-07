@@ -20,6 +20,11 @@ var objectivesFeedbackCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "objective-id",
 			Required:  true,
 			PathParam: "objectiveId",
@@ -71,6 +76,11 @@ var objectivesFeedbackList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "objective-id",
 			Required:  true,
 			PathParam: "objectiveId",
@@ -97,6 +107,10 @@ var objectivesFeedbackList = cli.Command{
 func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -122,6 +136,7 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.Feedback.New(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		params,
 		options...,
@@ -146,6 +161,10 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -175,6 +194,7 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Objectives.Feedback.List(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -193,6 +213,7 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Objectives.Feedback.ListAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,

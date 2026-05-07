@@ -295,6 +295,16 @@ func init() {
 				},
 			},
 			{
+				Name:     "api-keys:access",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&apiKeysAccessList,
+					&apiKeysAccessAdd,
+					&apiKeysAccessRemove,
+				},
+			},
+			{
 				Name:     "workspace-secrets",
 				Category: "API RESOURCE",
 				Suggest:  true,

@@ -16,6 +16,7 @@ func TestObjectivesToolsList(t *testing.T) {
 			"--api-key", "string",
 			"objectives:tools", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--limit", "0",

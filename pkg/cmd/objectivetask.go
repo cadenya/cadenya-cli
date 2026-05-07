@@ -20,6 +20,11 @@ var objectivesTasksRetrieve = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "objective-id",
 			Required:  true,
 			PathParam: "objectiveId",
@@ -39,6 +44,11 @@ var objectivesTasksList = cli.Command{
 	Usage:   "Lists all tasks for an objective",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "objective-id",
 			Required:  true,
@@ -71,6 +81,10 @@ var objectivesTasksList = cli.Command{
 func handleObjectivesTasksRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -98,6 +112,7 @@ func handleObjectivesTasksRetrieve(ctx context.Context, cmd *cli.Command) error 
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.Tasks.Get(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		cmd.Value("id").(string),
 		options...,
@@ -122,6 +137,10 @@ func handleObjectivesTasksRetrieve(ctx context.Context, cmd *cli.Command) error 
 func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -151,6 +170,7 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Objectives.Tasks.List(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -169,6 +189,7 @@ func handleObjectivesTasksList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Objectives.Tasks.ListAutoPaging(
 			ctx,
+			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,

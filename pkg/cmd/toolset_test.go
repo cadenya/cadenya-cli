@@ -16,6 +16,7 @@ func TestToolSetsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{adapter: {http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}, description: description}",
 		)
@@ -30,6 +31,7 @@ func TestToolSetsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets", "create",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
@@ -98,6 +100,7 @@ func TestToolSetsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"tool-sets", "create",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -109,6 +112,7 @@ func TestToolSetsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets", "retrieve",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -121,6 +125,7 @@ func TestToolSetsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{adapter: {http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}, description: description}",
@@ -137,6 +142,7 @@ func TestToolSetsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.bundle-key", "bundleKey",
@@ -208,6 +214,7 @@ func TestToolSetsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"tool-sets", "update",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -221,6 +228,7 @@ func TestToolSetsList(t *testing.T) {
 			"--api-key", "string",
 			"tool-sets", "list",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
@@ -239,6 +247,7 @@ func TestToolSetsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets", "delete",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -252,6 +261,7 @@ func TestToolSetsListEvents(t *testing.T) {
 			"--api-key", "string",
 			"tool-sets", "list-events",
 			"--max-items", "10",
+			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--cursor", "cursor",
 			"--include-info=true",

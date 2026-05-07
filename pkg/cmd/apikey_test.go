@@ -16,8 +16,9 @@ func TestAPIKeysCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "create",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{description: description}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--spec", "{description: description, permissions: [string]}",
+			"--initial-workspace-id", "string",
 		)
 	})
 
@@ -31,10 +32,11 @@ func TestAPIKeysCreate(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "create",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.description", "description",
+			"--spec.permissions", "[string]",
+			"--initial-workspace-id", "string",
 		)
 	})
 
@@ -43,12 +45,15 @@ func TestAPIKeysCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  description: description\n")
+			"  description: description\n" +
+			"  permissions:\n" +
+			"    - string\n" +
+			"initialWorkspaceIds:\n" +
+			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
@@ -77,8 +82,8 @@ func TestAPIKeysUpdate(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "update",
 			"--id", "id",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{description: description}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--spec", "{description: description, permissions: [string]}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -94,10 +99,10 @@ func TestAPIKeysUpdate(t *testing.T) {
 			"api-keys", "update",
 			"--id", "id",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.description", "description",
+			"--spec.permissions", "[string]",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -107,12 +112,13 @@ func TestAPIKeysUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
 			"  description: description\n" +
+			"  permissions:\n" +
+			"    - string\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
