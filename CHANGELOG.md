@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0 (2026-05-09)
+
+Full Changelog: [v0.12.0...v0.13.0](https://github.com/cadenya/cadenya-cli/compare/v0.12.0...v0.13.0)
+
+### Features
+
+* **api:** api update ([6fbb144](https://github.com/cadenya/cadenya-cli/commit/6fbb144c6d95e8cc63ecfa7a3c5edf9d6c18b851))
+
 ## 0.12.0 (2026-05-08)
 
 Full Changelog: [v0.11.0...v0.12.0](https://github.com/cadenya/cadenya-cli/compare/v0.11.0...v0.12.0)
