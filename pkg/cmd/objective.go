@@ -37,7 +37,6 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
 			Usage:    "CreateOperationMetadata contains the user-provided fields for creating\n an operation. Read-only fields (id, account_id, workspace_id, created_at, profile_id)\n are excluded since they are set by the server.",
-			Required: true,
 			BodyPath: "metadata",
 		},
 		&requestflag.Flag[string]{
