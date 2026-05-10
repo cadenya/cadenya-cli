@@ -263,6 +263,7 @@ func TestObjectivesListEvents(t *testing.T) {
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",
+			"--since-event-id", "sinceEventId",
 			"--sort-order", "sortOrder",
 			"--window-id", "windowId",
 		)

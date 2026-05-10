@@ -376,6 +376,11 @@ var objectivesListEvents = cli.Command{
 			QueryPath: "limit",
 		},
 		&requestflag.Flag[string]{
+			Name:      "since-event-id",
+			Usage:     "Optional string to fetch events since an ID",
+			QueryPath: "sinceEventId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "sort-order",
 			Usage:     "Sort order for results (asc or desc by creation time)",
 			QueryPath: "sortOrder",
