@@ -18,7 +18,7 @@ func TestAgentsCreate(t *testing.T) {
 			"agents", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, webhookEventsUrl: webhookEventsUrl}",
+			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, outputDefinition: {}, webhookEventsUrl: webhookEventsUrl}",
 			"--default-variation", "{metadata: {name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}}",
 		)
 	})
@@ -41,6 +41,7 @@ func TestAgentsCreate(t *testing.T) {
 			"--spec.variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
 			"--spec.description", "description",
 			"--spec.input-data-schema", "{}",
+			"--spec.output-definition", "{}",
 			"--spec.webhook-events-url", "webhookEventsUrl",
 			"--default-variation.metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--default-variation.spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}",
@@ -61,6 +62,7 @@ func TestAgentsCreate(t *testing.T) {
 			"  variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED\n" +
 			"  description: description\n" +
 			"  inputDataSchema: {}\n" +
+			"  outputDefinition: {}\n" +
 			"  webhookEventsUrl: webhookEventsUrl\n" +
 			"defaultVariation:\n" +
 			"  metadata:\n" +
@@ -124,7 +126,7 @@ func TestAgentsUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, webhookEventsUrl: webhookEventsUrl}",
+			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {}, outputDefinition: {}, webhookEventsUrl: webhookEventsUrl}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -148,6 +150,7 @@ func TestAgentsUpdate(t *testing.T) {
 			"--spec.variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
 			"--spec.description", "description",
 			"--spec.input-data-schema", "{}",
+			"--spec.output-definition", "{}",
 			"--spec.webhook-events-url", "webhookEventsUrl",
 			"--update-mask", "updateMask",
 		)
@@ -167,6 +170,7 @@ func TestAgentsUpdate(t *testing.T) {
 			"  variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED\n" +
 			"  description: description\n" +
 			"  inputDataSchema: {}\n" +
+			"  outputDefinition: {}\n" +
 			"  webhookEventsUrl: webhookEventsUrl\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
