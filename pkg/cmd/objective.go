@@ -74,6 +74,11 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "The output of the objective, populated when the objective completes. Will match the schema of output_json_schema or output_json_inferred.",
 			InnerField: "output",
 		},
+		&requestflag.InnerFlag[any]{
+			Name:       "data.output-definition",
+			Usage:      "Snapshot of the agent spec's output_definition at objective creation time.\n When present, the objective will run an extraction step after the LLM finishes.",
+			InnerField: "outputDefinition",
+		},
 		&requestflag.InnerFlag[string]{
 			Name:       "data.parent-objective-id",
 			Usage:      "A parent objective means the objective was spawned off using a separate agent to complete an objective",
