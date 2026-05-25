@@ -266,6 +266,7 @@ func init() {
 					&toolSetsUpdate,
 					&toolSetsList,
 					&toolSetsDelete,
+					&toolSetsGetOpenAPISpec,
 					&toolSetsListEvents,
 				},
 			},

@@ -233,6 +233,26 @@ var toolSetsDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var toolSetsGetOpenAPISpec = cli.Command{
+	Name:    "get-openapi-spec",
+	Usage:   "Retrieves the current OpenAPI specification JSON that has been consumed by the\ntool set. Only applicable to tool sets using the OpenAPI adapter.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
+		},
+	},
+	Action:          handleToolSetsGetOpenAPISpec,
+	HideHelpCommand: true,
+}
+
 var toolSetsListEvents = cli.Command{
 	Name:    "list-events",
 	Usage:   "Lists all events (including sync status) for a tool set",
@@ -531,6 +551,57 @@ func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
 		cmd.Value("id").(string),
 		options...,
 	)
+}
+
+func handleToolSetsGetOpenAPISpec(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
+		cmd.Set("tool-set-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.ToolSets.GetOpenAPISpec(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("tool-set-id").(string),
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "tool-sets get-openapi-spec",
+		Transform:      transform,
+	})
 }
 
 func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {

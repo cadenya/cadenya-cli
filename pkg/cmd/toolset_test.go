@@ -18,7 +18,7 @@ func TestToolSetsCreate(t *testing.T) {
 			"tool-sets", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{adapter: {http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}, description: description}",
+			"--spec", "{adapter: {http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}, openapi: {baseUrl: baseUrl, excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, serverName: serverName, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, uploadId: uploadId, url: url}}, description: description}",
 		)
 	})
 
@@ -36,7 +36,7 @@ func TestToolSetsCreate(t *testing.T) {
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.adapter", "{http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}",
+			"--spec.adapter", "{http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}, openapi: {baseUrl: baseUrl, excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, serverName: serverName, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, uploadId: uploadId, url: url}}",
 			"--spec.description", "description",
 		)
 	})
@@ -95,6 +95,48 @@ func TestToolSetsCreate(t *testing.T) {
 			"                regex: regex\n" +
 			"                startsWith: startsWith\n" +
 			"      url: url\n" +
+			"    openapi:\n" +
+			"      baseUrl: baseUrl\n" +
+			"      excludeTools:\n" +
+			"        operator: OPERATOR_UNSPECIFIED\n" +
+			"        filters:\n" +
+			"          - attribute: ATTRIBUTE_UNSPECIFIED\n" +
+			"            matcher:\n" +
+			"              caseSensitive: true\n" +
+			"              contains: contains\n" +
+			"              endsWith: endsWith\n" +
+			"              exact: exact\n" +
+			"              regex: regex\n" +
+			"              startsWith: startsWith\n" +
+			"      headers:\n" +
+			"        foo: string\n" +
+			"      includeTools:\n" +
+			"        operator: OPERATOR_UNSPECIFIED\n" +
+			"        filters:\n" +
+			"          - attribute: ATTRIBUTE_UNSPECIFIED\n" +
+			"            matcher:\n" +
+			"              caseSensitive: true\n" +
+			"              contains: contains\n" +
+			"              endsWith: endsWith\n" +
+			"              exact: exact\n" +
+			"              regex: regex\n" +
+			"              startsWith: startsWith\n" +
+			"      serverName: serverName\n" +
+			"      toolApprovals:\n" +
+			"        always: true\n" +
+			"        only:\n" +
+			"          operator: OPERATOR_UNSPECIFIED\n" +
+			"          filters:\n" +
+			"            - attribute: ATTRIBUTE_UNSPECIFIED\n" +
+			"              matcher:\n" +
+			"                caseSensitive: true\n" +
+			"                contains: contains\n" +
+			"                endsWith: endsWith\n" +
+			"                exact: exact\n" +
+			"                regex: regex\n" +
+			"                startsWith: startsWith\n" +
+			"      uploadId: uploadId\n" +
+			"      url: url\n" +
 			"  description: description\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -128,7 +170,7 @@ func TestToolSetsUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{adapter: {http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}, description: description}",
+			"--spec", "{adapter: {http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}, openapi: {baseUrl: baseUrl, excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, serverName: serverName, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, uploadId: uploadId, url: url}}, description: description}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -148,7 +190,7 @@ func TestToolSetsUpdate(t *testing.T) {
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.adapter", "{http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}}",
+			"--spec.adapter", "{http: {baseUrl: baseUrl, headers: {foo: string}}, mcp: {excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, url: url}, openapi: {baseUrl: baseUrl, excludeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, headers: {foo: string}, includeTools: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}, serverName: serverName, toolApprovals: {always: true, only: {operator: OPERATOR_UNSPECIFIED, filters: [{attribute: ATTRIBUTE_UNSPECIFIED, matcher: {caseSensitive: true, contains: contains, endsWith: endsWith, exact: exact, regex: regex, startsWith: startsWith}}]}}, uploadId: uploadId, url: url}}",
 			"--spec.description", "description",
 			"--update-mask", "updateMask",
 		)
@@ -207,6 +249,48 @@ func TestToolSetsUpdate(t *testing.T) {
 			"                exact: exact\n" +
 			"                regex: regex\n" +
 			"                startsWith: startsWith\n" +
+			"      url: url\n" +
+			"    openapi:\n" +
+			"      baseUrl: baseUrl\n" +
+			"      excludeTools:\n" +
+			"        operator: OPERATOR_UNSPECIFIED\n" +
+			"        filters:\n" +
+			"          - attribute: ATTRIBUTE_UNSPECIFIED\n" +
+			"            matcher:\n" +
+			"              caseSensitive: true\n" +
+			"              contains: contains\n" +
+			"              endsWith: endsWith\n" +
+			"              exact: exact\n" +
+			"              regex: regex\n" +
+			"              startsWith: startsWith\n" +
+			"      headers:\n" +
+			"        foo: string\n" +
+			"      includeTools:\n" +
+			"        operator: OPERATOR_UNSPECIFIED\n" +
+			"        filters:\n" +
+			"          - attribute: ATTRIBUTE_UNSPECIFIED\n" +
+			"            matcher:\n" +
+			"              caseSensitive: true\n" +
+			"              contains: contains\n" +
+			"              endsWith: endsWith\n" +
+			"              exact: exact\n" +
+			"              regex: regex\n" +
+			"              startsWith: startsWith\n" +
+			"      serverName: serverName\n" +
+			"      toolApprovals:\n" +
+			"        always: true\n" +
+			"        only:\n" +
+			"          operator: OPERATOR_UNSPECIFIED\n" +
+			"          filters:\n" +
+			"            - attribute: ATTRIBUTE_UNSPECIFIED\n" +
+			"              matcher:\n" +
+			"                caseSensitive: true\n" +
+			"                contains: contains\n" +
+			"                endsWith: endsWith\n" +
+			"                exact: exact\n" +
+			"                regex: regex\n" +
+			"                startsWith: startsWith\n" +
+			"      uploadId: uploadId\n" +
 			"      url: url\n" +
 			"  description: description\n" +
 			"updateMask: updateMask\n")
@@ -249,6 +333,19 @@ func TestToolSetsDelete(t *testing.T) {
 			"tool-sets", "delete",
 			"--workspace-id", "workspaceId",
 			"--id", "id",
+		)
+	})
+}
+
+func TestToolSetsGetOpenAPISpec(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"tool-sets", "get-openapi-spec",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
 		)
 	})
 }
