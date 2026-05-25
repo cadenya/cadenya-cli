@@ -69,12 +69,12 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Memory layers/entries to push onto this objective's memory stack on\n top of the baseline stack inherited from the selected variation.\n\n Array order is push order: the first element sits lower in the\n objective's contribution to the stack; the LAST element ends up on\n top of the effective stack. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically based on episodic_key.\n\n Stack size cap: the TOTAL effective stack (variation's memory layers\n + this field) must not exceed 10 entries. A request that would\n produce an effective stack larger than 10 is rejected with\n InvalidArgument.",
 			InnerField: "memoryStack",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[map[string]any]{
 			Name:       "data.output",
 			Usage:      "The output of the objective, populated when the objective completes. Will match the schema of output_json_schema or output_json_inferred.",
 			InnerField: "output",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[map[string]any]{
 			Name:       "data.output-definition",
 			Usage:      "Snapshot of the agent spec's output_definition at objective creation time.\n When present, the objective will run an extraction step after the LLM finishes.",
 			InnerField: "outputDefinition",

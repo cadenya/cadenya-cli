@@ -83,12 +83,12 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Description of the agent's purpose",
 			InnerField: "description",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.input-data-schema",
 			Usage:      "InputDataSchema is used for enforcing a data input when objectives are created. This is valuable when using liquid formatting in agent variation\n prompts. Input data schema is also valuable when using an agent as a sub-agent, as the schema is used as the tool's input parameter schema. If omitted,\n the sub-agent schema will be loaded with a simple \"prompt\" free text string as its schema.",
 			InnerField: "inputDataSchema",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.output-definition",
 			Usage:      "Optional output definition for objectives created for this agent.\n When provided, Cadenya will append a tool to that will be called by the LLM in use by the variant to extract information in the format provided here.\n Use this option when you want structured data to be created by your objectives.",
 			InnerField: "outputDefinition",
@@ -215,12 +215,12 @@ var agentsUpdate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Description of the agent's purpose",
 			InnerField: "description",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.input-data-schema",
 			Usage:      "InputDataSchema is used for enforcing a data input when objectives are created. This is valuable when using liquid formatting in agent variation\n prompts. Input data schema is also valuable when using an agent as a sub-agent, as the schema is used as the tool's input parameter schema. If omitted,\n the sub-agent schema will be loaded with a simple \"prompt\" free text string as its schema.",
 			InnerField: "inputDataSchema",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.output-definition",
 			Usage:      "Optional output definition for objectives created for this agent.\n When provided, Cadenya will append a tool to that will be called by the LLM in use by the variant to extract information in the format provided here.\n Use this option when you want structured data to be created by your objectives.",
 			InnerField: "outputDefinition",
