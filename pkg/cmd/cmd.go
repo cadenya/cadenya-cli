@@ -98,6 +98,14 @@ func init() {
 				},
 			},
 			{
+				Name:     "profiles",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&profilesList,
+				},
+			},
+			{
 				Name:     "agents",
 				Category: "API RESOURCE",
 				Suggest:  true,
@@ -322,8 +330,21 @@ func init() {
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
+					&workspacesCreate,
+					&workspacesRetrieve,
 					&workspacesList,
-					&workspacesGet,
+					&workspacesDelete,
+					&workspacesGetCurrent,
+				},
+			},
+			{
+				Name:     "workspaces:members",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&workspacesMembersList,
+					&workspacesMembersAdd,
+					&workspacesMembersRemove,
 				},
 			},
 			{
