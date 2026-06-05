@@ -333,6 +333,7 @@ func init() {
 				Commands: []*cli.Command{
 					&workspaceAdminCreate,
 					&workspaceAdminRetrieve,
+					&workspaceAdminUpdate,
 					&workspaceAdminList,
 					&workspaceAdminArchive,
 				},

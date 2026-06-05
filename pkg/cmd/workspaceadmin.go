@@ -74,6 +74,59 @@ var workspaceAdminRetrieve = cli.Command{
 	HideHelpCommand: true,
 }
 
+var workspaceAdminUpdate = requestflag.WithInnerFlags(cli.Command{
+	Name:    "update",
+	Usage:   "Updates a workspace's metadata (e.g. name) and spec. Admin only.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "metadata",
+			Usage:    "UpdateAccountResourceMetadata contains the user-provided fields for updating\n an account-scoped resource. Read-only fields (id, account_id, profile_id) are excluded\n since they are set by the server.",
+			BodyPath: "metadata",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "spec",
+			BodyPath: "spec",
+		},
+		&requestflag.Flag[string]{
+			Name:     "update-mask",
+			Usage:    "Fields to update.",
+			BodyPath: "updateMask",
+		},
+	},
+	Action:          handleWorkspaceAdminUpdate,
+	HideHelpCommand: true,
+}, map[string][]requestflag.HasOuterFlag{
+	"metadata": {
+		&requestflag.InnerFlag[string]{
+			Name:       "metadata.name",
+			Usage:      `Human-readable name for the resource (e.g., "Production API Key", "Staging Workspace")`,
+			InnerField: "name",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "metadata.external-id",
+			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
+			InnerField: "externalId",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "metadata.labels",
+			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
+			InnerField: "labels",
+		},
+	},
+	"spec": {
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.description",
+			InnerField: "description",
+		},
+	},
+})
+
 var workspaceAdminList = cli.Command{
 	Name:    "list",
 	Usage:   "Lists every workspace in the account, optionally including archived ones. Admin\nonly.",
@@ -197,6 +250,55 @@ func handleWorkspaceAdminRetrieve(ctx context.Context, cmd *cli.Command) error {
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "workspace-admin retrieve",
+		Transform:      transform,
+	})
+}
+
+func handleWorkspaceAdminUpdate(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		ApplicationJSON,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.WorkspaceAdminUpdateParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.WorkspaceAdmin.Update(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "workspace-admin update",
 		Transform:      transform,
 	})
 }
