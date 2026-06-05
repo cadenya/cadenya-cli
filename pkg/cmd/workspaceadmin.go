@@ -105,7 +105,7 @@ var workspaceAdminList = cli.Command{
 
 var workspaceAdminArchive = cli.Command{
 	Name:    "archive",
-	Usage:   "Archives a workspace (soft delete). The workspace is retained, but any\nsubsequent request scoped to it returns a permission error. Admin only.",
+	Usage:   "Archives a workspace (soft delete). The workspace is retained, but any\nsubsequent request scoped to it returns a permission error. Archiving the\naccount's last active (non-archived) workspace is not allowed and returns\nFailedPrecondition. Admin only.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
