@@ -8,13 +8,13 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/mocktest"
 )
 
-func TestWorkspacesMembersList(t *testing.T) {
+func TestWorkspaceAdminMembersList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspaces:members", "list",
+			"workspace-admin:members", "list",
 			"--max-items", "10",
 			"--workspace-id", "workspaceId",
 			"--cursor", "cursor",
@@ -23,39 +23,42 @@ func TestWorkspacesMembersList(t *testing.T) {
 	})
 }
 
-func TestWorkspacesMembersAdd(t *testing.T) {
+func TestWorkspaceAdminMembersAdd(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspaces:members", "add",
+			"workspace-admin:members", "add",
 			"--workspace-id", "workspaceId",
+			"--email", "email",
 			"--profile-id", "profileId",
 		)
 	})
 
 	t.Run("piping data", func(t *testing.T) {
 		// Test piping YAML data over stdin
-		pipeData := []byte("profileId: profileId")
+		pipeData := []byte("" +
+			"email: email\n" +
+			"profileId: profileId\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"workspaces:members", "add",
+			"workspace-admin:members", "add",
 			"--workspace-id", "workspaceId",
 		)
 	})
 }
 
-func TestWorkspacesMembersRemove(t *testing.T) {
+func TestWorkspaceAdminMembersRemove(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspaces:members", "remove",
+			"workspace-admin:members", "remove",
 			"--workspace-id", "workspaceId",
-			"--id", "id",
+			"--profile-id", "profileId",
 		)
 	})
 }

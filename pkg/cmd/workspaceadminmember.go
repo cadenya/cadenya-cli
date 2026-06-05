@@ -14,9 +14,9 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var workspacesMembersList = cli.Command{
+var workspaceAdminMembersList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists the members (actors) of a workspace. Requires the admin role.",
+	Usage:   "Lists the members of a workspace. Admin only.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -39,33 +39,38 @@ var workspacesMembersList = cli.Command{
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
 		},
 	},
-	Action:          handleWorkspacesMembersList,
+	Action:          handleWorkspaceAdminMembersList,
 	HideHelpCommand: true,
 }
 
-var workspacesMembersAdd = cli.Command{
+var workspaceAdminMembersAdd = cli.Command{
 	Name:    "add",
-	Usage:   "Grants a profile access to the workspace by creating an actor that links the\nprofile to the workspace. Idempotent — re-adding an active member is a no-op.\nRequires the admin role.",
+	Usage:   "Grants a profile access to the workspace by creating (or reactivating) the actor\nthat links the profile to the workspace. Accepts either an existing profile_id\nor an email to resolve-or-invite. Idempotent for an already-active member. Admin\nonly.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:      "workspace-id",
 			Required:  true,
 			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:     "email",
+			Usage:    "Email address to add (resolve-or-invite). Mutually exclusive with profile_id.",
+			BodyPath: "email",
 		},
 		&requestflag.Flag[string]{
 			Name:     "profile-id",
-			Usage:    "The existing account profile to add to the workspace.",
+			Usage:    "An existing account profile to add. Mutually exclusive with email.",
 			BodyPath: "profileId",
 		},
 	},
-	Action:          handleWorkspacesMembersAdd,
+	Action:          handleWorkspaceAdminMembersAdd,
 	HideHelpCommand: true,
 }
 
-var workspacesMembersRemove = cli.Command{
+var workspaceAdminMembersRemove = cli.Command{
 	Name:    "remove",
-	Usage:   "Revokes a member's access to the workspace by deactivating their actor. The\nmember is immediately cut off; the underlying profile is not deleted. Requires\nthe admin role.",
+	Usage:   "Revokes a member's access by deactivating their actor; the member is immediately\ncut off. The underlying profile is not deleted. Admin only.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -74,16 +79,16 @@ var workspacesMembersRemove = cli.Command{
 			PathParam: "workspaceId",
 		},
 		&requestflag.Flag[string]{
-			Name:      "id",
+			Name:      "profile-id",
 			Required:  true,
-			PathParam: "id",
+			PathParam: "profileId",
 		},
 	},
-	Action:          handleWorkspacesMembersRemove,
+	Action:          handleWorkspaceAdminMembersRemove,
 	HideHelpCommand: true,
 }
 
-func handleWorkspacesMembersList(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminMembersList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
@@ -105,7 +110,7 @@ func handleWorkspacesMembersList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.WorkspaceMemberListParams{}
+	params := cadenya.WorkspaceAdminMemberListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -113,7 +118,7 @@ func handleWorkspacesMembersList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.Workspaces.Members.List(
+		_, err = client.WorkspaceAdmin.Members.List(
 			ctx,
 			cmd.Value("workspace-id").(string),
 			params,
@@ -127,11 +132,11 @@ func handleWorkspacesMembersList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "workspaces:members list",
+			Title:          "workspace-admin:members list",
 			Transform:      transform,
 		})
 	} else {
-		iter := client.Workspaces.Members.ListAutoPaging(
+		iter := client.WorkspaceAdmin.Members.ListAutoPaging(
 			ctx,
 			cmd.Value("workspace-id").(string),
 			params,
@@ -145,13 +150,13 @@ func handleWorkspacesMembersList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "workspaces:members list",
+			Title:          "workspace-admin:members list",
 			Transform:      transform,
 		})
 	}
 }
 
-func handleWorkspacesMembersAdd(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminMembersAdd(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
@@ -173,11 +178,11 @@ func handleWorkspacesMembersAdd(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.WorkspaceMemberAddParams{}
+	params := cadenya.WorkspaceAdminMemberAddParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Workspaces.Members.Add(
+	_, err = client.WorkspaceAdmin.Members.Add(
 		ctx,
 		cmd.Value("workspace-id").(string),
 		params,
@@ -195,20 +200,20 @@ func handleWorkspacesMembersAdd(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "workspaces:members add",
+		Title:          "workspace-admin:members add",
 		Transform:      transform,
 	})
 }
 
-func handleWorkspacesMembersRemove(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminMembersRemove(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
 		cmd.Set("workspace-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
 	}
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
+	if !cmd.IsSet("profile-id") && len(unusedArgs) > 0 {
+		cmd.Set("profile-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
 	}
 	if len(unusedArgs) > 0 {
@@ -226,10 +231,10 @@ func handleWorkspacesMembersRemove(ctx context.Context, cmd *cli.Command) error 
 		return err
 	}
 
-	return client.Workspaces.Members.Remove(
+	return client.WorkspaceAdmin.Members.Remove(
 		ctx,
 		cmd.Value("workspace-id").(string),
-		cmd.Value("id").(string),
+		cmd.Value("profile-id").(string),
 		options...,
 	)
 }
