@@ -31,13 +31,8 @@ var workspaceAdminProfilesList = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:      "query",
-			Usage:     "Free-form search over profile name and email. Case-insensitive substring\n match; empty returns all profiles (subject to the type filter).",
+			Usage:     "Free-form search over profile name and email. Case-insensitive substring\n match; empty returns all profiles.",
 			QueryPath: "query",
-		},
-		&requestflag.Flag[string]{
-			Name:      "type",
-			Usage:     "Filter by profile type. Defaults to all types when unset; pass\n PROFILE_TYPE_USER to list only human users (the common case for a\n member picker).",
-			QueryPath: "type",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",

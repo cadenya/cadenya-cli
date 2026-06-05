@@ -19,7 +19,6 @@ func TestWorkspaceAdminProfilesList(t *testing.T) {
 			"--cursor", "cursor",
 			"--limit", "0",
 			"--query", "query",
-			"--type", "PROFILE_TYPE_USER",
 		)
 	})
 }
