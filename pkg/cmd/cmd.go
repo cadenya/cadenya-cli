@@ -348,6 +348,14 @@ func init() {
 				},
 			},
 			{
+				Name:     "workspace-admin:profiles",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&workspaceAdminProfilesList,
+				},
+			},
+			{
 				Name:     "bulk-workspace-resources",
 				Category: "API RESOURCE",
 				Suggest:  true,
