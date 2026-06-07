@@ -258,6 +258,7 @@ func init() {
 					&modelsRetrieve,
 					&modelsList,
 					&modelsSetStatus,
+					&modelsSwap,
 				},
 			},
 			{

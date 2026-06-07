@@ -123,6 +123,39 @@ var modelsSetStatus = cli.Command{
 	HideHelpCommand: true,
 }
 
+var modelsSwap = requestflag.WithInnerFlags(cli.Command{
+	Name:    "swap",
+	Usage:   "Reassigns agent variations from one model to another in bulk. Runs\nasynchronously and returns immediately.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[[]map[string]any]{
+			Name:     "model-swap",
+			Usage:    "The swaps to perform.",
+			BodyPath: "modelSwaps",
+		},
+	},
+	Action:          handleModelsSwap,
+	HideHelpCommand: true,
+}, map[string][]requestflag.HasOuterFlag{
+	"model-swap": {
+		&requestflag.InnerFlag[string]{
+			Name:       "model-swap.current-model-id",
+			Usage:      `The model variations are currently on. Accepts an id or "external_id:" slug.`,
+			InnerField: "currentModelId",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "model-swap.next-model-id",
+			Usage:      `The model to move variations to. Accepts an id or "external_id:" slug.`,
+			InnerField: "nextModelId",
+		},
+	},
+})
+
 func handleModelsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -292,6 +325,55 @@ func handleModelsSetStatus(ctx context.Context, cmd *cli.Command) error {
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "models set-status",
+		Transform:      transform,
+	})
+}
+
+func handleModelsSwap(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		ApplicationJSON,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ModelSwapParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Models.Swap(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "models swap",
 		Transform:      transform,
 	})
 }
