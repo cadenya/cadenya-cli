@@ -18,7 +18,7 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			"ai-provider-keys", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{apiKey: apiKey, provider: provider, region: region}",
+			"--spec", "{apiKey: apiKey, openrouter: {}, provider: AI_PROVIDER_UNSPECIFIED}",
 		)
 	})
 
@@ -37,8 +37,8 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.api-key", "apiKey",
-			"--spec.provider", "provider",
-			"--spec.region", "region",
+			"--spec.openrouter", "{}",
+			"--spec.provider", "AI_PROVIDER_UNSPECIFIED",
 		)
 	})
 
@@ -53,8 +53,8 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			"    foo: string\n" +
 			"spec:\n" +
 			"  apiKey: apiKey\n" +
-			"  provider: provider\n" +
-			"  region: region\n")
+			"  openrouter: {}\n" +
+			"  provider: AI_PROVIDER_UNSPECIFIED\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
@@ -87,7 +87,7 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{apiKey: apiKey, provider: provider, region: region}",
+			"--spec", "{apiKey: apiKey, openrouter: {}, provider: AI_PROVIDER_UNSPECIFIED}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -108,8 +108,8 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.api-key", "apiKey",
-			"--spec.provider", "provider",
-			"--spec.region", "region",
+			"--spec.openrouter", "{}",
+			"--spec.provider", "AI_PROVIDER_UNSPECIFIED",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -125,8 +125,8 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			"    foo: string\n" +
 			"spec:\n" +
 			"  apiKey: apiKey\n" +
-			"  provider: provider\n" +
-			"  region: region\n" +
+			"  openrouter: {}\n" +
+			"  provider: AI_PROVIDER_UNSPECIFIED\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -148,6 +148,7 @@ func TestAIProviderKeysList(t *testing.T) {
 			"--max-items", "10",
 			"--workspace-id", "workspaceId",
 			"--cursor", "cursor",
+			"--include-info=true",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",

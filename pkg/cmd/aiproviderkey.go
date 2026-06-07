@@ -67,15 +67,15 @@ var aiProviderKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "The provider credential. Accepted on create/update; never populated in\n responses (the server returns an empty value to avoid leaking it).",
 			InnerField: "apiKey",
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.provider",
-			Usage:      `The AI provider this key authenticates against. Currently "openrouter".`,
-			InnerField: "provider",
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.openrouter",
+			Usage:      "OpenRouterConfig holds OpenRouter-specific settings. Empty for now; it exists\n as the oneof seam so provider-specific options (region, base URL, etc.) can be\n added later without restructuring the spec.",
+			InnerField: "openrouter",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.region",
-			Usage:      `The provider region. "us" or "eu". Defaults to "us".`,
-			InnerField: "region",
+			Name:       "spec.provider",
+			Usage:      "The AI provider this key authenticates against.",
+			InnerField: "provider",
 		},
 	},
 })
@@ -161,15 +161,15 @@ var aiProviderKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "The provider credential. Accepted on create/update; never populated in\n responses (the server returns an empty value to avoid leaking it).",
 			InnerField: "apiKey",
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.provider",
-			Usage:      `The AI provider this key authenticates against. Currently "openrouter".`,
-			InnerField: "provider",
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.openrouter",
+			Usage:      "OpenRouterConfig holds OpenRouter-specific settings. Empty for now; it exists\n as the oneof seam so provider-specific options (region, base URL, etc.) can be\n added later without restructuring the spec.",
+			InnerField: "openrouter",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.region",
-			Usage:      `The provider region. "us" or "eu". Defaults to "us".`,
-			InnerField: "region",
+			Name:       "spec.provider",
+			Usage:      "The AI provider this key authenticates against.",
+			InnerField: "provider",
 		},
 	},
 })
@@ -188,6 +188,11 @@ var aiProviderKeysList = cli.Command{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
+		},
+		&requestflag.Flag[bool]{
+			Name:      "include-info",
+			Usage:     "When true, populate each item's info (model counts), at the cost of extra\n lookups.",
+			QueryPath: "includeInfo",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",

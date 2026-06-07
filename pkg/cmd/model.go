@@ -45,6 +45,11 @@ var modelsList = cli.Command{
 			PathParam: "workspaceId",
 		},
 		&requestflag.Flag[string]{
+			Name:      "ai-provider-key-id",
+			Usage:     "Filter to models provisioned on a specific AI provider key. Accepts the\n key's id or an \"external_id:\"-prefixed slug.",
+			QueryPath: "aiProviderKeyId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "bundle-key",
 			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
 			QueryPath: "bundleKey",
@@ -53,6 +58,11 @@ var modelsList = cli.Command{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
+		},
+		&requestflag.Flag[bool]{
+			Name:      "include-info",
+			Usage:     "When true, populate each item's info (e.g. the AI provider), at the cost of\n extra lookups.",
+			QueryPath: "includeInfo",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
