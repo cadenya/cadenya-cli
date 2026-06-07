@@ -89,6 +89,18 @@ func init() {
 		},
 		Commands: []*cli.Command{
 			{
+				Name:     "ai-provider-keys",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&aiProviderKeysCreate,
+					&aiProviderKeysRetrieve,
+					&aiProviderKeysUpdate,
+					&aiProviderKeysList,
+					&aiProviderKeysDelete,
+				},
+			},
+			{
 				Name:     "account",
 				Category: "API RESOURCE",
 				Suggest:  true,
