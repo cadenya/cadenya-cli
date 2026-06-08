@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.18.1 (2026-06-08)
+
+Full Changelog: [v0.18.0...v0.18.1](https://github.com/cadenya/cadenya-cli/compare/v0.18.0...v0.18.1)
+
+### Chores
+
+* align cadenya-go to v0.30.0 to match Stainless codegen ([a62ac1e](https://github.com/cadenya/cadenya-cli/commit/a62ac1e4daab24e408cfa3eac9e1fcecd06c57ba))
+
 ## 0.18.0 (2026-05-25)
 
 Full Changelog: [v0.17.0...v0.18.0](https://github.com/cadenya/cadenya-cli/compare/v0.17.0...v0.18.0)
