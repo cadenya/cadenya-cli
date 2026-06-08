@@ -18,8 +18,11 @@ func TestObjectivesCreate(t *testing.T) {
 			"objectives", "create",
 			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
-			"--data", "{data: {}, initialMessage: initialMessage, memoryStack: [{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}], secrets: [{name: name, value: value}]}",
+			"--data", "{foo: bar}",
+			"--initial-message", "initialMessage",
+			"--memory-stack", "{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
+			"--secret", "{name: name, value: value}",
 			"--variation-id", "variationId",
 		)
 	})
@@ -35,12 +38,14 @@ func TestObjectivesCreate(t *testing.T) {
 			"objectives", "create",
 			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
-			"--data.data", "{}",
-			"--data.initial-message", "initialMessage",
-			"--data.memory-stack", "[{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}]",
-			"--data.secrets", "[{name: name, value: value}]",
+			"--data", "{foo: bar}",
+			"--initial-message", "initialMessage",
+			"--memory-stack.memory-entry-id", "memoryEntryId",
+			"--memory-stack.memory-layer-id", "memoryLayerId",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
+			"--secret.name", "name",
+			"--secret.value", "value",
 			"--variation-id", "variationId",
 		)
 	})
@@ -50,18 +55,18 @@ func TestObjectivesCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"agentId: agentId\n" +
 			"data:\n" +
-			"  data: {}\n" +
-			"  initialMessage: initialMessage\n" +
-			"  memoryStack:\n" +
-			"    - memoryEntryId: memoryEntryId\n" +
-			"      memoryLayerId: memoryLayerId\n" +
-			"  secrets:\n" +
-			"    - name: name\n" +
-			"      value: value\n" +
+			"  foo: bar\n" +
+			"initialMessage: initialMessage\n" +
+			"memoryStack:\n" +
+			"  - memoryEntryId: memoryEntryId\n" +
+			"    memoryLayerId: memoryLayerId\n" +
 			"metadata:\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
+			"secrets:\n" +
+			"  - name: name\n" +
+			"    value: value\n" +
 			"variationId: variationId\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,

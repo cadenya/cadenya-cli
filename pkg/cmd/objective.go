@@ -31,13 +31,29 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "data",
+			Usage:    "Arbitrary data for the objective. May be used in liquid templates for prompts configured on the agent variation",
 			Required: true,
 			BodyPath: "data",
+		},
+		&requestflag.Flag[string]{
+			Name:     "initial-message",
+			Usage:    "Optional override for initial message sent to the agent. This becomes the first user message in the LLM chat history. The agent variation is used\n to set this if not present.",
+			BodyPath: "initialMessage",
+		},
+		&requestflag.Flag[[]map[string]any]{
+			Name:     "memory-stack",
+			Usage:    "Memory layers/entries to push onto this objective's memory stack on\n top of the baseline stack inherited from the selected variation.\n\n Array order is push order: the first element sits lower in the\n objective's contribution to the stack; the LAST element ends up on\n top of the effective stack. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically based on episodic_key.\n\n Stack size cap: the TOTAL effective stack (variation's memory layers\n + this field) must not exceed 10 entries. A request that would\n produce an effective stack larger than 10 is rejected with\n InvalidArgument.",
+			BodyPath: "memoryStack",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
 			Usage:    "CreateOperationMetadata contains the user-provided fields for creating\n an operation. Read-only fields (id, account_id, workspace_id, created_at, profile_id)\n are excluded since they are set by the server.",
 			BodyPath: "metadata",
+		},
+		&requestflag.Flag[[]map[string]any]{
+			Name:     "secret",
+			Usage:    "Secrets that can be used in the headers for tool calls using the secret interpolation format.",
+			BodyPath: "secrets",
 		},
 		&requestflag.Flag[string]{
 			Name:     "variation-id",
@@ -48,61 +64,15 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 	Action:          handleObjectivesCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
-	"data": {
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.agent",
-			Usage:      "Agent resource",
-			InnerField: "agent",
-		},
-		&requestflag.InnerFlag[any]{
-			Name:       "data.data",
-			Usage:      "Represents a dynamically typed value which can be either null, a number, a string, a boolean, a recursive struct value, or a list of values.",
-			InnerField: "data",
+	"memory-stack": {
+		&requestflag.InnerFlag[string]{
+			Name:       "memory-stack.memory-entry-id",
+			Usage:      "When set, pushes only this entry from memory_layer_id onto the stack —\n behaves as a single-entry layer (only this key resolves at this\n position). The entry must belong to memory_layer_id; mismatches are\n rejected with InvalidArgument.",
+			InnerField: "memoryEntryId",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "data.initial-message",
-			Usage:      "The initial message sent to the agent. This becomes the first user message in the LLM chat history.",
-			InnerField: "initialMessage",
-		},
-		&requestflag.InnerFlag[[]map[string]any]{
-			Name:       "data.memory-stack",
-			Usage:      "Memory layers/entries to push onto this objective's memory stack on\n top of the baseline stack inherited from the selected variation.\n\n Array order is push order: the first element sits lower in the\n objective's contribution to the stack; the LAST element ends up on\n top of the effective stack. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically based on episodic_key.\n\n Stack size cap: the TOTAL effective stack (variation's memory layers\n + this field) must not exceed 10 entries. A request that would\n produce an effective stack larger than 10 is rejected with\n InvalidArgument.",
-			InnerField: "memoryStack",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.output",
-			Usage:      "The output of the objective, populated when the objective completes. Will match the schema of output_json_schema or output_json_inferred.",
-			InnerField: "output",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.output-definition",
-			Usage:      "Snapshot of the agent spec's output_definition at objective creation time.\n When present, the objective will run an extraction step after the LLM finishes.",
-			InnerField: "outputDefinition",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "data.parent-objective-id",
-			Usage:      "A parent objective means the objective was spawned off using a separate agent to complete an objective",
-			InnerField: "parentObjectiveId",
-		},
-		&requestflag.InnerFlag[[]map[string]any]{
-			Name:       "data.secrets",
-			Usage:      "Secrets that can be used in the headers for tool calls using the secret interpolation format.",
-			InnerField: "secrets",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "data.source-schedule-id",
-			Usage:      "ID of the AgentSchedule that produced this objective, when applicable.\n Populated when the objective is created from a schedule fire; empty when\n the objective was created via CreateObjective directly.",
-			InnerField: "sourceScheduleId",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "data.system-prompt",
-			Usage:      "system_prompt is read-only, derived from the selected variation's prompt",
-			InnerField: "systemPrompt",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.variation",
-			Usage:      "AgentVariation resource",
-			InnerField: "variation",
+			Name:       "memory-stack.memory-layer-id",
+			InnerField: "memoryLayerId",
 		},
 	},
 	"metadata": {
@@ -115,6 +85,16 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "metadata.labels",
 			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"priority\": \"high\", \"source\": \"api\", \"workflow\": \"onboarding\"}",
 			InnerField: "labels",
+		},
+	},
+	"secret": {
+		&requestflag.InnerFlag[string]{
+			Name:       "secret.name",
+			InnerField: "name",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "secret.value",
+			InnerField: "value",
 		},
 	},
 })
