@@ -80,11 +80,6 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "spec.parameters",
 			InnerField: "parameters",
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.status",
-			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_OMITTED", "TOOL_STATUS_ARCHIVED".`,
-			InnerField: "status",
-		},
 		&requestflag.InnerFlag[bool]{
 			Name:       "spec.requires-approval",
 			InnerField: "requiresApproval",
@@ -190,11 +185,6 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "spec.parameters",
 			InnerField: "parameters",
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.status",
-			Usage:      `Allowed values: "TOOL_STATUS_UNSPECIFIED", "TOOL_STATUS_AVAILABLE", "TOOL_STATUS_OMITTED", "TOOL_STATUS_ARCHIVED".`,
-			InnerField: "status",
-		},
 		&requestflag.InnerFlag[bool]{
 			Name:       "spec.requires-approval",
 			InnerField: "requiresApproval",
@@ -263,9 +253,9 @@ var toolSetsToolsList = cli.Command{
 			QueryPath: "sortOrder",
 		},
 		&requestflag.Flag[[]string]{
-			Name:      "status",
-			Usage:     "Filter by tool status. Multiple values are OR'd together.",
-			QueryPath: "statuses",
+			Name:      "state",
+			Usage:     "Filter by tool state. Multiple values are OR'd together.",
+			QueryPath: "states",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
@@ -298,6 +288,56 @@ var toolSetsToolsDelete = cli.Command{
 		},
 	},
 	Action:          handleToolSetsToolsDelete,
+	HideHelpCommand: true,
+}
+
+var toolSetsToolsOmit = cli.Command{
+	Name:    "omit",
+	Usage:   "Transitions a tool to STATE_OMITTED, excluding it from agent use. Fails if the\ntool is currently assigned to agent variations.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleToolSetsToolsOmit,
+	HideHelpCommand: true,
+}
+
+var toolSetsToolsRestore = cli.Command{
+	Name:    "restore",
+	Usage:   "Transitions an omitted tool back to STATE_AVAILABLE. For managed tool sets, the\nnext sync may omit the tool again if its filters still exclude it.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleToolSetsToolsRestore,
 	HideHelpCommand: true,
 }
 
@@ -581,4 +621,122 @@ func handleToolSetsToolsDelete(ctx context.Context, cmd *cli.Command) error {
 		cmd.Value("id").(string),
 		options...,
 	)
+}
+
+func handleToolSetsToolsOmit(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
+		cmd.Set("tool-set-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ToolSetToolOmitParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.ToolSets.Tools.Omit(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("tool-set-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "tool-sets:tools omit",
+		Transform:      transform,
+	})
+}
+
+func handleToolSetsToolsRestore(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
+		cmd.Set("tool-set-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ToolSetToolRestoreParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.ToolSets.Tools.Restore(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("tool-set-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "tool-sets:tools restore",
+		Transform:      transform,
+	})
 }

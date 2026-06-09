@@ -19,7 +19,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}, openapi: {method: method, operationId: operationId, path: path}}, description: description, parameters: {foo: bar}, status: TOOL_STATUS_UNSPECIFIED, requiresApproval: true}",
+			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}, openapi: {method: method, operationId: operationId, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true}",
 		)
 	})
 
@@ -41,7 +41,6 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}, openapi: {method: method, operationId: operationId, path: path}}",
 			"--spec.description", "description",
 			"--spec.parameters", "{foo: bar}",
-			"--spec.status", "TOOL_STATUS_UNSPECIFIED",
 			"--spec.requires-approval=true",
 		)
 	})
@@ -77,7 +76,6 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"  description: description\n" +
 			"  parameters:\n" +
 			"    foo: bar\n" +
-			"  status: TOOL_STATUS_UNSPECIFIED\n" +
 			"  requiresApproval: true\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -114,7 +112,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}, openapi: {method: method, operationId: operationId, path: path}}, description: description, parameters: {foo: bar}, status: TOOL_STATUS_UNSPECIFIED, requiresApproval: true}",
+			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}, openapi: {method: method, operationId: operationId, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -138,7 +136,6 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate, toolName: toolName}, mcp: {toolDescription: toolDescription, toolName: toolName, toolTitle: toolTitle}, openapi: {method: method, operationId: operationId, path: path}}",
 			"--spec.description", "description",
 			"--spec.parameters", "{foo: bar}",
-			"--spec.status", "TOOL_STATUS_UNSPECIFIED",
 			"--spec.requires-approval=true",
 			"--update-mask", "updateMask",
 		)
@@ -175,7 +172,6 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"  description: description\n" +
 			"  parameters:\n" +
 			"    foo: bar\n" +
-			"  status: TOOL_STATUS_UNSPECIFIED\n" +
 			"  requiresApproval: true\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
@@ -208,7 +204,7 @@ func TestToolSetsToolsList(t *testing.T) {
 			"--query", "query",
 			"--requires-approval=true",
 			"--sort-order", "sortOrder",
-			"--status", "TOOL_STATUS_UNSPECIFIED",
+			"--state", "STATE_UNSPECIFIED",
 		)
 	})
 }
@@ -220,6 +216,34 @@ func TestToolSetsToolsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "delete",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestToolSetsToolsOmit(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"tool-sets:tools", "omit",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestToolSetsToolsRestore(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"tool-sets:tools", "restore",
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--id", "id",

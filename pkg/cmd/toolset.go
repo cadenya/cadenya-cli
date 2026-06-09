@@ -204,6 +204,11 @@ var toolSetsList = cli.Command{
 			Usage:     "Sort order for results (asc or desc by creation time)",
 			QueryPath: "sortOrder",
 		},
+		&requestflag.Flag[string]{
+			Name:      "state",
+			Usage:     "Filter by tool set lifecycle state. Defaults to STATE_ACTIVE when\n unspecified; pass STATE_ARCHIVED to list archived tool sets.",
+			QueryPath: "state",
+		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
@@ -230,6 +235,26 @@ var toolSetsDelete = cli.Command{
 		},
 	},
 	Action:          handleToolSetsDelete,
+	HideHelpCommand: true,
+}
+
+var toolSetsArchive = cli.Command{
+	Name:    "archive",
+	Usage:   "Transitions a tool set to STATE_ARCHIVED. Syncing stops, the tool set is hidden\nfrom list results, its tools are no longer offered to objectives, and new\nvariation assignments are rejected. Existing assignments are retained, and\nhistory is preserved — unlike delete, archiving works while the tool set is\nstill assigned to agent variations.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleToolSetsArchive,
 	HideHelpCommand: true,
 }
 
@@ -294,6 +319,26 @@ var toolSetsListEvents = cli.Command{
 		},
 	},
 	Action:          handleToolSetsListEvents,
+	HideHelpCommand: true,
+}
+
+var toolSetsUnarchive = cli.Command{
+	Name:    "unarchive",
+	Usage:   "Transitions an archived tool set back to STATE_ACTIVE. Managed tool sets resume\nsyncing on their next cycle and their tools become available to objectives\nagain.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleToolSetsUnarchive,
 	HideHelpCommand: true,
 }
 
@@ -553,6 +598,60 @@ func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 }
 
+func handleToolSetsArchive(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ToolSetArchiveParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.ToolSets.Archive(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "tool-sets archive",
+		Transform:      transform,
+	})
+}
+
 func handleToolSetsGetOpenAPISpec(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -676,4 +775,58 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	}
+}
+
+func handleToolSetsUnarchive(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ToolSetUnarchiveParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.ToolSets.Unarchive(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "tool-sets unarchive",
+		Transform:      transform,
+	})
 }

@@ -89,11 +89,6 @@ var agentsSchedulesCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "overlapPolicy",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.status",
-			Usage:      "Lifecycle. Defaults to ACTIVE on create when unspecified.",
-			InnerField: "status",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "spec.variation-id",
 			Usage:      "Optional explicit variation. When unset, the agent's variation_selection_mode\n chooses per fire.",
 			InnerField: "variationId",
@@ -209,11 +204,6 @@ var agentsSchedulesUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "overlapPolicy",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.status",
-			Usage:      "Lifecycle. Defaults to ACTIVE on create when unspecified.",
-			InnerField: "status",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "spec.variation-id",
 			Usage:      "Optional explicit variation. When unset, the agent's variation_selection_mode\n chooses per fire.",
 			InnerField: "variationId",
@@ -302,6 +292,81 @@ var agentsSchedulesDelete = cli.Command{
 		},
 	},
 	Action:          handleAgentsSchedulesDelete,
+	HideHelpCommand: true,
+}
+
+var agentsSchedulesArchive = cli.Command{
+	Name:    "archive",
+	Usage:   "Transitions a schedule to STATE_ARCHIVED and removes its underlying timer.\nArchiving is terminal: archived schedules never fire and cannot be reactivated;\ncreate a new schedule instead.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleAgentsSchedulesArchive,
+	HideHelpCommand: true,
+}
+
+var agentsSchedulesPause = cli.Command{
+	Name:    "pause",
+	Usage:   "Transitions a schedule to STATE_PAUSED. Paused schedules retain history but do\nnot fire.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleAgentsSchedulesPause,
+	HideHelpCommand: true,
+}
+
+var agentsSchedulesResume = cli.Command{
+	Name:    "resume",
+	Usage:   "Transitions a paused schedule back to STATE_ACTIVE so it fires on its cadence\nagain. Archived schedules cannot be resumed.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleAgentsSchedulesResume,
 	HideHelpCommand: true,
 }
 
@@ -585,4 +650,181 @@ func handleAgentsSchedulesDelete(ctx context.Context, cmd *cli.Command) error {
 		cmd.Value("id").(string),
 		options...,
 	)
+}
+
+func handleAgentsSchedulesArchive(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.AgentScheduleArchiveParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Agents.Schedules.Archive(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("agent-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agents:schedules archive",
+		Transform:      transform,
+	})
+}
+
+func handleAgentsSchedulesPause(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.AgentSchedulePauseParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Agents.Schedules.Pause(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("agent-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agents:schedules pause",
+		Transform:      transform,
+	})
+}
+
+func handleAgentsSchedulesResume(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.AgentScheduleResumeParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Agents.Schedules.Resume(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("agent-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agents:schedules resume",
+		Transform:      transform,
+	})
 }

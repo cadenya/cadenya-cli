@@ -479,9 +479,16 @@ func handleAPIKeysRotate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.APIKeyRotateParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.APIKeys.Rotate(ctx, cmd.Value("id").(string), options...)
+	_, err = client.APIKeys.Rotate(
+		ctx,
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}

@@ -39,31 +39,31 @@ func TestModelsList(t *testing.T) {
 			"--prefix", "prefix",
 			"--query", "query",
 			"--sort-order", "sortOrder",
-			"--status", "MODEL_STATUS_UNSPECIFIED",
+			"--state", "STATE_UNSPECIFIED",
 		)
 	})
 }
 
-func TestModelsSetStatus(t *testing.T) {
+func TestModelsDisable(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"models", "set-status",
+			"models", "disable",
 			"--workspace-id", "workspaceId",
 			"--id", "id",
-			"--status", "MODEL_STATUS_UNSPECIFIED",
 		)
 	})
+}
 
-	t.Run("piping data", func(t *testing.T) {
-		// Test piping YAML data over stdin
-		pipeData := []byte("status: MODEL_STATUS_UNSPECIFIED")
-		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData,
+func TestModelsEnable(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
 			"--api-key", "string",
-			"models", "set-status",
+			"models", "enable",
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)

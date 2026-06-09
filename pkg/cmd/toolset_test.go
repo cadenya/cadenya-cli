@@ -320,6 +320,7 @@ func TestToolSetsList(t *testing.T) {
 			"--prefix", "prefix",
 			"--query", "query",
 			"--sort-order", "sortOrder",
+			"--state", "STATE_UNSPECIFIED",
 		)
 	})
 }
@@ -331,6 +332,19 @@ func TestToolSetsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets", "delete",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestToolSetsArchive(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"tool-sets", "archive",
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
@@ -364,6 +378,19 @@ func TestToolSetsListEvents(t *testing.T) {
 			"--include-info=true",
 			"--limit", "0",
 			"--sort-order", "sortOrder",
+		)
+	})
+}
+
+func TestToolSetsUnarchive(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"tool-sets", "unarchive",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }

@@ -119,6 +119,10 @@ func init() {
 					&agentsUpdate,
 					&agentsList,
 					&agentsDelete,
+					&agentsArchive,
+					&agentsPublish,
+					&agentsUnarchive,
+					&agentsUnpublish,
 				},
 			},
 			{
@@ -164,6 +168,9 @@ func init() {
 					&agentsSchedulesUpdate,
 					&agentsSchedulesList,
 					&agentsSchedulesDelete,
+					&agentsSchedulesArchive,
+					&agentsSchedulesPause,
+					&agentsSchedulesResume,
 				},
 			},
 			{
@@ -257,7 +264,8 @@ func init() {
 				Commands: []*cli.Command{
 					&modelsRetrieve,
 					&modelsList,
-					&modelsSetStatus,
+					&modelsDisable,
+					&modelsEnable,
 					&modelsSwap,
 				},
 			},
@@ -279,8 +287,10 @@ func init() {
 					&toolSetsUpdate,
 					&toolSetsList,
 					&toolSetsDelete,
+					&toolSetsArchive,
 					&toolSetsGetOpenAPISpec,
 					&toolSetsListEvents,
+					&toolSetsUnarchive,
 				},
 			},
 			{
@@ -293,6 +303,8 @@ func init() {
 					&toolSetsToolsUpdate,
 					&toolSetsToolsList,
 					&toolSetsToolsDelete,
+					&toolSetsToolsOmit,
+					&toolSetsToolsRestore,
 				},
 			},
 			{

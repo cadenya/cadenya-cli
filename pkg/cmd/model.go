@@ -85,9 +85,9 @@ var modelsList = cli.Command{
 			QueryPath: "sortOrder",
 		},
 		&requestflag.Flag[string]{
-			Name:      "status",
-			Usage:     "Filter by model status",
-			QueryPath: "status",
+			Name:      "state",
+			Usage:     "Filter by model state",
+			QueryPath: "state",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
@@ -98,9 +98,9 @@ var modelsList = cli.Command{
 	HideHelpCommand: true,
 }
 
-var modelsSetStatus = cli.Command{
-	Name:    "set-status",
-	Usage:   "Enables or disables a model in the workspace",
+var modelsDisable = cli.Command{
+	Name:    "disable",
+	Usage:   "Transitions a model to STATE_DISABLED. Fails while agent variations are still\nprovisioned on the model; use :swapModelOnVariations to move them first.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -113,13 +113,28 @@ var modelsSetStatus = cli.Command{
 			Required:  true,
 			PathParam: "id",
 		},
+	},
+	Action:          handleModelsDisable,
+	HideHelpCommand: true,
+}
+
+var modelsEnable = cli.Command{
+	Name:    "enable",
+	Usage:   "Transitions a model to STATE_ENABLED, making it available for agent variations\nin the workspace",
+	Suggest: true,
+	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "status",
-			Usage:    "The new status for the model",
-			BodyPath: "status",
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
 		},
 	},
-	Action:          handleModelsSetStatus,
+	Action:          handleModelsEnable,
 	HideHelpCommand: true,
 }
 
@@ -275,7 +290,7 @@ func handleModelsList(ctx context.Context, cmd *cli.Command) error {
 	}
 }
 
-func handleModelsSetStatus(ctx context.Context, cmd *cli.Command) error {
+func handleModelsDisable(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
@@ -294,18 +309,18 @@ func handleModelsSetStatus(ctx context.Context, cmd *cli.Command) error {
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
 		apiquery.ArrayQueryFormatComma,
-		ApplicationJSON,
+		EmptyBody,
 		false,
 	)
 	if err != nil {
 		return err
 	}
 
-	params := cadenya.ModelSetStatusParams{}
+	params := cadenya.ModelDisableParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Models.SetStatus(
+	_, err = client.Models.Disable(
 		ctx,
 		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
@@ -324,7 +339,61 @@ func handleModelsSetStatus(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "models set-status",
+		Title:          "models disable",
+		Transform:      transform,
+	})
+}
+
+func handleModelsEnable(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ModelEnableParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Models.Enable(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "models enable",
 		Transform:      transform,
 	})
 }

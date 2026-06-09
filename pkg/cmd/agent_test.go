@@ -18,7 +18,7 @@ func TestAgentsCreate(t *testing.T) {
 			"agents", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
+			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
 			"--default-variation", "{metadata: {name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}}",
 		)
 	})
@@ -37,7 +37,6 @@ func TestAgentsCreate(t *testing.T) {
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.status", "AGENT_STATUS_UNSPECIFIED",
 			"--spec.variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
 			"--spec.description", "description",
 			"--spec.input-data-schema", "{foo: bar}",
@@ -58,7 +57,6 @@ func TestAgentsCreate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  status: AGENT_STATUS_UNSPECIFIED\n" +
 			"  variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED\n" +
 			"  description: description\n" +
 			"  inputDataSchema:\n" +
@@ -128,7 +126,7 @@ func TestAgentsUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{status: AGENT_STATUS_UNSPECIFIED, variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
+			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -148,7 +146,6 @@ func TestAgentsUpdate(t *testing.T) {
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.status", "AGENT_STATUS_UNSPECIFIED",
 			"--spec.variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
 			"--spec.description", "description",
 			"--spec.input-data-schema", "{foo: bar}",
@@ -168,7 +165,6 @@ func TestAgentsUpdate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  status: AGENT_STATUS_UNSPECIFIED\n" +
 			"  variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED\n" +
 			"  description: description\n" +
 			"  inputDataSchema:\n" +
@@ -203,7 +199,7 @@ func TestAgentsList(t *testing.T) {
 			"--prefix", "prefix",
 			"--query", "query",
 			"--sort-order", "sortOrder",
-			"--status", "AGENT_STATUS_UNSPECIFIED",
+			"--state", "STATE_UNSPECIFIED",
 			"--variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
 		)
 	})
@@ -216,6 +212,58 @@ func TestAgentsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "delete",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestAgentsArchive(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agents", "archive",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestAgentsPublish(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agents", "publish",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestAgentsUnarchive(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agents", "unarchive",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
+		)
+	})
+}
+
+func TestAgentsUnpublish(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agents", "unpublish",
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
