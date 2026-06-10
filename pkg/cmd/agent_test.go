@@ -19,7 +19,7 @@ func TestAgentsCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
-			"--default-variation", "{metadata: {name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}}",
+			"--default-variation", "{metadata: {name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}}",
 		)
 	})
 
@@ -43,7 +43,7 @@ func TestAgentsCreate(t *testing.T) {
 			"--spec.output-definition", "{foo: bar}",
 			"--spec.webhook-events-url", "webhookEventsUrl",
 			"--default-variation.metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--default-variation.spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}",
+			"--default-variation.spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}",
 		)
 	})
 
@@ -92,7 +92,8 @@ func TestAgentsCreate(t *testing.T) {
 			"        - string\n" +
 			"      maxTools: 0\n" +
 			"      rerankThreshold: 0\n" +
-			"    prompt: prompt\n" +
+			"    systemPromptTemplate: systemPromptTemplate\n" +
+			"    userMessageTemplate: userMessageTemplate\n" +
 			"    weight: 0\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,

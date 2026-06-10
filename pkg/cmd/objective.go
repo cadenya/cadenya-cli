@@ -37,7 +37,7 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "initial-message",
-			Usage:    "Optional override for initial message sent to the agent. This becomes the first user message in the LLM chat history. The agent variation is used\n to set this if not present.",
+			Usage:    "Optional override for the initial message sent to the agent. This becomes the first user message in the LLM chat history.\n When not set, the selected variation's user_message_template is rendered with user_data instead. If neither this field\n nor a user_message_template is present, the request is rejected with InvalidArgument.",
 			BodyPath: "initialMessage",
 		},
 		&requestflag.Flag[[]map[string]any]{
@@ -54,6 +54,11 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			Name:     "secret",
 			Usage:    "Secrets that can be used in the headers for tool calls using the secret interpolation format.",
 			BodyPath: "secrets",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "user-data",
+			Usage:    "Arbitrary data rendered into the selected variation's user_message_template\n (liquid) to produce the initial user message. Separate from `data`, which\n renders the system prompt template.",
+			BodyPath: "userData",
 		},
 		&requestflag.Flag[string]{
 			Name:     "variation-id",

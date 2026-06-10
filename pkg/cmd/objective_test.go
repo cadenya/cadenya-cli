@@ -23,6 +23,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"--memory-stack", "{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
 			"--secret", "{name: name, value: value}",
+			"--user-data", "{foo: bar}",
 			"--variation-id", "variationId",
 		)
 	})
@@ -46,6 +47,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"--metadata.labels", "{foo: string}",
 			"--secret.name", "name",
 			"--secret.value", "value",
+			"--user-data", "{foo: bar}",
 			"--variation-id", "variationId",
 		)
 	})
@@ -67,6 +69,8 @@ func TestObjectivesCreate(t *testing.T) {
 			"secrets:\n" +
 			"  - name: name\n" +
 			"    value: value\n" +
+			"userData:\n" +
+			"  foo: bar\n" +
 			"variationId: variationId\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,

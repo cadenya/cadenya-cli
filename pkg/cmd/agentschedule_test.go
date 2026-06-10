@@ -19,7 +19,7 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{initialMessage: initialMessage, schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, variationId: variationId}",
+			"--spec", "{schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, initialMessage: initialMessage, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, userData: {}, variationId: variationId}",
 		)
 	})
 
@@ -38,10 +38,11 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.initial-message", "initialMessage",
 			"--spec.schedule", "{calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}",
 			"--spec.data", "{}",
+			"--spec.initial-message", "initialMessage",
 			"--spec.overlap-policy", "OVERLAP_POLICY_UNSPECIFIED",
+			"--spec.user-data", "{}",
 			"--spec.variation-id", "variationId",
 		)
 	})
@@ -56,7 +57,6 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  initialMessage: initialMessage\n" +
 			"  schedule:\n" +
 			"    calendars:\n" +
 			"      - comment: comment\n" +
@@ -89,7 +89,9 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			"        offset: '-160513s'\n" +
 			"    timezone: timezone\n" +
 			"  data: {}\n" +
+			"  initialMessage: initialMessage\n" +
 			"  overlapPolicy: OVERLAP_POLICY_UNSPECIFIED\n" +
+			"  userData: {}\n" +
 			"  variationId: variationId\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -126,7 +128,7 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{initialMessage: initialMessage, schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, variationId: variationId}",
+			"--spec", "{schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, initialMessage: initialMessage, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, userData: {}, variationId: variationId}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -147,10 +149,11 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.initial-message", "initialMessage",
 			"--spec.schedule", "{calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}",
 			"--spec.data", "{}",
+			"--spec.initial-message", "initialMessage",
 			"--spec.overlap-policy", "OVERLAP_POLICY_UNSPECIFIED",
+			"--spec.user-data", "{}",
 			"--spec.variation-id", "variationId",
 			"--update-mask", "updateMask",
 		)
@@ -166,7 +169,6 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  initialMessage: initialMessage\n" +
 			"  schedule:\n" +
 			"    calendars:\n" +
 			"      - comment: comment\n" +
@@ -199,7 +201,9 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			"        offset: '-160513s'\n" +
 			"    timezone: timezone\n" +
 			"  data: {}\n" +
+			"  initialMessage: initialMessage\n" +
 			"  overlapPolicy: OVERLAP_POLICY_UNSPECIFIED\n" +
+			"  userData: {}\n" +
 			"  variationId: variationId\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(

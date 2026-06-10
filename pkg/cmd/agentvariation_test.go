@@ -19,7 +19,7 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}",
+			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}",
 		)
 	})
 
@@ -45,7 +45,8 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"--spec.episodic-memory-ttl", "0",
 			"--spec.model-config", "{modelId: modelId, temperature: 0}",
 			"--spec.progressive-discovery", "{hints: [string], maxTools: 0, rerankThreshold: 0}",
-			"--spec.prompt", "prompt",
+			"--spec.system-prompt-template", "systemPromptTemplate",
+			"--spec.user-message-template", "userMessageTemplate",
 			"--spec.weight", "0",
 		)
 	})
@@ -80,7 +81,8 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"      - string\n" +
 			"    maxTools: 0\n" +
 			"    rerankThreshold: 0\n" +
-			"  prompt: prompt\n" +
+			"  systemPromptTemplate: systemPromptTemplate\n" +
+			"  userMessageTemplate: userMessageTemplate\n" +
 			"  weight: 0\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -117,7 +119,7 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, prompt: prompt, weight: 0}",
+			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -145,7 +147,8 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"--spec.episodic-memory-ttl", "0",
 			"--spec.model-config", "{modelId: modelId, temperature: 0}",
 			"--spec.progressive-discovery", "{hints: [string], maxTools: 0, rerankThreshold: 0}",
-			"--spec.prompt", "prompt",
+			"--spec.system-prompt-template", "systemPromptTemplate",
+			"--spec.user-message-template", "userMessageTemplate",
 			"--spec.weight", "0",
 			"--update-mask", "updateMask",
 		)
@@ -181,7 +184,8 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"      - string\n" +
 			"    maxTools: 0\n" +
 			"    rerankThreshold: 0\n" +
-			"  prompt: prompt\n" +
+			"  systemPromptTemplate: systemPromptTemplate\n" +
+			"  userMessageTemplate: userMessageTemplate\n" +
 			"  weight: 0\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(

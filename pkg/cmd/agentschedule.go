@@ -68,11 +68,6 @@ var agentsSchedulesCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 	},
 	"spec": {
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.initial-message",
-			Usage:      "The initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history.",
-			InnerField: "initialMessage",
-		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.schedule",
 			Usage:      "Schedule defines WHEN the schedule fires. Temporal-style structured form:\n a list of calendar rules (wall-clock) and/or interval rules (duration),\n OR'd together. At least one rule is required.",
@@ -84,9 +79,19 @@ var agentsSchedulesCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "data",
 		},
 		&requestflag.InnerFlag[string]{
+			Name:       "spec.initial-message",
+			Usage:      "Optional initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history. When unset, the fired\n objective defers to the selected variation's user_message_template.",
+			InnerField: "initialMessage",
+		},
+		&requestflag.InnerFlag[string]{
 			Name:       "spec.overlap-policy",
 			Usage:      "What to do when the previous run is still in flight. Defaults to SKIP.",
 			InnerField: "overlapPolicy",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.user-data",
+			Usage:      "Optional data rendered into the variation's user_message_template when each\n fired objective is created. Separate from `data`, which renders the system\n prompt template.",
+			InnerField: "userData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.variation-id",
@@ -183,11 +188,6 @@ var agentsSchedulesUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 	},
 	"spec": {
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.initial-message",
-			Usage:      "The initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history.",
-			InnerField: "initialMessage",
-		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.schedule",
 			Usage:      "Schedule defines WHEN the schedule fires. Temporal-style structured form:\n a list of calendar rules (wall-clock) and/or interval rules (duration),\n OR'd together. At least one rule is required.",
@@ -199,9 +199,19 @@ var agentsSchedulesUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "data",
 		},
 		&requestflag.InnerFlag[string]{
+			Name:       "spec.initial-message",
+			Usage:      "Optional initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history. When unset, the fired\n objective defers to the selected variation's user_message_template.",
+			InnerField: "initialMessage",
+		},
+		&requestflag.InnerFlag[string]{
 			Name:       "spec.overlap-policy",
 			Usage:      "What to do when the previous run is still in flight. Defaults to SKIP.",
 			InnerField: "overlapPolicy",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.user-data",
+			Usage:      "Optional data rendered into the variation's user_message_template when each\n fired objective is created. Separate from `data`, which renders the system\n prompt template.",
+			InnerField: "userData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.variation-id",

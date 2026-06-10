@@ -103,9 +103,14 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "progressiveDiscovery",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.prompt",
-			Usage:      "The system prompt for this variation",
-			InnerField: "prompt",
+			Name:       "spec.system-prompt-template",
+			Usage:      "Liquid template for the system prompt of objectives using this variation.\n Rendered with CreateObjectiveRequest.data into Objective.system_prompt.",
+			InnerField: "systemPromptTemplate",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.user-message-template",
+			Usage:      "Liquid template for the initial user message of objectives using this variation.\n Rendered with CreateObjectiveRequest.user_data and becomes the first user message\n in the LLM chat history. CreateObjectiveRequest.initial_message, when set, overrides\n the rendered result. If neither this template nor initial_message is present,\n objective creation is rejected with InvalidArgument.",
+			InnerField: "userMessageTemplate",
 		},
 		&requestflag.InnerFlag[int64]{
 			Name:       "spec.weight",
@@ -237,9 +242,14 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "progressiveDiscovery",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.prompt",
-			Usage:      "The system prompt for this variation",
-			InnerField: "prompt",
+			Name:       "spec.system-prompt-template",
+			Usage:      "Liquid template for the system prompt of objectives using this variation.\n Rendered with CreateObjectiveRequest.data into Objective.system_prompt.",
+			InnerField: "systemPromptTemplate",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.user-message-template",
+			Usage:      "Liquid template for the initial user message of objectives using this variation.\n Rendered with CreateObjectiveRequest.user_data and becomes the first user message\n in the LLM chat history. CreateObjectiveRequest.initial_message, when set, overrides\n the rendered result. If neither this template nor initial_message is present,\n objective creation is rejected with InvalidArgument.",
+			InnerField: "userMessageTemplate",
 		},
 		&requestflag.InnerFlag[int64]{
 			Name:       "spec.weight",
