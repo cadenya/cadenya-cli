@@ -14,6 +14,31 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+var objectivesToolCallsRetrieve = cli.Command{
+	Name:    "retrieve",
+	Usage:   "Retrieves a single tool call, including the content the tool returned. Media\ncontent (images, audio) is served as short-lived signed URLs.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-call-id",
+			Required:  true,
+			PathParam: "toolCallId",
+		},
+	},
+	Action:          handleObjectivesToolCallsRetrieve,
+	HideHelpCommand: true,
+}
+
 var objectivesToolCallsList = cli.Command{
 	Name:    "list",
 	Usage:   "Lists all tool calls for an objective",
@@ -111,6 +136,62 @@ var objectivesToolCallsDeny = cli.Command{
 	},
 	Action:          handleObjectivesToolCallsDeny,
 	HideHelpCommand: true,
+}
+
+func handleObjectivesToolCallsRetrieve(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
+		cmd.Set("objective-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("tool-call-id") && len(unusedArgs) > 0 {
+		cmd.Set("tool-call-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Objectives.ToolCalls.Get(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("objective-id").(string),
+		cmd.Value("tool-call-id").(string),
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives:tool-calls retrieve",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error {

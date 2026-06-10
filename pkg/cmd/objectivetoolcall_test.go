@@ -8,6 +8,20 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/mocktest"
 )
 
+func TestObjectivesToolCallsRetrieve(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"objectives:tool-calls", "retrieve",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
+			"--tool-call-id", "toolCallId",
+		)
+	})
+}
+
 func TestObjectivesToolCallsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
