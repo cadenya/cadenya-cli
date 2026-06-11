@@ -89,7 +89,7 @@ var memoryLayersCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[bool]{
 			Name:       "spec.system-managed",
-			Usage:      "Server-set. True for layers managed by the system (e.g., episodic layers\n created automatically when an objective uses an episodic_key). System-managed\n layers cannot be assigned to objective stacks via the API and cannot be\n mutated by clients — their lifecycle is controlled entirely by the runtime.",
+			Usage:      "Server-set. True for layers managed by the system (e.g., episodic layers\n created automatically when an objective uses an episodic_key). System-managed\n layers cannot be assigned to objective cascades via the API and cannot be\n mutated by clients — their lifecycle is controlled entirely by the runtime.",
 			InnerField: "systemManaged",
 		},
 	},
@@ -197,7 +197,7 @@ var memoryLayersUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[bool]{
 			Name:       "spec.system-managed",
-			Usage:      "Server-set. True for layers managed by the system (e.g., episodic layers\n created automatically when an objective uses an episodic_key). System-managed\n layers cannot be assigned to objective stacks via the API and cannot be\n mutated by clients — their lifecycle is controlled entirely by the runtime.",
+			Usage:      "Server-set. True for layers managed by the system (e.g., episodic layers\n created automatically when an objective uses an episodic_key). System-managed\n layers cannot be assigned to objective cascades via the API and cannot be\n mutated by clients — their lifecycle is controlled entirely by the runtime.",
 			InnerField: "systemManaged",
 		},
 	},

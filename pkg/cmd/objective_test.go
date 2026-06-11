@@ -21,7 +21,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"--data", "{foo: bar}",
 			"--episodic-memory", "{key: key}",
 			"--initial-message", "initialMessage",
-			"--memory-stack", "{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}",
+			"--memory-cascade", "{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
 			"--secret", "{name: name, value: value}",
 			"--user-data", "{foo: bar}",
@@ -43,8 +43,8 @@ func TestObjectivesCreate(t *testing.T) {
 			"--data", "{foo: bar}",
 			"--episodic-memory.key", "key",
 			"--initial-message", "initialMessage",
-			"--memory-stack.memory-entry-id", "memoryEntryId",
-			"--memory-stack.memory-layer-id", "memoryLayerId",
+			"--memory-cascade.memory-entry-id", "memoryEntryId",
+			"--memory-cascade.memory-layer-id", "memoryLayerId",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--secret.name", "name",
@@ -63,7 +63,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"episodicMemory:\n" +
 			"  key: key\n" +
 			"initialMessage: initialMessage\n" +
-			"memoryStack:\n" +
+			"memoryCascade:\n" +
 			"  - memoryEntryId: memoryEntryId\n" +
 			"    memoryLayerId: memoryLayerId\n" +
 			"metadata:\n" +

@@ -46,9 +46,9 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "initialMessage",
 		},
 		&requestflag.Flag[[]map[string]any]{
-			Name:     "memory-stack",
-			Usage:    "Memory layers/entries to push onto this objective's memory stack on\n top of the baseline stack inherited from the selected variation.\n\n Array order is push order: the first element sits lower in the\n objective's contribution to the stack; the LAST element ends up on\n top of the effective stack. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically based on episodic_key.\n\n Stack size cap: the TOTAL effective stack (variation's memory layers\n + this field) must not exceed 10 entries. A request that would\n produce an effective stack larger than 10 is rejected with\n InvalidArgument.",
-			BodyPath: "memoryStack",
+			Name:     "memory-cascade",
+			Usage:    "Memory layers/entries layered over the baseline cascade inherited\n from the selected variation — element-level rules over inherited\n styles, in CSS terms.\n\n Array order is resolution order: EARLIER elements are more specific\n and are consulted first. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically based on the episodic key.\n\n Size cap: the TOTAL effective cascade (this field + the variation's\n memory layer assignments) must not exceed 10 entries. A request\n that would produce a larger cascade is rejected with\n InvalidArgument.",
+			BodyPath: "memoryCascade",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -86,14 +86,14 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "memoryLayerId",
 		},
 	},
-	"memory-stack": {
+	"memory-cascade": {
 		&requestflag.InnerFlag[string]{
-			Name:       "memory-stack.memory-entry-id",
-			Usage:      "When set, pushes only this entry from memory_layer_id onto the stack —\n behaves as a single-entry layer (only this key resolves at this\n position). The entry must belong to memory_layer_id; mismatches are\n rejected with InvalidArgument.",
+			Name:       "memory-cascade.memory-entry-id",
+			Usage:      "When set, inserts only this entry from memory_layer_id into the cascade —\n behaves as a single-entry layer (only this key resolves at this\n position). The entry must belong to memory_layer_id; mismatches are\n rejected with InvalidArgument.",
 			InnerField: "memoryEntryId",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "memory-stack.memory-layer-id",
+			Name:       "memory-cascade.memory-layer-id",
 			InnerField: "memoryLayerId",
 		},
 	},

@@ -352,7 +352,7 @@ var agentsVariationsAddAssignment = cli.Command{
 
 var agentsVariationsAddMemoryLayer = cli.Command{
 	Name:    "add-memory-layer",
-	Usage:   "Attaches a memory layer to a variation at a given position in the variation's\nbaseline memory stack.",
+	Usage:   "Attaches a memory layer to a variation at a given position in the variation's\nbaseline memory cascade.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -377,7 +377,7 @@ var agentsVariationsAddMemoryLayer = cli.Command{
 		},
 		&requestflag.Flag[int64]{
 			Name:     "position",
-			Usage:    "Position in the stack. If omitted, server appends\n (max existing position + 1).",
+			Usage:    "Position in the baseline cascade (lower = more specific). If\n omitted, the server appends at the most general end (max existing\n position + 1).",
 			BodyPath: "position",
 		},
 	},
