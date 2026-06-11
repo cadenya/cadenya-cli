@@ -78,6 +78,16 @@ var agentsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Description of the agent's purpose",
 			InnerField: "description",
 		},
+		&requestflag.InnerFlag[bool]{
+			Name:       "spec.enable-episodic-memory",
+			Usage:      "Enable episodic memory for objectives created for this agent.\n When true, objective creation requires an episodic_memory key and the\n system finds or creates a memory layer for that (agent, key) pair, letting\n the agent store and retrieve memories across objectives that share the key.\n Memory is agent-level so all variations of the agent share the same layers.",
+			InnerField: "enableEpisodicMemory",
+		},
+		&requestflag.InnerFlag[int64]{
+			Name:       "spec.episodic-memory-ttl",
+			Usage:      "How long episodic memories should be retained.\n Each new objective slides the layer's expiry forward by this duration, and\n stored entries expire this long after they are written.\n If not set, episodic memories are retained indefinitely.",
+			InnerField: "episodicMemoryTtl",
+		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.input-data-schema",
 			Usage:      "InputDataSchema is used for enforcing a data input when objectives are created. This is valuable when using liquid formatting in agent variation\n prompts. Input data schema is also valuable when using an agent as a sub-agent, as the schema is used as the tool's input parameter schema. If omitted,\n the sub-agent schema will be loaded with a simple \"prompt\" free text string as its schema.",
@@ -204,6 +214,16 @@ var agentsUpdate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "spec.description",
 			Usage:      "Description of the agent's purpose",
 			InnerField: "description",
+		},
+		&requestflag.InnerFlag[bool]{
+			Name:       "spec.enable-episodic-memory",
+			Usage:      "Enable episodic memory for objectives created for this agent.\n When true, objective creation requires an episodic_memory key and the\n system finds or creates a memory layer for that (agent, key) pair, letting\n the agent store and retrieve memories across objectives that share the key.\n Memory is agent-level so all variations of the agent share the same layers.",
+			InnerField: "enableEpisodicMemory",
+		},
+		&requestflag.InnerFlag[int64]{
+			Name:       "spec.episodic-memory-ttl",
+			Usage:      "How long episodic memories should be retained.\n Each new objective slides the layer's expiry forward by this duration, and\n stored entries expire this long after they are written.\n If not set, episodic memories are retained indefinitely.",
+			InnerField: "episodicMemoryTtl",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.input-data-schema",

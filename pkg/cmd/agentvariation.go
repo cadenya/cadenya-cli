@@ -82,16 +82,6 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Human-readable description of what this variation does or when it should be used",
 			InnerField: "description",
 		},
-		&requestflag.InnerFlag[bool]{
-			Name:       "spec.enable-episodic-memory",
-			Usage:      "Enable episodic memory for objectives using this variation.\n When true, the system automatically creates a document namespace for each objective\n using the objective's episodic_key as the external_id, allowing the agent to\n store and retrieve documents specific to that episode.",
-			InnerField: "enableEpisodicMemory",
-		},
-		&requestflag.InnerFlag[int64]{
-			Name:       "spec.episodic-memory-ttl",
-			Usage:      "How long episodic memories should be retained.\n After this duration, episodic document namespaces can be automatically cleaned up.\n If not set, episodic memories are retained indefinitely.",
-			InnerField: "episodicMemoryTtl",
-		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.model-config",
 			Usage:      "ModelConfig defines the model configuration for a variation",
@@ -220,16 +210,6 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "spec.description",
 			Usage:      "Human-readable description of what this variation does or when it should be used",
 			InnerField: "description",
-		},
-		&requestflag.InnerFlag[bool]{
-			Name:       "spec.enable-episodic-memory",
-			Usage:      "Enable episodic memory for objectives using this variation.\n When true, the system automatically creates a document namespace for each objective\n using the objective's episodic_key as the external_id, allowing the agent to\n store and retrieve documents specific to that episode.",
-			InnerField: "enableEpisodicMemory",
-		},
-		&requestflag.InnerFlag[int64]{
-			Name:       "spec.episodic-memory-ttl",
-			Usage:      "How long episodic memories should be retained.\n After this duration, episodic document namespaces can be automatically cleaned up.\n If not set, episodic memories are retained indefinitely.",
-			InnerField: "episodicMemoryTtl",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.model-config",

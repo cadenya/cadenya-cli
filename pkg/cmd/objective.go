@@ -35,6 +35,11 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			Required: true,
 			BodyPath: "data",
 		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "episodic-memory",
+			Usage:    "Episodic is used to configure the episodic memory for the objective",
+			BodyPath: "episodicMemory",
+		},
 		&requestflag.Flag[string]{
 			Name:     "initial-message",
 			Usage:    "Optional override for the initial message sent to the agent. This becomes the first user message in the LLM chat history.\n When not set, the selected variation's user_message_template is rendered with user_data instead. If neither this field\n nor a user_message_template is present, the request is rejected with InvalidArgument.",
@@ -69,6 +74,18 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 	Action:          handleObjectivesCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
+	"episodic-memory": {
+		&requestflag.InnerFlag[string]{
+			Name:       "episodic-memory.key",
+			Usage:      "The caller-supplied episodic key. Objectives created with the same key\n (for the same agent) share one episodic memory layer.",
+			InnerField: "key",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "episodic-memory.memory-layer-id",
+			Usage:      "The episodic memory layer resolved (created or reused) for this\n objective's key. Populated by the system at objective creation.",
+			InnerField: "memoryLayerId",
+		},
+	},
 	"memory-stack": {
 		&requestflag.InnerFlag[string]{
 			Name:       "memory-stack.memory-entry-id",

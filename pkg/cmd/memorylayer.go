@@ -68,9 +68,19 @@ var memoryLayersCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "type",
 		},
 		&requestflag.InnerFlag[string]{
+			Name:       "spec.agent-id",
+			Usage:      "Server-set on episodic layers: the agent this layer belongs to. Unset for\n non-episodic layers.",
+			InnerField: "agentId",
+		},
+		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
 			Usage:      "Human-readable description of the layer's purpose. Encouraged for\n user-created layers; system-managed layers may have a generated description.",
 			InnerField: "description",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.episodic-key",
+			Usage:      "Server-set on episodic layers: the caller-supplied episodic key the layer\n was created for. Unset for non-episodic layers.",
+			InnerField: "episodicKey",
 		},
 		&requestflag.InnerFlag[any]{
 			Name:       "spec.expires-at",
@@ -166,9 +176,19 @@ var memoryLayersUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "type",
 		},
 		&requestflag.InnerFlag[string]{
+			Name:       "spec.agent-id",
+			Usage:      "Server-set on episodic layers: the agent this layer belongs to. Unset for\n non-episodic layers.",
+			InnerField: "agentId",
+		},
+		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
 			Usage:      "Human-readable description of the layer's purpose. Encouraged for\n user-created layers; system-managed layers may have a generated description.",
 			InnerField: "description",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.episodic-key",
+			Usage:      "Server-set on episodic layers: the caller-supplied episodic key the layer\n was created for. Unset for non-episodic layers.",
+			InnerField: "episodicKey",
 		},
 		&requestflag.InnerFlag[any]{
 			Name:       "spec.expires-at",
@@ -194,6 +214,11 @@ var memoryLayersList = cli.Command{
 			PathParam: "workspaceId",
 		},
 		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Usage:     "Filter to episodic layers belonging to this agent.",
+			QueryPath: "agentId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "bundle-key",
 			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
 			QueryPath: "bundleKey",
@@ -202,6 +227,11 @@ var memoryLayersList = cli.Command{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
+		},
+		&requestflag.Flag[string]{
+			Name:      "episodic-key-prefix",
+			Usage:     "Filter to episodic layers whose episodic key starts with this prefix\n (e.g. \"customer/\" matches \"customer/42\" and \"customer/43\"). Useful for\n namespaced keys, similar to a redis key scan.",
+			QueryPath: "episodicKeyPrefix",
 		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",

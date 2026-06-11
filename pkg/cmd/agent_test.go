@@ -18,8 +18,8 @@ func TestAgentsCreate(t *testing.T) {
 			"agents", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
-			"--default-variation", "{metadata: {name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}}",
+			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
+			"--default-variation", "{metadata: {name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}}",
 		)
 	})
 
@@ -39,11 +39,13 @@ func TestAgentsCreate(t *testing.T) {
 			"--metadata.labels", "{foo: string}",
 			"--spec.variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
 			"--spec.description", "description",
+			"--spec.enable-episodic-memory=true",
+			"--spec.episodic-memory-ttl", "0",
 			"--spec.input-data-schema", "{foo: bar}",
 			"--spec.output-definition", "{foo: bar}",
 			"--spec.webhook-events-url", "webhookEventsUrl",
 			"--default-variation.metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--default-variation.spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}",
+			"--default-variation.spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}",
 		)
 	})
 
@@ -59,6 +61,8 @@ func TestAgentsCreate(t *testing.T) {
 			"spec:\n" +
 			"  variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED\n" +
 			"  description: description\n" +
+			"  enableEpisodicMemory: true\n" +
+			"  episodicMemoryTtl: 0\n" +
 			"  inputDataSchema:\n" +
 			"    foo: bar\n" +
 			"  outputDefinition:\n" +
@@ -82,8 +86,6 @@ func TestAgentsCreate(t *testing.T) {
 			"      maxSubObjectives: 0\n" +
 			"      maxToolCalls: 0\n" +
 			"    description: description\n" +
-			"    enableEpisodicMemory: true\n" +
-			"    episodicMemoryTtl: 0\n" +
 			"    modelConfig:\n" +
 			"      modelId: modelId\n" +
 			"      temperature: 0\n" +
@@ -127,7 +129,7 @@ func TestAgentsUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
+			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -149,6 +151,8 @@ func TestAgentsUpdate(t *testing.T) {
 			"--metadata.labels", "{foo: string}",
 			"--spec.variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
 			"--spec.description", "description",
+			"--spec.enable-episodic-memory=true",
+			"--spec.episodic-memory-ttl", "0",
 			"--spec.input-data-schema", "{foo: bar}",
 			"--spec.output-definition", "{foo: bar}",
 			"--spec.webhook-events-url", "webhookEventsUrl",
@@ -168,6 +172,8 @@ func TestAgentsUpdate(t *testing.T) {
 			"spec:\n" +
 			"  variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED\n" +
 			"  description: description\n" +
+			"  enableEpisodicMemory: true\n" +
+			"  episodicMemoryTtl: 0\n" +
 			"  inputDataSchema:\n" +
 			"    foo: bar\n" +
 			"  outputDefinition:\n" +

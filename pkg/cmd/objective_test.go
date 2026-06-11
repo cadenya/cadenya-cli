@@ -19,6 +19,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--data", "{foo: bar}",
+			"--episodic-memory", "{key: key}",
 			"--initial-message", "initialMessage",
 			"--memory-stack", "{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
@@ -40,6 +41,7 @@ func TestObjectivesCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--data", "{foo: bar}",
+			"--episodic-memory.key", "key",
 			"--initial-message", "initialMessage",
 			"--memory-stack.memory-entry-id", "memoryEntryId",
 			"--memory-stack.memory-layer-id", "memoryLayerId",
@@ -58,6 +60,8 @@ func TestObjectivesCreate(t *testing.T) {
 			"agentId: agentId\n" +
 			"data:\n" +
 			"  foo: bar\n" +
+			"episodicMemory:\n" +
+			"  key: key\n" +
 			"initialMessage: initialMessage\n" +
 			"memoryStack:\n" +
 			"  - memoryEntryId: memoryEntryId\n" +
