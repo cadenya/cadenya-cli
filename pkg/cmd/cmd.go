@@ -110,6 +110,14 @@ func init() {
 				},
 			},
 			{
+				Name:     "profiles",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&profilesWhoami,
+				},
+			},
+			{
 				Name:     "agents",
 				Category: "API RESOURCE",
 				Suggest:  true,
