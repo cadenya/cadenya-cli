@@ -35,6 +35,7 @@ func TestModelsList(t *testing.T) {
 			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--is-assigned=true",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",
@@ -78,7 +79,7 @@ func TestModelsSwap(t *testing.T) {
 			"--api-key", "string",
 			"models", "swap",
 			"--workspace-id", "workspaceId",
-			"--model-swap", "{currentModelId: currentModelId, nextModelId: nextModelId}",
+			"--model-swap", "{currentModelId: currentModelId, disableCurrentAfterSwap: true, nextModelId: nextModelId}",
 		)
 	})
 
@@ -93,6 +94,7 @@ func TestModelsSwap(t *testing.T) {
 			"models", "swap",
 			"--workspace-id", "workspaceId",
 			"--model-swap.current-model-id", "currentModelId",
+			"--model-swap.disable-current-after-swap=true",
 			"--model-swap.next-model-id", "nextModelId",
 		)
 	})
@@ -102,6 +104,7 @@ func TestModelsSwap(t *testing.T) {
 		pipeData := []byte("" +
 			"modelSwaps:\n" +
 			"  - currentModelId: currentModelId\n" +
+			"    disableCurrentAfterSwap: true\n" +
 			"    nextModelId: nextModelId\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,

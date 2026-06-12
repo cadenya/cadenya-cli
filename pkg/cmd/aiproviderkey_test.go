@@ -151,6 +151,7 @@ func TestAIProviderKeysList(t *testing.T) {
 			"--include-info=true",
 			"--limit", "0",
 			"--prefix", "prefix",
+			"--promotional=true",
 			"--query", "query",
 			"--sort-order", "sortOrder",
 		)

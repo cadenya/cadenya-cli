@@ -64,6 +64,11 @@ var modelsList = cli.Command{
 			Usage:     "When true, populate each item's info (e.g. the AI provider), at the cost of\n extra lookups.",
 			QueryPath: "includeInfo",
 		},
+		&requestflag.Flag[bool]{
+			Name:      "is-assigned",
+			Usage:     "Filter models to only ones assigned to an active agent variation/agent.\n Draft agents count as assigned; archived agents do not. Assignment does not\n imply recent traffic — see ModelInfo.last_used_at for that.",
+			QueryPath: "isAssigned",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return",
@@ -162,6 +167,11 @@ var modelsSwap = requestflag.WithInnerFlags(cli.Command{
 			Name:       "model-swap.current-model-id",
 			Usage:      `The model variations are currently on. Accepts an id or "external_id:" slug.`,
 			InnerField: "currentModelId",
+		},
+		&requestflag.InnerFlag[bool]{
+			Name:       "model-swap.disable-current-after-swap",
+			Usage:      "Whether to disable the current model after the swap.",
+			InnerField: "disableCurrentAfterSwap",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "model-swap.next-model-id",

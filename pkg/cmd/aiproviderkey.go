@@ -204,6 +204,11 @@ var aiProviderKeysList = cli.Command{
 			Usage:     "Filter expression (query param: prefix)",
 			QueryPath: "prefix",
 		},
+		&requestflag.Flag[bool]{
+			Name:      "promotional",
+			Usage:     "When true, return only promotional keys (provided by Cadenya, e.g. for\n onboarding). Defaults to returning all keys, customer-provided and\n promotional alike.",
+			QueryPath: "promotional",
+		},
 		&requestflag.Flag[string]{
 			Name:      "query",
 			Usage:     "Free-form search query",
