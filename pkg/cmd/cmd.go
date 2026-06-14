@@ -317,6 +317,18 @@ func init() {
 				},
 			},
 			{
+				Name:     "tool-sets:secrets",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&toolSetsSecretsCreate,
+					&toolSetsSecretsRetrieve,
+					&toolSetsSecretsUpdate,
+					&toolSetsSecretsList,
+					&toolSetsSecretsDelete,
+				},
+			},
+			{
 				Name:     "api-keys",
 				Category: "API RESOURCE",
 				Suggest:  true,
