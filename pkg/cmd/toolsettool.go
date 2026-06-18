@@ -84,6 +84,11 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "spec.requires-approval",
 			InnerField: "requiresApproval",
 		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.llm-tool-name",
+			Usage:      "The name provided to the LLM, which may differ from the metadata.name on the tool.\n LLMs have specific length and format requirements, and tool set sources may not comply\n with them, so Cadenya does its best to format names into a usable format.",
+			InnerField: "llmToolName",
+		},
 	},
 })
 
@@ -188,6 +193,11 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 		&requestflag.InnerFlag[bool]{
 			Name:       "spec.requires-approval",
 			InnerField: "requiresApproval",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.llm-tool-name",
+			Usage:      "The name provided to the LLM, which may differ from the metadata.name on the tool.\n LLMs have specific length and format requirements, and tool set sources may not comply\n with them, so Cadenya does its best to format names into a usable format.",
+			InnerField: "llmToolName",
 		},
 	},
 })
