@@ -403,24 +403,6 @@ func init() {
 				},
 			},
 			{
-				Name:     "bulk-workspace-resources",
-				Category: "API RESOURCE",
-				Suggest:  true,
-				Commands: []*cli.Command{
-					&bulkWorkspaceResourcesRetrieve,
-					&bulkWorkspaceResourcesList,
-					&bulkWorkspaceResourcesApply,
-				},
-			},
-			{
-				Name:     "bulk-workspace-resources:results",
-				Category: "API RESOURCE",
-				Suggest:  true,
-				Commands: []*cli.Command{
-					&bulkWorkspaceResourcesResultsList,
-				},
-			},
-			{
 				Name:            "@manpages",
 				Usage:           "Generate documentation for 'man'",
 				UsageText:       "cadenya @manpages [-o cadenya.1] [--gzip]",

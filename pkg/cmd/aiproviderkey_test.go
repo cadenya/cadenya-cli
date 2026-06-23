@@ -17,7 +17,7 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			"--api-key", "string",
 			"ai-provider-keys", "create",
 			"--workspace-id", "workspaceId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{apiKey: apiKey, openrouter: {}, provider: AI_PROVIDER_UNSPECIFIED}",
 		)
 	})
@@ -33,7 +33,6 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			"ai-provider-keys", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.api-key", "apiKey",
@@ -47,7 +46,6 @@ func TestAIProviderKeysCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -86,7 +84,7 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			"ai-provider-keys", "update",
 			"--workspace-id", "workspaceId",
 			"--id", "id",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{apiKey: apiKey, openrouter: {}, provider: AI_PROVIDER_UNSPECIFIED}",
 			"--update-mask", "updateMask",
 		)
@@ -104,7 +102,6 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.api-key", "apiKey",
@@ -119,7 +116,6 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +

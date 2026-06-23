@@ -17,7 +17,7 @@ func TestUploadsCreate(t *testing.T) {
 			"--api-key", "string",
 			"uploads", "create",
 			"--workspace-id", "workspaceId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{contentType: contentType, filename: filename, sizeBytes: sizeBytes}",
 		)
 	})
@@ -33,7 +33,6 @@ func TestUploadsCreate(t *testing.T) {
 			"uploads", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.content-type", "contentType",
@@ -47,7 +46,6 @@ func TestUploadsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +

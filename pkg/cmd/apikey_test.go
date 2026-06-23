@@ -137,7 +137,6 @@ func TestAPIKeysList(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "list",
 			"--max-items", "10",
-			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

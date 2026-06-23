@@ -17,7 +17,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			"--api-key", "string",
 			"workspace-secrets", "create",
 			"--workspace-id", "workspaceId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 		)
 	})
@@ -33,7 +33,6 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			"workspace-secrets", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.value", "value",
@@ -45,7 +44,6 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -82,7 +80,7 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			"workspace-secrets", "update",
 			"--workspace-id", "workspaceId",
 			"--id", "id",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 			"--update-mask", "updateMask",
 		)
@@ -100,7 +98,6 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.value", "value",
@@ -113,7 +110,6 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -139,7 +135,6 @@ func TestWorkspaceSecretsList(t *testing.T) {
 			"workspace-secrets", "list",
 			"--max-items", "10",
 			"--workspace-id", "workspaceId",
-			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

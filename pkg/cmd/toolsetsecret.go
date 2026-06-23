@@ -51,11 +51,6 @@ var toolSetsSecretsCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
 			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
 			InnerField: "externalId",
@@ -144,11 +139,6 @@ var toolSetsSecretsUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
 			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
 			InnerField: "externalId",
@@ -181,11 +171,6 @@ var toolSetsSecretsList = cli.Command{
 			Name:      "tool-set-id",
 			Required:  true,
 			PathParam: "toolSetId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "bundle-key",
-			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
-			QueryPath: "bundleKey",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",

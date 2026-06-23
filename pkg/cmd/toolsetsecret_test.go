@@ -18,7 +18,7 @@ func TestToolSetsSecretsCreate(t *testing.T) {
 			"tool-sets:secrets", "create",
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 		)
 	})
@@ -35,7 +35,6 @@ func TestToolSetsSecretsCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.value", "value",
@@ -47,7 +46,6 @@ func TestToolSetsSecretsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -87,7 +85,7 @@ func TestToolSetsSecretsUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 			"--update-mask", "updateMask",
 		)
@@ -106,7 +104,6 @@ func TestToolSetsSecretsUpdate(t *testing.T) {
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.value", "value",
@@ -119,7 +116,6 @@ func TestToolSetsSecretsUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -147,7 +143,6 @@ func TestToolSetsSecretsList(t *testing.T) {
 			"--max-items", "10",
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
-			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

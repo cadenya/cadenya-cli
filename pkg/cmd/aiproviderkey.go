@@ -46,11 +46,6 @@ var aiProviderKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
 			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
 			InnerField: "externalId",
@@ -138,11 +133,6 @@ var aiProviderKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "metadata.name",
 			Usage:      `Human-readable name for the resource (e.g., "Customer Support Agent", "Email Tool")`,
 			InnerField: "name",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",

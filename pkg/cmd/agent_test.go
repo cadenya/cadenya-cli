@@ -17,9 +17,9 @@ func TestAgentsCreate(t *testing.T) {
 			"--api-key", "string",
 			"agents", "create",
 			"--workspace-id", "workspaceId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
-			"--default-variation", "{metadata: {name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}}",
+			"--default-variation", "{metadata: {name: name, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}}",
 		)
 	})
 
@@ -34,7 +34,6 @@ func TestAgentsCreate(t *testing.T) {
 			"agents", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
@@ -44,7 +43,7 @@ func TestAgentsCreate(t *testing.T) {
 			"--spec.input-data-schema", "{foo: bar}",
 			"--spec.output-definition", "{foo: bar}",
 			"--spec.webhook-events-url", "webhookEventsUrl",
-			"--default-variation.metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--default-variation.metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--default-variation.spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}",
 		)
 	})
@@ -54,7 +53,6 @@ func TestAgentsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -71,7 +69,6 @@ func TestAgentsCreate(t *testing.T) {
 			"defaultVariation:\n" +
 			"  metadata:\n" +
 			"    name: name\n" +
-			"    bundleKey: bundleKey\n" +
 			"    externalId: externalId\n" +
 			"    labels:\n" +
 			"      foo: string\n" +
@@ -128,7 +125,7 @@ func TestAgentsUpdate(t *testing.T) {
 			"agents", "update",
 			"--workspace-id", "workspaceId",
 			"--id", "id",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
 			"--update-mask", "updateMask",
 		)
@@ -146,7 +143,6 @@ func TestAgentsUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.variation-selection-mode", "VARIATION_SELECTION_MODE_UNSPECIFIED",
@@ -165,7 +161,6 @@ func TestAgentsUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -199,7 +194,6 @@ func TestAgentsList(t *testing.T) {
 			"agents", "list",
 			"--max-items", "10",
 			"--workspace-id", "workspaceId",
-			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

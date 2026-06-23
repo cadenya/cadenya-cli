@@ -172,11 +172,6 @@ var apiKeysList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:      "bundle-key",
-			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
-			QueryPath: "bundleKey",
-		},
-		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response.",
 			QueryPath: "cursor",

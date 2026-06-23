@@ -18,7 +18,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"tool-sets:tools", "create",
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {}, openapi: {method: method, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
 		)
 	})
@@ -35,7 +35,6 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {}, openapi: {method: method, path: path}}",
@@ -51,7 +50,6 @@ func TestToolSetsToolsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -108,7 +106,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {}, openapi: {method: method, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
 			"--update-mask", "updateMask",
 		)
@@ -127,7 +125,6 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {}, openapi: {method: method, path: path}}",
@@ -144,7 +141,6 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -189,7 +185,6 @@ func TestToolSetsToolsList(t *testing.T) {
 			"--max-items", "10",
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
-			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

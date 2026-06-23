@@ -18,7 +18,7 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			"memory-layers:entries", "create",
 			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{key: key, content: content, description: description, uploadId: uploadId}",
 		)
 	})
@@ -35,7 +35,6 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.key", "key",
@@ -50,7 +49,6 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -93,7 +91,7 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
 			"--id", "id",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{content: content, description: description, key: key, uploadId: uploadId}",
 			"--update-mask", "updateMask",
 		)
@@ -112,7 +110,6 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			"--memory-layer-id", "memoryLayerId",
 			"--id", "id",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.content", "content",
@@ -128,7 +125,6 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -159,7 +155,6 @@ func TestMemoryLayersEntriesList(t *testing.T) {
 			"--max-items", "10",
 			"--workspace-id", "workspaceId",
 			"--memory-layer-id", "memoryLayerId",
-			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",

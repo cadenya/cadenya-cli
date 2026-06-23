@@ -32,7 +32,6 @@ func TestModelsList(t *testing.T) {
 			"--max-items", "10",
 			"--workspace-id", "workspaceId",
 			"--ai-provider-key-id", "aiProviderKeyId",
-			"--bundle-key", "bundleKey",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--is-assigned=true",
