@@ -57,15 +57,15 @@ var aiProviderKeysCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 	},
 	"spec": {
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.api-key",
-			Usage:      "The provider credential. Accepted on create/update; never populated in\n responses (the server returns an empty value to avoid leaking it).",
-			InnerField: "apiKey",
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "spec.config",
+			Usage:      "AIProviderConfig holds non-secret, provider-specific settings. The set case\n must correspond to AIProviderKeySpec.provider. Providers with no settings\n (Anthropic, Gemini) simply leave this unset. The endpoint of a named provider\n is fixed and intentionally not overridable here; use the OpenAI-compatible\n provider to target a custom endpoint.",
+			InnerField: "config",
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "spec.openrouter",
-			Usage:      "OpenRouterConfig holds OpenRouter-specific settings. Empty for now; it exists\n as the oneof seam so provider-specific options (region, base URL, etc.) can be\n added later without restructuring the spec.",
-			InnerField: "openrouter",
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "spec.credentials",
+			Usage:      "AIProviderCredential is the secret material used to authenticate with a\n provider. The set case must correspond to AIProviderKeySpec.provider. The\n server encrypts the serialized message at rest and never returns it on reads.",
+			InnerField: "credentials",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.provider",
@@ -146,15 +146,15 @@ var aiProviderKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 	},
 	"spec": {
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.api-key",
-			Usage:      "The provider credential. Accepted on create/update; never populated in\n responses (the server returns an empty value to avoid leaking it).",
-			InnerField: "apiKey",
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "spec.config",
+			Usage:      "AIProviderConfig holds non-secret, provider-specific settings. The set case\n must correspond to AIProviderKeySpec.provider. Providers with no settings\n (Anthropic, Gemini) simply leave this unset. The endpoint of a named provider\n is fixed and intentionally not overridable here; use the OpenAI-compatible\n provider to target a custom endpoint.",
+			InnerField: "config",
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "spec.openrouter",
-			Usage:      "OpenRouterConfig holds OpenRouter-specific settings. Empty for now; it exists\n as the oneof seam so provider-specific options (region, base URL, etc.) can be\n added later without restructuring the spec.",
-			InnerField: "openrouter",
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "spec.credentials",
+			Usage:      "AIProviderCredential is the secret material used to authenticate with a\n provider. The set case must correspond to AIProviderKeySpec.provider. The\n server encrypts the serialized message at rest and never returns it on reads.",
+			InnerField: "credentials",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.provider",

@@ -18,7 +18,7 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			"ai-provider-keys", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{apiKey: apiKey, openrouter: {}, provider: AI_PROVIDER_UNSPECIFIED}",
+			"--spec", "{config: {openai: {organizationId: organizationId, projectId: projectId}, openaiCompatible: {baseUrl: baseUrl}, openrouter: {region: region}}, credentials: {apiKey: {apiKey: apiKey}, headers: {headers: {foo: string}}}, provider: AI_PROVIDER_UNSPECIFIED}",
 		)
 	})
 
@@ -35,8 +35,8 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.api-key", "apiKey",
-			"--spec.openrouter", "{}",
+			"--spec.config", "{openai: {organizationId: organizationId, projectId: projectId}, openaiCompatible: {baseUrl: baseUrl}, openrouter: {region: region}}",
+			"--spec.credentials", "{apiKey: {apiKey: apiKey}, headers: {headers: {foo: string}}}",
 			"--spec.provider", "AI_PROVIDER_UNSPECIFIED",
 		)
 	})
@@ -50,8 +50,20 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  apiKey: apiKey\n" +
-			"  openrouter: {}\n" +
+			"  config:\n" +
+			"    openai:\n" +
+			"      organizationId: organizationId\n" +
+			"      projectId: projectId\n" +
+			"    openaiCompatible:\n" +
+			"      baseUrl: baseUrl\n" +
+			"    openrouter:\n" +
+			"      region: region\n" +
+			"  credentials:\n" +
+			"    apiKey:\n" +
+			"      apiKey: apiKey\n" +
+			"    headers:\n" +
+			"      headers:\n" +
+			"        foo: string\n" +
 			"  provider: AI_PROVIDER_UNSPECIFIED\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -85,7 +97,7 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{apiKey: apiKey, openrouter: {}, provider: AI_PROVIDER_UNSPECIFIED}",
+			"--spec", "{config: {openai: {organizationId: organizationId, projectId: projectId}, openaiCompatible: {baseUrl: baseUrl}, openrouter: {region: region}}, credentials: {apiKey: {apiKey: apiKey}, headers: {headers: {foo: string}}}, provider: AI_PROVIDER_UNSPECIFIED}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -104,8 +116,8 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.api-key", "apiKey",
-			"--spec.openrouter", "{}",
+			"--spec.config", "{openai: {organizationId: organizationId, projectId: projectId}, openaiCompatible: {baseUrl: baseUrl}, openrouter: {region: region}}",
+			"--spec.credentials", "{apiKey: {apiKey: apiKey}, headers: {headers: {foo: string}}}",
 			"--spec.provider", "AI_PROVIDER_UNSPECIFIED",
 			"--update-mask", "updateMask",
 		)
@@ -120,8 +132,20 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  apiKey: apiKey\n" +
-			"  openrouter: {}\n" +
+			"  config:\n" +
+			"    openai:\n" +
+			"      organizationId: organizationId\n" +
+			"      projectId: projectId\n" +
+			"    openaiCompatible:\n" +
+			"      baseUrl: baseUrl\n" +
+			"    openrouter:\n" +
+			"      region: region\n" +
+			"  credentials:\n" +
+			"    apiKey:\n" +
+			"      apiKey: apiKey\n" +
+			"    headers:\n" +
+			"      headers:\n" +
+			"        foo: string\n" +
 			"  provider: AI_PROVIDER_UNSPECIFIED\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
