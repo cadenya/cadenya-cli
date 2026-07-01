@@ -411,6 +411,30 @@ var objectivesListEvents = cli.Command{
 	HideHelpCommand: true,
 }
 
+var objectivesStreamEvents = cli.Command{
+	Name:    "stream-events",
+	Usage:   "Streams events for an objective in real-time using server-sent events (SSE)",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
+		},
+		&requestflag.Flag[int64]{
+			Name:  "max-items",
+			Usage: "The maximum number of items to return (use -1 for unlimited).",
+		},
+	},
+	Action:          handleObjectivesStreamEvents,
+	HideHelpCommand: true,
+}
+
 func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -887,4 +911,52 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	}
+}
+
+func handleObjectivesStreamEvents(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
+		cmd.Set("objective-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	stream := client.Objectives.StreamEventsStreaming(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("objective-id").(string),
+		options...,
+	)
+	maxItems := int64(-1)
+	if cmd.IsSet("max-items") {
+		maxItems = cmd.Value("max-items").(int64)
+	}
+	return ShowJSONIterator(stream, maxItems, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives stream-events",
+		Transform:      transform,
+	})
 }
