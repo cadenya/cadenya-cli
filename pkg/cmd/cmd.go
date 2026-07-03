@@ -106,6 +106,7 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&accountRetrieve,
+					&accountRotateChallengeToken,
 					&accountRotateWebhookSigningKey,
 				},
 			},

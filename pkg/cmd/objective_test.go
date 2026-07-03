@@ -206,25 +206,6 @@ func TestObjectivesContinue(t *testing.T) {
 			"--objective-id", "objectiveId",
 			"--enqueue=true",
 			"--message", "message",
-			"--secret", "{name: name, value: value}",
-		)
-	})
-
-	t.Run("inner flags", func(t *testing.T) {
-		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(objectivesContinue)
-
-		// Alternative argument passing style using inner flags
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"objectives", "continue",
-			"--workspace-id", "workspaceId",
-			"--objective-id", "objectiveId",
-			"--enqueue=true",
-			"--message", "message",
-			"--secret.name", "name",
-			"--secret.value", "value",
 		)
 	})
 
@@ -232,10 +213,7 @@ func TestObjectivesContinue(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
 			"enqueue: true\n" +
-			"message: message\n" +
-			"secrets:\n" +
-			"  - name: name\n" +
-			"    value: value\n")
+			"message: message\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",

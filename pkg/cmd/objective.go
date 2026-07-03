@@ -272,7 +272,7 @@ var objectivesCompact = requestflag.WithInnerFlags(cli.Command{
 	},
 })
 
-var objectivesContinue = requestflag.WithInnerFlags(cli.Command{
+var objectivesContinue = cli.Command{
 	Name:    "continue",
 	Usage:   "Continues an objective that has completed",
 	Suggest: true,
@@ -297,26 +297,10 @@ var objectivesContinue = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "The message to continue an objective that has completed (or you are enqueing)",
 			BodyPath: "message",
 		},
-		&requestflag.Flag[[]map[string]any]{
-			Name:     "secret",
-			Usage:    "Secrets that should be included with the message. Helpful for when you need to update secrets on the objective (IE: A secret expires and needs to be refreshed)",
-			BodyPath: "secrets",
-		},
 	},
 	Action:          handleObjectivesContinue,
 	HideHelpCommand: true,
-}, map[string][]requestflag.HasOuterFlag{
-	"secret": {
-		&requestflag.InnerFlag[string]{
-			Name:       "secret.name",
-			InnerField: "name",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "secret.value",
-			InnerField: "value",
-		},
-	},
-})
+}
 
 var objectivesListContextWindows = cli.Command{
 	Name:    "list-context-windows",
