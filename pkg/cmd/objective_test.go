@@ -18,13 +18,13 @@ func TestObjectivesCreate(t *testing.T) {
 			"objectives", "create",
 			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
-			"--data", "{foo: bar}",
+			"--system-prompt-data", "{foo: bar}",
 			"--episodic-memory", "{key: key}",
-			"--initial-message", "initialMessage",
+			"--first-user-message", "firstUserMessage",
+			"--first-user-message-data", "{foo: bar}",
 			"--memory-cascade", "{memoryEntryId: memoryEntryId, memoryLayerId: memoryLayerId}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
 			"--secret", "{name: name, value: value}",
-			"--user-data", "{foo: bar}",
 			"--variation-id", "variationId",
 		)
 	})
@@ -40,16 +40,16 @@ func TestObjectivesCreate(t *testing.T) {
 			"objectives", "create",
 			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
-			"--data", "{foo: bar}",
+			"--system-prompt-data", "{foo: bar}",
 			"--episodic-memory.key", "key",
-			"--initial-message", "initialMessage",
+			"--first-user-message", "firstUserMessage",
+			"--first-user-message-data", "{foo: bar}",
 			"--memory-cascade.memory-entry-id", "memoryEntryId",
 			"--memory-cascade.memory-layer-id", "memoryLayerId",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--secret.name", "name",
 			"--secret.value", "value",
-			"--user-data", "{foo: bar}",
 			"--variation-id", "variationId",
 		)
 	})
@@ -58,11 +58,13 @@ func TestObjectivesCreate(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
 			"agentId: agentId\n" +
-			"data:\n" +
+			"systemPromptData:\n" +
 			"  foo: bar\n" +
 			"episodicMemory:\n" +
 			"  key: key\n" +
-			"initialMessage: initialMessage\n" +
+			"firstUserMessage: firstUserMessage\n" +
+			"firstUserMessageData:\n" +
+			"  foo: bar\n" +
 			"memoryCascade:\n" +
 			"  - memoryEntryId: memoryEntryId\n" +
 			"    memoryLayerId: memoryLayerId\n" +
@@ -73,8 +75,6 @@ func TestObjectivesCreate(t *testing.T) {
 			"secrets:\n" +
 			"  - name: name\n" +
 			"    value: value\n" +
-			"userData:\n" +
-			"  foo: bar\n" +
 			"variationId: variationId\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,

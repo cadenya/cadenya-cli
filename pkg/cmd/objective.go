@@ -30,10 +30,10 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "agentId",
 		},
 		&requestflag.Flag[map[string]any]{
-			Name:     "data",
-			Usage:    "Arbitrary data for the objective. May be used in liquid templates for prompts configured on the agent variation",
+			Name:     "system-prompt-data",
+			Usage:    "Arbitrary data rendered into the selected variation's system_prompt_template\n (liquid) to produce the objective's system prompt. If the agent has a\n system_prompt_data_schema, this must satisfy it.",
 			Required: true,
-			BodyPath: "data",
+			BodyPath: "systemPromptData",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "episodic-memory",
@@ -41,9 +41,14 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "episodicMemory",
 		},
 		&requestflag.Flag[string]{
-			Name:     "initial-message",
-			Usage:    "Optional override for the initial message sent to the agent. This becomes the first user message in the LLM chat history.\n When not set, the selected variation's user_message_template is rendered with user_data instead. If neither this field\n nor a user_message_template is present, the request is rejected with InvalidArgument.",
-			BodyPath: "initialMessage",
+			Name:     "first-user-message",
+			Usage:    "Optional explicit first user message for the LLM chat history. When not set,\n the selected variation's first_user_message_template is rendered with\n first_user_message_data instead. If neither this field nor a\n first_user_message_template is present, the request is rejected with InvalidArgument.",
+			BodyPath: "firstUserMessage",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "first-user-message-data",
+			Usage:    "Arbitrary data rendered into the selected variation's first_user_message_template\n (liquid) to produce the first user message. Separate from `system_prompt_data`,\n which renders the system prompt template.",
+			BodyPath: "firstUserMessageData",
 		},
 		&requestflag.Flag[[]map[string]any]{
 			Name:     "memory-cascade",
@@ -59,11 +64,6 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			Name:     "secret",
 			Usage:    "Secrets that can be used in the headers for tool calls using the secret interpolation format.",
 			BodyPath: "secrets",
-		},
-		&requestflag.Flag[map[string]any]{
-			Name:     "user-data",
-			Usage:    "Arbitrary data rendered into the selected variation's user_message_template\n (liquid) to produce the initial user message. Separate from `data`, which\n renders the system prompt template.",
-			BodyPath: "userData",
 		},
 		&requestflag.Flag[string]{
 			Name:     "variation-id",

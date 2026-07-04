@@ -18,8 +18,8 @@ func TestAgentsCreate(t *testing.T) {
 			"agents", "create",
 			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
-			"--default-variation", "{metadata: {name: name, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}}",
+			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, outputDefinition: {foo: bar}, systemPromptDataSchema: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
+			"--default-variation", "{metadata: {name: name, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, firstUserMessageTemplate: firstUserMessageTemplate, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, weight: 0}}",
 		)
 	})
 
@@ -40,11 +40,11 @@ func TestAgentsCreate(t *testing.T) {
 			"--spec.description", "description",
 			"--spec.enable-episodic-memory=true",
 			"--spec.episodic-memory-ttl", "0",
-			"--spec.input-data-schema", "{foo: bar}",
 			"--spec.output-definition", "{foo: bar}",
+			"--spec.system-prompt-data-schema", "{foo: bar}",
 			"--spec.webhook-events-url", "webhookEventsUrl",
 			"--default-variation.metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--default-variation.spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, userMessageTemplate: userMessageTemplate, weight: 0}",
+			"--default-variation.spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {maxSubObjectives: 0, maxToolCalls: 0}, description: description, firstUserMessageTemplate: firstUserMessageTemplate, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate, weight: 0}",
 		)
 	})
 
@@ -61,9 +61,9 @@ func TestAgentsCreate(t *testing.T) {
 			"  description: description\n" +
 			"  enableEpisodicMemory: true\n" +
 			"  episodicMemoryTtl: 0\n" +
-			"  inputDataSchema:\n" +
-			"    foo: bar\n" +
 			"  outputDefinition:\n" +
+			"    foo: bar\n" +
+			"  systemPromptDataSchema:\n" +
 			"    foo: bar\n" +
 			"  webhookEventsUrl: webhookEventsUrl\n" +
 			"defaultVariation:\n" +
@@ -83,6 +83,7 @@ func TestAgentsCreate(t *testing.T) {
 			"      maxSubObjectives: 0\n" +
 			"      maxToolCalls: 0\n" +
 			"    description: description\n" +
+			"    firstUserMessageTemplate: firstUserMessageTemplate\n" +
 			"    modelConfig:\n" +
 			"      modelId: modelId\n" +
 			"      temperature: 0\n" +
@@ -92,7 +93,6 @@ func TestAgentsCreate(t *testing.T) {
 			"      maxTools: 0\n" +
 			"      rerankThreshold: 0\n" +
 			"    systemPromptTemplate: systemPromptTemplate\n" +
-			"    userMessageTemplate: userMessageTemplate\n" +
 			"    weight: 0\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -126,7 +126,7 @@ func TestAgentsUpdate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, inputDataSchema: {foo: bar}, outputDefinition: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
+			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, outputDefinition: {foo: bar}, systemPromptDataSchema: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -149,8 +149,8 @@ func TestAgentsUpdate(t *testing.T) {
 			"--spec.description", "description",
 			"--spec.enable-episodic-memory=true",
 			"--spec.episodic-memory-ttl", "0",
-			"--spec.input-data-schema", "{foo: bar}",
 			"--spec.output-definition", "{foo: bar}",
+			"--spec.system-prompt-data-schema", "{foo: bar}",
 			"--spec.webhook-events-url", "webhookEventsUrl",
 			"--update-mask", "updateMask",
 		)
@@ -169,9 +169,9 @@ func TestAgentsUpdate(t *testing.T) {
 			"  description: description\n" +
 			"  enableEpisodicMemory: true\n" +
 			"  episodicMemoryTtl: 0\n" +
-			"  inputDataSchema:\n" +
-			"    foo: bar\n" +
 			"  outputDefinition:\n" +
+			"    foo: bar\n" +
+			"  systemPromptDataSchema:\n" +
 			"    foo: bar\n" +
 			"  webhookEventsUrl: webhookEventsUrl\n" +
 			"updateMask: updateMask\n")

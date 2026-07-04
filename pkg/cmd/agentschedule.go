@@ -68,15 +68,15 @@ var agentsSchedulesCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Schedule defines WHEN the schedule fires. Temporal-style structured form:\n a list of calendar rules (wall-clock) and/or interval rules (duration),\n OR'd together. At least one rule is required.",
 			InnerField: "schedule",
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "spec.data",
-			Usage:      "Optional input data passed to the objective. If the agent has an\n input_data_schema, this must satisfy it.",
-			InnerField: "data",
-		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.initial-message",
-			Usage:      "Optional initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history. When unset, the fired\n objective defers to the selected variation's user_message_template.",
-			InnerField: "initialMessage",
+			Name:       "spec.first-user-message",
+			Usage:      "Optional explicit first user message passed to CreateObjective on each fire.\n Becomes the first user message in the objective's chat history. When unset, the\n fired objective defers to the selected variation's first_user_message_template.",
+			InnerField: "firstUserMessage",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.first-user-message-data",
+			Usage:      "Optional data rendered into the variation's first_user_message_template when\n each fired objective is created. Separate from `system_prompt_data`, which\n renders the system prompt template.",
+			InnerField: "firstUserMessageData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.overlap-policy",
@@ -84,9 +84,9 @@ var agentsSchedulesCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "overlapPolicy",
 		},
 		&requestflag.InnerFlag[any]{
-			Name:       "spec.user-data",
-			Usage:      "Optional data rendered into the variation's user_message_template when each\n fired objective is created. Separate from `data`, which renders the system\n prompt template.",
-			InnerField: "userData",
+			Name:       "spec.system-prompt-data",
+			Usage:      "Optional data rendered into the variation's system_prompt_template when each\n fired objective is created. If the agent has a system_prompt_data_schema,\n this must satisfy it.",
+			InnerField: "systemPromptData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.variation-id",
@@ -183,15 +183,15 @@ var agentsSchedulesUpdate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Schedule defines WHEN the schedule fires. Temporal-style structured form:\n a list of calendar rules (wall-clock) and/or interval rules (duration),\n OR'd together. At least one rule is required.",
 			InnerField: "schedule",
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "spec.data",
-			Usage:      "Optional input data passed to the objective. If the agent has an\n input_data_schema, this must satisfy it.",
-			InnerField: "data",
-		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.initial-message",
-			Usage:      "Optional initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history. When unset, the fired\n objective defers to the selected variation's user_message_template.",
-			InnerField: "initialMessage",
+			Name:       "spec.first-user-message",
+			Usage:      "Optional explicit first user message passed to CreateObjective on each fire.\n Becomes the first user message in the objective's chat history. When unset, the\n fired objective defers to the selected variation's first_user_message_template.",
+			InnerField: "firstUserMessage",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.first-user-message-data",
+			Usage:      "Optional data rendered into the variation's first_user_message_template when\n each fired objective is created. Separate from `system_prompt_data`, which\n renders the system prompt template.",
+			InnerField: "firstUserMessageData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.overlap-policy",
@@ -199,9 +199,9 @@ var agentsSchedulesUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "overlapPolicy",
 		},
 		&requestflag.InnerFlag[any]{
-			Name:       "spec.user-data",
-			Usage:      "Optional data rendered into the variation's user_message_template when each\n fired objective is created. Separate from `data`, which renders the system\n prompt template.",
-			InnerField: "userData",
+			Name:       "spec.system-prompt-data",
+			Usage:      "Optional data rendered into the variation's system_prompt_template when each\n fired objective is created. If the agent has a system_prompt_data_schema,\n this must satisfy it.",
+			InnerField: "systemPromptData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.variation-id",
