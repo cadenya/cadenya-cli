@@ -195,6 +195,7 @@ func init() {
 					&objectivesContinue,
 					&objectivesListContextWindows,
 					&objectivesListEvents,
+					&objectivesRetrieveDiagnostics,
 					&objectivesStreamEvents,
 				},
 			},

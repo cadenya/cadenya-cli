@@ -395,6 +395,26 @@ var objectivesListEvents = cli.Command{
 	HideHelpCommand: true,
 }
 
+var objectivesRetrieveDiagnostics = cli.Command{
+	Name:    "retrieve-diagnostics",
+	Usage:   "Returns the context-usage breakdown measured for the objective's most recent\niteration: character lengths per context component (system prompt, memory\nappendices, tool definitions, messages by role) alongside the iteration's input\ntoken counts.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
+		},
+	},
+	Action:          handleObjectivesRetrieveDiagnostics,
+	HideHelpCommand: true,
+}
+
 var objectivesStreamEvents = cli.Command{
 	Name:    "stream-events",
 	Usage:   "Streams events for an objective in real-time using server-sent events (SSE)",
@@ -895,6 +915,57 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	}
+}
+
+func handleObjectivesRetrieveDiagnostics(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
+		cmd.Set("objective-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Objectives.GetDiagnostics(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("objective-id").(string),
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives retrieve-diagnostics",
+		Transform:      transform,
+	})
 }
 
 func handleObjectivesStreamEvents(ctx context.Context, cmd *cli.Command) error {

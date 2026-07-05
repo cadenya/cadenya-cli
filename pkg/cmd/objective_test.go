@@ -261,6 +261,19 @@ func TestObjectivesListEvents(t *testing.T) {
 	})
 }
 
+func TestObjectivesRetrieveDiagnostics(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"objectives", "retrieve-diagnostics",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
+		)
+	})
+}
+
 func TestObjectivesStreamEvents(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
