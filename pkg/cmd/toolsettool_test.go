@@ -19,7 +19,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--tool-set-id", "toolSetId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
+			"--spec", "{config: {bare: {}, http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
 		)
 	})
 
@@ -37,7 +37,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}",
+			"--spec.config", "{bare: {}, http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}",
 			"--spec.description", "description",
 			"--spec.parameters", "{foo: bar}",
 			"--spec.requires-approval=true",
@@ -55,6 +55,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"    foo: string\n" +
 			"spec:\n" +
 			"  config:\n" +
+			"    bare: {}\n" +
 			"    http:\n" +
 			"      requestMethod: HTTP_METHOD_UNSPECIFIED\n" +
 			"      headers:\n" +
@@ -113,7 +114,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"--tool-set-id", "toolSetId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
+			"--spec", "{config: {bare: {}, http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -133,7 +134,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}",
+			"--spec.config", "{bare: {}, http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}",
 			"--spec.description", "description",
 			"--spec.parameters", "{foo: bar}",
 			"--spec.requires-approval=true",
@@ -152,6 +153,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"    foo: string\n" +
 			"spec:\n" +
 			"  config:\n" +
+			"    bare: {}\n" +
 			"    http:\n" +
 			"      requestMethod: HTTP_METHOD_UNSPECIFIED\n" +
 			"      headers:\n" +

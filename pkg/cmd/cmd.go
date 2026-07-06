@@ -216,6 +216,7 @@ func init() {
 					&objectivesToolCallsList,
 					&objectivesToolCallsApprove,
 					&objectivesToolCallsDeny,
+					&objectivesToolCallsSetContent,
 				},
 			},
 			{

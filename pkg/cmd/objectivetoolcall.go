@@ -59,6 +59,11 @@ var objectivesToolCallsList = cli.Command{
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
 		},
+		&requestflag.Flag[string]{
+			Name:      "execution-status",
+			Usage:     "Filter by tool call execution status. Useful for reverse-harness\n polling of bare tool calls waiting for externally supplied content\n (TOOL_CALL_EXECUTION_STATUS_WAITING_FOR_CONTENT).",
+			QueryPath: "executionStatus",
+		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",
 			Usage:     "When set to true you may use more of your alloted API rate-limit",
@@ -137,6 +142,52 @@ var objectivesToolCallsDeny = cli.Command{
 	Action:          handleObjectivesToolCallsDeny,
 	HideHelpCommand: true,
 }
+
+var objectivesToolCallsSetContent = requestflag.WithInnerFlags(cli.Command{
+	Name:    "set-content",
+	Usage:   "For bare tool calls (tool sets with no execution adapter), sets the content an\nexternal API consumer supplies for the call — used for human-in-the-loop tools\nand reverse harnesses that execute tools locally and report results back.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-call-id",
+			Required:  true,
+			PathParam: "toolCallId",
+		},
+		&requestflag.Flag[[]map[string]any]{
+			Name:     "content",
+			Usage:    "The content to set on the tool call. Mirrors\n ObjectiveToolCallResult.ContentBlock but writable: media blocks carry\n raw data on input where the result-side carries a signed url on output.",
+			Required: true,
+			BodyPath: "content",
+		},
+	},
+	Action:          handleObjectivesToolCallsSetContent,
+	HideHelpCommand: true,
+}, map[string][]requestflag.HasOuterFlag{
+	"content": {
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "content.audio",
+			InnerField: "audio",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "content.image",
+			InnerField: "image",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "content.text",
+			InnerField: "text",
+		},
+	},
+})
 
 func handleObjectivesToolCallsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
@@ -382,6 +433,65 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "objectives:tool-calls deny",
+		Transform:      transform,
+	})
+}
+
+func handleObjectivesToolCallsSetContent(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
+		cmd.Set("objective-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("tool-call-id") && len(unusedArgs) > 0 {
+		cmd.Set("tool-call-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		ApplicationJSON,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ObjectiveToolCallSetContentParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Objectives.ToolCalls.SetContent(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("objective-id").(string),
+		cmd.Value("tool-call-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives:tool-calls set-content",
 		Transform:      transform,
 	})
 }
