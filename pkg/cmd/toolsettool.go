@@ -73,6 +73,7 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.parameters",
+			Usage:      "The tool's JSON Schema, as handed to the LLM. Required, but may be the\n empty object `{}` for a tool that takes no arguments. Requiring it rather\n than defaulting it means a misspelled field name (`inputSchema`, say) is a\n 400 instead of a silently parameterless tool.",
 			InnerField: "parameters",
 		},
 		&requestflag.InnerFlag[bool]{
@@ -178,6 +179,7 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.parameters",
+			Usage:      "The tool's JSON Schema, as handed to the LLM. Required, but may be the\n empty object `{}` for a tool that takes no arguments. Requiring it rather\n than defaulting it means a misspelled field name (`inputSchema`, say) is a\n 400 instead of a silently parameterless tool.",
 			InnerField: "parameters",
 		},
 		&requestflag.InnerFlag[bool]{
