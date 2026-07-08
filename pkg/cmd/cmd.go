@@ -373,7 +373,6 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&workspacesList,
-					&workspacesGet,
 				},
 			},
 			{

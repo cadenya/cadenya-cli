@@ -53,15 +53,6 @@ var workspacesList = cli.Command{
 	HideHelpCommand: true,
 }
 
-var workspacesGet = cli.Command{
-	Name:            "get",
-	Usage:           "Retrieves the workspace associated with the current API token. Useful for\nworkspace-scoped tokens to identify which workspace they belong to.",
-	Suggest:         true,
-	Flags:           []cli.Flag{},
-	Action:          handleWorkspacesGet,
-	HideHelpCommand: true,
-}
-
 func handleWorkspacesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -115,43 +106,4 @@ func handleWorkspacesList(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	}
-}
-
-func handleWorkspacesGet(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Workspaces.Get(ctx, options...)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	explicitFormat := cmd.Root().IsSet("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(obj, ShowJSONOpts{
-		ExplicitFormat: explicitFormat,
-		Format:         format,
-		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "workspaces get",
-		Transform:      transform,
-	})
 }

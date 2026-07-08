@@ -24,14 +24,3 @@ func TestWorkspacesList(t *testing.T) {
 		)
 	})
 }
-
-func TestWorkspacesGet(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"workspaces", "get",
-		)
-	})
-}
