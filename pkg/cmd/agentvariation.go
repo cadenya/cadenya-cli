@@ -97,11 +97,6 @@ var agentsVariationsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:      "Liquid template for the system prompt of objectives using this variation.\n Rendered with CreateObjectiveRequest.system_prompt_data into Objective.system_prompt.",
 			InnerField: "systemPromptTemplate",
 		},
-		&requestflag.InnerFlag[int64]{
-			Name:       "spec.weight",
-			Usage:      "Weight for weighted random selection (>= 0). P(v) = v.weight / sum(all_weights).\n Only used when the agent's variation_selection_mode is WEIGHTED. A weight of 0 means never auto-selected, but can still be chosen explicitly via variation_id on CreateObjectiveRequest.",
-			InnerField: "weight",
-		},
 	},
 })
 
@@ -220,11 +215,6 @@ var agentsVariationsUpdate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "spec.system-prompt-template",
 			Usage:      "Liquid template for the system prompt of objectives using this variation.\n Rendered with CreateObjectiveRequest.system_prompt_data into Objective.system_prompt.",
 			InnerField: "systemPromptTemplate",
-		},
-		&requestflag.InnerFlag[int64]{
-			Name:       "spec.weight",
-			Usage:      "Weight for weighted random selection (>= 0). P(v) = v.weight / sum(all_weights).\n Only used when the agent's variation_selection_mode is WEIGHTED. A weight of 0 means never auto-selected, but can still be chosen explicitly via variation_id on CreateObjectiveRequest.",
-			InnerField: "weight",
 		},
 	},
 })
