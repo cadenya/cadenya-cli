@@ -321,6 +321,7 @@ func TestToolSetsList(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",
@@ -381,6 +382,7 @@ func TestToolSetsListEvents(t *testing.T) {
 			"--tool-set-id", "toolSetId",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--sort-order", "sortOrder",
 		)

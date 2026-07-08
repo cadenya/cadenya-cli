@@ -157,6 +157,7 @@ func TestMemoryLayersEntriesList(t *testing.T) {
 			"--memory-layer-id", "memoryLayerId",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",

@@ -23,6 +23,7 @@ func TestAgentsFeedbackList(t *testing.T) {
 			"--created-before", "'2019-12-27T18:11:19.117Z'",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--query", "query",
 			"--sentiment", "FEEDBACK_SENTIMENT_UNSPECIFIED",

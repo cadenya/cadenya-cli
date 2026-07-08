@@ -111,6 +111,7 @@ func TestObjectivesList(t *testing.T) {
 			"--agent-schedule-id", "agentScheduleId",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--parent-objective-id", "parentObjectiveId",
 			"--profile-id", "profileId",
@@ -236,6 +237,7 @@ func TestObjectivesListContextWindows(t *testing.T) {
 			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 		)
 	})
@@ -253,6 +255,7 @@ func TestObjectivesListEvents(t *testing.T) {
 			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--since-event-id", "sinceEventId",
 			"--sort-order", "sortOrder",

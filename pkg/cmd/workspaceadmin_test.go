@@ -129,6 +129,7 @@ func TestWorkspaceAdminList(t *testing.T) {
 			"--max-items", "10",
 			"--cursor", "cursor",
 			"--include-archived=true",
+			"--labels", "labels",
 			"--limit", "0",
 		)
 	})

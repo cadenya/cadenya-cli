@@ -236,6 +236,11 @@ var agentsSchedulesList = cli.Command{
 			Usage:     "When true, the `info` field on each returned schedule is populated.\n Requests with this flag count more against your rate limit.",
 			QueryPath: "includeInfo",
 		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return.",

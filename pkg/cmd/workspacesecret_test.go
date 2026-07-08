@@ -137,6 +137,7 @@ func TestWorkspaceSecretsList(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",

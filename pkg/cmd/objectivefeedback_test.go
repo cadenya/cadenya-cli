@@ -72,6 +72,7 @@ func TestObjectivesFeedbackList(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
+			"--labels", "labels",
 			"--limit", "0",
 		)
 	})

@@ -64,6 +64,11 @@ var modelsList = cli.Command{
 			Usage:     "Filter models to only ones assigned to an active agent variation/agent.\n Draft agents count as assigned; archived agents do not. Assignment does not\n imply recent traffic — see ModelInfo.last_used_at for that.",
 			QueryPath: "isAssigned",
 		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return",

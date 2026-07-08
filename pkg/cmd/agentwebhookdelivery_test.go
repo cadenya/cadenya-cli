@@ -20,6 +20,7 @@ func TestAgentsWebhookDeliveriesList(t *testing.T) {
 			"--agent-id", "agentId",
 			"--cursor", "cursor",
 			"--event-type", "OBJECTIVE_EVENT_TYPE_UNSPECIFIED",
+			"--labels", "labels",
 			"--limit", "0",
 			"--objective-id", "objectiveId",
 		)

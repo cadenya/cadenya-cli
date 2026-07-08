@@ -142,6 +142,11 @@ var workspaceAdminList = cli.Command{
 			Usage:     "When true, archived workspaces are included in the results. Defaults to\n false (active workspaces only).",
 			QueryPath: "includeArchived",
 		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return",

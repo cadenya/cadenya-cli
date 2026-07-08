@@ -143,6 +143,7 @@ func TestMemoryLayersList(t *testing.T) {
 			"--cursor", "cursor",
 			"--episodic-key-prefix", "episodicKeyPrefix",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",

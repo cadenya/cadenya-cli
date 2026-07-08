@@ -36,6 +36,7 @@ func TestObjectivesToolCallsList(t *testing.T) {
 			"--cursor", "cursor",
 			"--execution-status", "TOOL_CALL_EXECUTION_STATUS_UNSPECIFIED",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--status", "TOOL_CALL_STATUS_UNSPECIFIED",
 		)

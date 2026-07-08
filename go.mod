@@ -3,7 +3,7 @@ module github.com/cadenya/cadenya-cli
 go 1.25
 
 require (
-	github.com/cadenya/cadenya-go v0.48.0
+	github.com/cadenya/cadenya-go v0.49.0
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/lipgloss v1.1.0

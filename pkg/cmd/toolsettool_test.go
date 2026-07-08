@@ -201,6 +201,7 @@ func TestToolSetsToolsList(t *testing.T) {
 			"--tool-set-id", "toolSetId",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--name", "string",
 			"--prefix", "prefix",

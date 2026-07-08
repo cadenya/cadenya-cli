@@ -17,6 +17,7 @@ func TestWorkspaceAdminProfilesList(t *testing.T) {
 			"workspace-admin:profiles", "list",
 			"--max-items", "10",
 			"--cursor", "cursor",
+			"--labels", "labels",
 			"--limit", "0",
 			"--query", "query",
 		)

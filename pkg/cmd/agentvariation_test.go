@@ -201,6 +201,7 @@ func TestAgentsVariationsList(t *testing.T) {
 			"--agent-id", "agentId",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--sort-order", "sortOrder",
 		)

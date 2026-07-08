@@ -35,6 +35,7 @@ func TestModelsList(t *testing.T) {
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--is-assigned=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",

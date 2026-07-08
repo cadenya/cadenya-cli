@@ -18,6 +18,7 @@ func TestAPIKeysAccessList(t *testing.T) {
 			"--max-items", "10",
 			"--id", "id",
 			"--cursor", "cursor",
+			"--labels", "labels",
 			"--limit", "0",
 		)
 	})
