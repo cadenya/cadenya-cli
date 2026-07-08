@@ -19,7 +19,7 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"--workspace-id", "workspaceId",
 			"--agent-id", "agentId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {inactivityTimeout: '-160513s', maxSubObjectives: 0, maxToolCalls: 0}, description: description, firstUserMessageTemplate: firstUserMessageTemplate, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate}",
+			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {inactivityTimeout: '-160513s', maxSubObjectives: 0, maxToolCalls: 0}, description: description, firstUserMessageTemplate: firstUserMessageTemplate, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0}, systemPromptTemplate: systemPromptTemplate}",
 		)
 	})
 
@@ -42,7 +42,7 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"--spec.description", "description",
 			"--spec.first-user-message-template", "firstUserMessageTemplate",
 			"--spec.model-config", "{modelId: modelId, temperature: 0}",
-			"--spec.progressive-discovery", "{hints: [string], maxTools: 0, rerankThreshold: 0}",
+			"--spec.progressive-discovery", "{hints: [string], maxTools: 0}",
 			"--spec.system-prompt-template", "systemPromptTemplate",
 		)
 	})
@@ -75,7 +75,6 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			"    hints:\n" +
 			"      - string\n" +
 			"    maxTools: 0\n" +
-			"    rerankThreshold: 0\n" +
 			"  systemPromptTemplate: systemPromptTemplate\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -112,7 +111,7 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"--agent-id", "agentId",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {inactivityTimeout: '-160513s', maxSubObjectives: 0, maxToolCalls: 0}, description: description, firstUserMessageTemplate: firstUserMessageTemplate, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0, rerankThreshold: 0}, systemPromptTemplate: systemPromptTemplate}",
+			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {inactivityTimeout: '-160513s', maxSubObjectives: 0, maxToolCalls: 0}, description: description, firstUserMessageTemplate: firstUserMessageTemplate, modelConfig: {modelId: modelId, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0}, systemPromptTemplate: systemPromptTemplate}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -137,7 +136,7 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"--spec.description", "description",
 			"--spec.first-user-message-template", "firstUserMessageTemplate",
 			"--spec.model-config", "{modelId: modelId, temperature: 0}",
-			"--spec.progressive-discovery", "{hints: [string], maxTools: 0, rerankThreshold: 0}",
+			"--spec.progressive-discovery", "{hints: [string], maxTools: 0}",
 			"--spec.system-prompt-template", "systemPromptTemplate",
 			"--update-mask", "updateMask",
 		)
@@ -171,7 +170,6 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			"    hints:\n" +
 			"      - string\n" +
 			"    maxTools: 0\n" +
-			"    rerankThreshold: 0\n" +
 			"  systemPromptTemplate: systemPromptTemplate\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
