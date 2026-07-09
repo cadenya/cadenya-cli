@@ -76,7 +76,7 @@ var modelsList = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:      "prefix",
-			Usage:     "Filter by name prefix",
+			Usage:     "Filter by a prefix of the model's display name, external id, or id\n (case-insensitive). A model's external id is the form used in\n modelConfig.modelId, so a caller holding that can narrow the list by it.",
 			QueryPath: "prefix",
 		},
 		&requestflag.Flag[string]{
