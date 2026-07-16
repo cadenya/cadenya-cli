@@ -70,7 +70,7 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[[]string]{
 			Name:       "spec.permissions",
-			Usage:      "Permissions granted to this key. Each entry is a colon-separated\n verb:resource string (e.g. \"manage:agents\"). Currently has no\n enforced effect; reserved for future fine-grained authorization.",
+			Usage:      "Scopes granted to this key. Each entry is a colon-separated\n resource:verb string (e.g. \"objectives:manage\").\n\n Resources: agents, objectives, tools, memory, secrets, account.\n Verbs: read and manage, where manage implies read — a stored scope set\n is normalized to drop \"x:read\" when \"x:manage\" is present. The secrets\n and account resources support only manage. \"*\" is an explicit\n full-access grant.\n\n An empty list grants full access (grandfathered legacy behavior); new\n keys should be created with explicit scopes.",
 			InnerField: "permissions",
 		},
 		&requestflag.InnerFlag[bool]{
@@ -155,7 +155,7 @@ var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[[]string]{
 			Name:       "spec.permissions",
-			Usage:      "Permissions granted to this key. Each entry is a colon-separated\n verb:resource string (e.g. \"manage:agents\"). Currently has no\n enforced effect; reserved for future fine-grained authorization.",
+			Usage:      "Scopes granted to this key. Each entry is a colon-separated\n resource:verb string (e.g. \"objectives:manage\").\n\n Resources: agents, objectives, tools, memory, secrets, account.\n Verbs: read and manage, where manage implies read — a stored scope set\n is normalized to drop \"x:read\" when \"x:manage\" is present. The secrets\n and account resources support only manage. \"*\" is an explicit\n full-access grant.\n\n An empty list grants full access (grandfathered legacy behavior); new\n keys should be created with explicit scopes.",
 			InnerField: "permissions",
 		},
 		&requestflag.InnerFlag[bool]{
