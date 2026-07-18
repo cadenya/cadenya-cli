@@ -16,9 +16,14 @@ import (
 
 var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
-	Usage:   "Creates a new API key on the account. Optionally grants the key access to one or\nmore workspaces via initial_workspace_ids.",
+	Usage:   "Creates a new API key in the workspace.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
 			Usage:    "CreateAccountResourceMetadata contains the user-provided fields for creating\n an account-scoped resource. Read-only fields (id, account_id, profile_id) are excluded\n since they are set by the server.",
@@ -30,11 +35,6 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Configuration for an API key.",
 			Required: true,
 			BodyPath: "spec",
-		},
-		&requestflag.Flag[[]string]{
-			Name:     "initial-workspace-id",
-			Usage:    "Workspaces this API key will have access to on creation. Optional —\n a key can be created with no workspace access and granted later via\n AddAPIKeyWorkspace.",
-			BodyPath: "initialWorkspaceIds",
 		},
 	},
 	Action:          handleAPIKeysCreate,
@@ -75,7 +75,7 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[bool]{
 			Name:       "spec.system",
-			Usage:      "True when this key is managed by the system (e.g. the auto-provisioned\n global account key). System keys cannot be deleted but can be rotated.",
+			Usage:      "True when this key is managed by the system (i.e. the auto-provisioned\n global account key). System keys cannot be deleted but can be rotated.",
 			InnerField: "system",
 		},
 	},
@@ -86,6 +86,11 @@ var apiKeysRetrieve = cli.Command{
 	Usage:   "Retrieves an API key by ID.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
@@ -101,6 +106,11 @@ var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "Updates an API key.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
@@ -160,7 +170,7 @@ var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[bool]{
 			Name:       "spec.system",
-			Usage:      "True when this key is managed by the system (e.g. the auto-provisioned\n global account key). System keys cannot be deleted but can be rotated.",
+			Usage:      "True when this key is managed by the system (i.e. the auto-provisioned\n global account key). System keys cannot be deleted but can be rotated.",
 			InnerField: "system",
 		},
 	},
@@ -168,9 +178,14 @@ var apiKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 
 var apiKeysList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists all API keys on the account.",
+	Usage:   "Lists the workspace's API keys.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response.",
@@ -221,6 +236,11 @@ var apiKeysDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
 			PathParam: "id",
@@ -230,11 +250,56 @@ var apiKeysDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var apiKeysDisable = cli.Command{
+	Name:    "disable",
+	Usage:   "Disables an API key. While disabled, presenting the key's token fails\nauthentication on every endpoint; the key is retained. Idempotent.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleAPIKeysDisable,
+	HideHelpCommand: true,
+}
+
+var apiKeysEnable = cli.Command{
+	Name:    "enable",
+	Usage:   "Re-enables a disabled API key so its token authenticates again. Idempotent.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleAPIKeysEnable,
+	HideHelpCommand: true,
+}
+
 var apiKeysRotate = cli.Command{
 	Name:    "rotate",
 	Usage:   "Rotates an API key and returns a new token. All previous tokens for this key are\ninvalidated.",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
 		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
@@ -248,7 +313,10 @@ var apiKeysRotate = cli.Command{
 func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -268,7 +336,12 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.APIKeys.New(ctx, params, options...)
+	_, err = client.APIKeys.New(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -289,6 +362,10 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 func handleAPIKeysRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -310,7 +387,12 @@ func handleAPIKeysRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.APIKeys.Get(ctx, cmd.Value("id").(string), options...)
+	_, err = client.APIKeys.Get(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -331,6 +413,10 @@ func handleAPIKeysRetrieve(ctx context.Context, cmd *cli.Command) error {
 func handleAPIKeysUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -356,6 +442,7 @@ func handleAPIKeysUpdate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.APIKeys.Update(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -380,7 +467,10 @@ func handleAPIKeysUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -404,7 +494,12 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.APIKeys.List(ctx, params, options...)
+		_, err = client.APIKeys.List(
+			ctx,
+			cmd.Value("workspace-id").(string),
+			params,
+			options...,
+		)
 		if err != nil {
 			return err
 		}
@@ -417,7 +512,12 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	} else {
-		iter := client.APIKeys.ListAutoPaging(ctx, params, options...)
+		iter := client.APIKeys.ListAutoPaging(
+			ctx,
+			cmd.Value("workspace-id").(string),
+			params,
+			options...,
+		)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -435,6 +535,10 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -454,12 +558,129 @@ func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.APIKeys.Delete(ctx, cmd.Value("id").(string), options...)
+	return client.APIKeys.Delete(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		options...,
+	)
+}
+
+func handleAPIKeysDisable(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.APIKeyDisableParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.APIKeys.Disable(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "api-keys disable",
+		Transform:      transform,
+	})
+}
+
+func handleAPIKeysEnable(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.APIKeyEnableParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.APIKeys.Enable(
+		ctx,
+		cmd.Value("workspace-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "api-keys enable",
+		Transform:      transform,
+	})
 }
 
 func handleAPIKeysRotate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
+		cmd.Set("workspace-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -485,6 +706,7 @@ func handleAPIKeysRotate(ctx context.Context, cmd *cli.Command) error {
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.APIKeys.Rotate(
 		ctx,
+		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
