@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -66,10 +66,6 @@ var agentsWebhookDeliveriesList = cli.Command{
 func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -89,7 +85,9 @@ func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) er
 		return err
 	}
 
-	params := cadenya.AgentWebhookDeliveryListParams{}
+	params := cadenya.AgentWebhookDeliveryListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -99,7 +97,6 @@ func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) er
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Agents.WebhookDeliveries.List(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -118,7 +115,6 @@ func handleAgentsWebhookDeliveriesList(ctx context.Context, cmd *cli.Command) er
 	} else {
 		iter := client.Agents.WebhookDeliveries.ListAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,

@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -346,10 +346,6 @@ var toolSetsToolsRestore = cli.Command{
 func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -369,13 +365,14 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolNewParams{}
+	params := cadenya.ToolSetToolNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Tools.New(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		params,
 		options...,
@@ -400,10 +397,6 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -427,13 +420,17 @@ func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.ToolSetToolGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Tools.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 	if err != nil {
@@ -456,10 +453,6 @@ func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -483,13 +476,14 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolUpdateParams{}
+	params := cadenya.ToolSetToolUpdateParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Tools.Update(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -515,10 +509,6 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -538,7 +528,9 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolListParams{}
+	params := cadenya.ToolSetToolListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -548,7 +540,6 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.ToolSets.Tools.List(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("tool-set-id").(string),
 			params,
 			options...,
@@ -567,7 +558,6 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.ToolSets.Tools.ListAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("tool-set-id").(string),
 			params,
 			options...,
@@ -589,10 +579,6 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -616,11 +602,15 @@ func handleToolSetsToolsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.ToolSetToolDeleteParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.ToolSets.Tools.Delete(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 }
@@ -628,10 +618,6 @@ func handleToolSetsToolsDelete(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsOmit(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -655,13 +641,14 @@ func handleToolSetsToolsOmit(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolOmitParams{}
+	params := cadenya.ToolSetToolOmitParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Tools.Omit(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -687,10 +674,6 @@ func handleToolSetsToolsOmit(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsToolsRestore(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -714,13 +697,14 @@ func handleToolSetsToolsRestore(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolRestoreParams{}
+	params := cadenya.ToolSetToolRestoreParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Tools.Restore(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
 		params,

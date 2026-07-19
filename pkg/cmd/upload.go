@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -98,10 +98,7 @@ var uploadsRetrieve = cli.Command{
 func handleUploadsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -117,16 +114,13 @@ func handleUploadsCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.UploadNewParams{}
+	params := cadenya.UploadNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Uploads.New(
-		ctx,
-		cmd.Value("workspace-id").(string),
-		params,
-		options...,
-	)
+	_, err = client.Uploads.New(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -147,10 +141,6 @@ func handleUploadsCreate(ctx context.Context, cmd *cli.Command) error {
 func handleUploadsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -170,12 +160,16 @@ func handleUploadsRetrieve(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.UploadGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Uploads.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 	if err != nil {

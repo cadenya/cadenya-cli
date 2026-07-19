@@ -16,8 +16,8 @@ func TestObjectivesFeedbackCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:feedback", "create",
-			"--workspace-id", "workspaceId",
-			"--objective-id", "objectiveId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
 			"--data", "{comment: comment, score: 0}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
 		)
@@ -32,8 +32,8 @@ func TestObjectivesFeedbackCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:feedback", "create",
-			"--workspace-id", "workspaceId",
-			"--objective-id", "objectiveId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
 			"--data.comment", "comment",
 			"--data.score", "0",
 			"--metadata.external-id", "externalId",
@@ -55,8 +55,8 @@ func TestObjectivesFeedbackCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives:feedback", "create",
-			"--workspace-id", "workspaceId",
-			"--objective-id", "objectiveId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
 		)
 	})
 }
@@ -69,8 +69,8 @@ func TestObjectivesFeedbackList(t *testing.T) {
 			"--api-key", "string",
 			"objectives:feedback", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
-			"--objective-id", "objectiveId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
 			"--cursor", "cursor",
 			"--labels", "labels",
 			"--limit", "0",

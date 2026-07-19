@@ -16,10 +16,10 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "create",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {bare: {}, http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
+			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, type: http}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
 		)
 	})
 
@@ -32,12 +32,12 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "create",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.config", "{bare: {}, http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}",
+			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, type: http}",
 			"--spec.description", "description",
 			"--spec.parameters", "{foo: bar}",
 			"--spec.requires-approval=true",
@@ -55,7 +55,6 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"    foo: string\n" +
 			"spec:\n" +
 			"  config:\n" +
-			"    bare: {}\n" +
 			"    http:\n" +
 			"      requestMethod: HTTP_METHOD_UNSPECIFIED\n" +
 			"      headers:\n" +
@@ -64,16 +63,7 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			"      query: query\n" +
 			"      requestBodyContentType: requestBodyContentType\n" +
 			"      requestBodyTemplate: requestBodyTemplate\n" +
-			"    mcp:\n" +
-			"      annotations:\n" +
-			"        destructiveHint: true\n" +
-			"        idempotentHint: true\n" +
-			"        openWorldHint: true\n" +
-			"        readOnlyHint: true\n" +
-			"        title: title\n" +
-			"    openapi:\n" +
-			"      method: method\n" +
-			"      path: path\n" +
+			"    type: http\n" +
 			"  description: description\n" +
 			"  parameters:\n" +
 			"    foo: bar\n" +
@@ -83,8 +73,8 @@ func TestToolSetsToolsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"tool-sets:tools", "create",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
 		)
 	})
 }
@@ -96,9 +86,9 @@ func TestToolSetsToolsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "retrieve",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "tool_01HXKD2E5NQM3T9AYWCFWVYY9K",
 		)
 	})
 }
@@ -110,11 +100,11 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "update",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "tool_01HXKD2E5NQM3T9AYWCFWVYY9K",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {bare: {}, http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
+			"--spec", "{config: {http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, type: http}, description: description, parameters: {foo: bar}, requiresApproval: true, llmToolName: llmToolName}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -128,13 +118,13 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "update",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "tool_01HXKD2E5NQM3T9AYWCFWVYY9K",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.config", "{bare: {}, http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, mcp: {annotations: {destructiveHint: true, idempotentHint: true, openWorldHint: true, readOnlyHint: true, title: title}}, openapi: {method: method, path: path}}",
+			"--spec.config", "{http: {requestMethod: HTTP_METHOD_UNSPECIFIED, headers: {foo: string}, path: path, query: query, requestBodyContentType: requestBodyContentType, requestBodyTemplate: requestBodyTemplate}, type: http}",
 			"--spec.description", "description",
 			"--spec.parameters", "{foo: bar}",
 			"--spec.requires-approval=true",
@@ -153,7 +143,6 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"    foo: string\n" +
 			"spec:\n" +
 			"  config:\n" +
-			"    bare: {}\n" +
 			"    http:\n" +
 			"      requestMethod: HTTP_METHOD_UNSPECIFIED\n" +
 			"      headers:\n" +
@@ -162,16 +151,7 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			"      query: query\n" +
 			"      requestBodyContentType: requestBodyContentType\n" +
 			"      requestBodyTemplate: requestBodyTemplate\n" +
-			"    mcp:\n" +
-			"      annotations:\n" +
-			"        destructiveHint: true\n" +
-			"        idempotentHint: true\n" +
-			"        openWorldHint: true\n" +
-			"        readOnlyHint: true\n" +
-			"        title: title\n" +
-			"    openapi:\n" +
-			"      method: method\n" +
-			"      path: path\n" +
+			"    type: http\n" +
 			"  description: description\n" +
 			"  parameters:\n" +
 			"    foo: bar\n" +
@@ -182,9 +162,9 @@ func TestToolSetsToolsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"tool-sets:tools", "update",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "tool_01HXKD2E5NQM3T9AYWCFWVYY9K",
 		)
 	})
 }
@@ -197,8 +177,8 @@ func TestToolSetsToolsList(t *testing.T) {
 			"--api-key", "string",
 			"tool-sets:tools", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -220,9 +200,9 @@ func TestToolSetsToolsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "delete",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "tool_01HXKD2E5NQM3T9AYWCFWVYY9K",
 		)
 	})
 }
@@ -234,9 +214,9 @@ func TestToolSetsToolsOmit(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "omit",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "tool_01HXKD2E5NQM3T9AYWCFWVYY9K",
 		)
 	})
 }
@@ -248,9 +228,9 @@ func TestToolSetsToolsRestore(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:tools", "restore",
-			"--workspace-id", "workspaceId",
-			"--tool-set-id", "toolSetId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "tool_01HXKD2E5NQM3T9AYWCFWVYY9K",
 		)
 	})
 }

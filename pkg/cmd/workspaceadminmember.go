@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -91,10 +91,7 @@ var workspaceAdminMembersRemove = cli.Command{
 func handleWorkspaceAdminMembersList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -110,7 +107,9 @@ func handleWorkspaceAdminMembersList(ctx context.Context, cmd *cli.Command) erro
 		return err
 	}
 
-	params := cadenya.WorkspaceAdminMemberListParams{}
+	params := cadenya.WorkspaceAdminMemberListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -118,12 +117,7 @@ func handleWorkspaceAdminMembersList(ctx context.Context, cmd *cli.Command) erro
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.WorkspaceAdmin.Members.List(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		_, err = client.WorkspaceAdmin.Members.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -136,12 +130,7 @@ func handleWorkspaceAdminMembersList(ctx context.Context, cmd *cli.Command) erro
 			Transform:      transform,
 		})
 	} else {
-		iter := client.WorkspaceAdmin.Members.ListAutoPaging(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		iter := client.WorkspaceAdmin.Members.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -159,10 +148,7 @@ func handleWorkspaceAdminMembersList(ctx context.Context, cmd *cli.Command) erro
 func handleWorkspaceAdminMembersAdd(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -178,16 +164,13 @@ func handleWorkspaceAdminMembersAdd(ctx context.Context, cmd *cli.Command) error
 		return err
 	}
 
-	params := cadenya.WorkspaceAdminMemberAddParams{}
+	params := cadenya.WorkspaceAdminMemberAddParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.WorkspaceAdmin.Members.Add(
-		ctx,
-		cmd.Value("workspace-id").(string),
-		params,
-		options...,
-	)
+	_, err = client.WorkspaceAdmin.Members.Add(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -208,10 +191,6 @@ func handleWorkspaceAdminMembersAdd(ctx context.Context, cmd *cli.Command) error
 func handleWorkspaceAdminMembersRemove(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("profile-id") && len(unusedArgs) > 0 {
 		cmd.Set("profile-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -231,10 +210,14 @@ func handleWorkspaceAdminMembersRemove(ctx context.Context, cmd *cli.Command) er
 		return err
 	}
 
+	params := cadenya.WorkspaceAdminMemberRemoveParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.WorkspaceAdmin.Members.Remove(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("profile-id").(string),
+		params,
 		options...,
 	)
 }

@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -314,16 +314,22 @@ var agentsVariationsAddAssignment = cli.Command{
 			PathParam: "variationId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "sub-agent-id",
-			BodyPath: "subAgentId",
-		},
-		&requestflag.Flag[string]{
 			Name:     "tool-id",
 			BodyPath: "toolId",
 		},
 		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    `Allowed values: "toolId".`,
+			Required: true,
+			BodyPath: "type",
+		},
+		&requestflag.Flag[string]{
 			Name:     "tool-set-id",
 			BodyPath: "toolSetId",
+		},
+		&requestflag.Flag[string]{
+			Name:     "sub-agent-id",
+			BodyPath: "subAgentId",
 		},
 	},
 	Action:          handleAgentsVariationsAddAssignment,
@@ -353,6 +359,7 @@ var agentsVariationsAddMemoryLayer = cli.Command{
 		&requestflag.Flag[string]{
 			Name:     "memory-layer-id",
 			Usage:    "Layer to attach. Accepts the canonical `memlyr_…` form or the `external_id:<value>` form.",
+			Required: true,
 			BodyPath: "memoryLayerId",
 		},
 		&requestflag.Flag[int64]{
@@ -463,10 +470,6 @@ var agentsVariationsUpdateMemoryLayer = cli.Command{
 func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -486,13 +489,14 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentVariationNewParams{}
+	params := cadenya.AgentVariationNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.New(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		params,
 		options...,
@@ -517,10 +521,6 @@ func handleAgentsVariationsCreate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -544,13 +544,17 @@ func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error
 		return err
 	}
 
+	params := cadenya.AgentVariationGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 	if err != nil {
@@ -573,10 +577,6 @@ func handleAgentsVariationsRetrieve(ctx context.Context, cmd *cli.Command) error
 func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -600,13 +600,14 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentVariationUpdateParams{}
+	params := cadenya.AgentVariationUpdateParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.Update(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -632,10 +633,6 @@ func handleAgentsVariationsUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -655,7 +652,9 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentVariationListParams{}
+	params := cadenya.AgentVariationListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -665,7 +664,6 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Agents.Variations.List(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -684,7 +682,6 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Agents.Variations.ListAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -706,10 +703,6 @@ func handleAgentsVariationsList(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsVariationsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -733,11 +726,15 @@ func handleAgentsVariationsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.AgentVariationDeleteParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.Agents.Variations.Delete(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 }
@@ -745,10 +742,6 @@ func handleAgentsVariationsDelete(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsVariationsAddAssignment(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -772,13 +765,14 @@ func handleAgentsVariationsAddAssignment(ctx context.Context, cmd *cli.Command) 
 		return err
 	}
 
-	params := cadenya.AgentVariationAddAssignmentParams{}
+	params := cadenya.AgentVariationAddAssignmentParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.AddAssignment(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		params,
@@ -804,10 +798,6 @@ func handleAgentsVariationsAddAssignment(ctx context.Context, cmd *cli.Command) 
 func handleAgentsVariationsAddMemoryLayer(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -831,13 +821,14 @@ func handleAgentsVariationsAddMemoryLayer(ctx context.Context, cmd *cli.Command)
 		return err
 	}
 
-	params := cadenya.AgentVariationAddMemoryLayerParams{}
+	params := cadenya.AgentVariationAddMemoryLayerParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.AddMemoryLayer(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		params,
@@ -863,10 +854,6 @@ func handleAgentsVariationsAddMemoryLayer(ctx context.Context, cmd *cli.Command)
 func handleAgentsVariationsRemoveAssignment(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -894,12 +881,16 @@ func handleAgentsVariationsRemoveAssignment(ctx context.Context, cmd *cli.Comman
 		return err
 	}
 
+	params := cadenya.AgentVariationRemoveAssignmentParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.Agents.Variations.RemoveAssignment(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 }
@@ -907,10 +898,6 @@ func handleAgentsVariationsRemoveAssignment(ctx context.Context, cmd *cli.Comman
 func handleAgentsVariationsRemoveMemoryLayer(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -938,12 +925,16 @@ func handleAgentsVariationsRemoveMemoryLayer(ctx context.Context, cmd *cli.Comma
 		return err
 	}
 
+	params := cadenya.AgentVariationRemoveMemoryLayerParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.Agents.Variations.RemoveMemoryLayer(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 }
@@ -951,10 +942,6 @@ func handleAgentsVariationsRemoveMemoryLayer(ctx context.Context, cmd *cli.Comma
 func handleAgentsVariationsUpdateMemoryLayer(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -982,13 +969,14 @@ func handleAgentsVariationsUpdateMemoryLayer(ctx context.Context, cmd *cli.Comma
 		return err
 	}
 
-	params := cadenya.AgentVariationUpdateMemoryLayerParams{}
+	params := cadenya.AgentVariationUpdateMemoryLayerParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Variations.UpdateMemoryLayer(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("variation-id").(string),
 		cmd.Value("id").(string),

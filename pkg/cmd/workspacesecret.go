@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -219,10 +219,7 @@ var workspaceSecretsDelete = cli.Command{
 func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -238,16 +235,13 @@ func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.WorkspaceSecretNewParams{}
+	params := cadenya.WorkspaceSecretNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.WorkspaceSecrets.New(
-		ctx,
-		cmd.Value("workspace-id").(string),
-		params,
-		options...,
-	)
+	_, err = client.WorkspaceSecrets.New(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -268,10 +262,6 @@ func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
 func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -291,12 +281,16 @@ func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error
 		return err
 	}
 
+	params := cadenya.WorkspaceSecretGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.WorkspaceSecrets.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 	if err != nil {
@@ -319,10 +313,6 @@ func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error
 func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -342,13 +332,14 @@ func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.WorkspaceSecretUpdateParams{}
+	params := cadenya.WorkspaceSecretUpdateParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.WorkspaceSecrets.Update(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -373,10 +364,7 @@ func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -392,7 +380,9 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.WorkspaceSecretListParams{}
+	params := cadenya.WorkspaceSecretListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -400,12 +390,7 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.WorkspaceSecrets.List(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		_, err = client.WorkspaceSecrets.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -418,12 +403,7 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	} else {
-		iter := client.WorkspaceSecrets.ListAutoPaging(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		iter := client.WorkspaceSecrets.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -441,10 +421,6 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 func handleWorkspaceSecretsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -464,10 +440,14 @@ func handleWorkspaceSecretsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.WorkspaceSecretDeleteParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.WorkspaceSecrets.Delete(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 }

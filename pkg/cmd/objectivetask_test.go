@@ -15,8 +15,8 @@ func TestObjectivesTasksRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:tasks", "retrieve",
-			"--workspace-id", "workspaceId",
-			"--objective-id", "objectiveId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
 			"--id", "id",
 		)
 	})
@@ -30,8 +30,8 @@ func TestObjectivesTasksList(t *testing.T) {
 			"--api-key", "string",
 			"objectives:tasks", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
-			"--objective-id", "objectiveId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
 			"--cursor", "cursor",
 			"--limit", "0",
 			"--sort-order", "sortOrder",

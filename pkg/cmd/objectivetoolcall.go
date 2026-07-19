@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -148,7 +148,7 @@ var objectivesToolCallsDeny = cli.Command{
 	HideHelpCommand: true,
 }
 
-var objectivesToolCallsSetContent = requestflag.WithInnerFlags(cli.Command{
+var objectivesToolCallsSetContent = cli.Command{
 	Name:    "set-content",
 	Usage:   "For bare tool calls (tool sets with no execution adapter), sets the content an\nexternal API consumer supplies for the call — used for human-in-the-loop tools\nand reverse harnesses that execute tools locally and report results back.",
 	Suggest: true,
@@ -177,30 +177,11 @@ var objectivesToolCallsSetContent = requestflag.WithInnerFlags(cli.Command{
 	},
 	Action:          handleObjectivesToolCallsSetContent,
 	HideHelpCommand: true,
-}, map[string][]requestflag.HasOuterFlag{
-	"content": {
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "content.audio",
-			InnerField: "audio",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "content.image",
-			InnerField: "image",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "content.text",
-			InnerField: "text",
-		},
-	},
-})
+}
 
 func handleObjectivesToolCallsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -224,13 +205,17 @@ func handleObjectivesToolCallsRetrieve(ctx context.Context, cmd *cli.Command) er
 		return err
 	}
 
+	params := cadenya.ObjectiveToolCallGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.ToolCalls.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		cmd.Value("tool-call-id").(string),
+		params,
 		options...,
 	)
 	if err != nil {
@@ -253,10 +238,6 @@ func handleObjectivesToolCallsRetrieve(ctx context.Context, cmd *cli.Command) er
 func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -276,7 +257,9 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 		return err
 	}
 
-	params := cadenya.ObjectiveToolCallListParams{}
+	params := cadenya.ObjectiveToolCallListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -286,7 +269,6 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Objectives.ToolCalls.List(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -305,7 +287,6 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 	} else {
 		iter := client.Objectives.ToolCalls.ListAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -327,10 +308,6 @@ func handleObjectivesToolCallsList(ctx context.Context, cmd *cli.Command) error 
 func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -354,13 +331,14 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 		return err
 	}
 
-	params := cadenya.ObjectiveToolCallApproveParams{}
+	params := cadenya.ObjectiveToolCallApproveParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.ToolCalls.Approve(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		cmd.Value("tool-call-id").(string),
 		params,
@@ -386,10 +364,6 @@ func handleObjectivesToolCallsApprove(ctx context.Context, cmd *cli.Command) err
 func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -413,13 +387,14 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 		return err
 	}
 
-	params := cadenya.ObjectiveToolCallDenyParams{}
+	params := cadenya.ObjectiveToolCallDenyParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.ToolCalls.Deny(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		cmd.Value("tool-call-id").(string),
 		params,
@@ -445,10 +420,6 @@ func handleObjectivesToolCallsDeny(ctx context.Context, cmd *cli.Command) error 
 func handleObjectivesToolCallsSetContent(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -472,13 +443,14 @@ func handleObjectivesToolCallsSetContent(ctx context.Context, cmd *cli.Command) 
 		return err
 	}
 
-	params := cadenya.ObjectiveToolCallSetContentParams{}
+	params := cadenya.ObjectiveToolCallSetContentParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.ToolCalls.SetContent(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		cmd.Value("tool-call-id").(string),
 		params,

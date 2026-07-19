@@ -15,7 +15,7 @@ on:
       - 'stl-preview-base/**'
 
 env:
-  GOPRIVATE: github.com/cadenya/cadenya-go,github.com/stainless-sdks/cadenya-go
+  GOPRIVATE: go.cadenya.com/cadenya-go,github.com/stainless-sdks/cadenya-go
 
 jobs:
   lint:

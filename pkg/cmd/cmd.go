@@ -86,6 +86,11 @@ func init() {
 				Name:    "webhook-key",
 				Sources: cli.EnvVars("CADENYA_WEBHOOK_KEY"),
 			},
+			&requestflag.Flag[string]{
+				Name:    "workspace-id",
+				Usage:   "Workspace to operate on. Fills the {workspaceId} path parameter on workspace-scoped endpoints unless overridden per request.",
+				Sources: cli.EnvVars("CADENYA_WORKSPACE_ID"),
+			},
 		},
 		Commands: []*cli.Command{
 			{

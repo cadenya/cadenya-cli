@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -373,10 +373,6 @@ var agentsSchedulesResume = cli.Command{
 func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -396,13 +392,14 @@ func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentScheduleNewParams{}
+	params := cadenya.AgentScheduleNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.New(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		params,
 		options...,
@@ -427,10 +424,6 @@ func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -454,13 +447,17 @@ func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error 
 		return err
 	}
 
+	params := cadenya.AgentScheduleGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 	if err != nil {
@@ -483,10 +480,6 @@ func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error 
 func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -510,13 +503,14 @@ func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentScheduleUpdateParams{}
+	params := cadenya.AgentScheduleUpdateParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.Update(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -542,10 +536,6 @@ func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -565,7 +555,9 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentScheduleListParams{}
+	params := cadenya.AgentScheduleListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -575,7 +567,6 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Agents.Schedules.List(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -594,7 +585,6 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Agents.Schedules.ListAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -616,10 +606,6 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -643,11 +629,15 @@ func handleAgentsSchedulesDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.AgentScheduleDeleteParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.Agents.Schedules.Delete(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 }
@@ -655,10 +645,6 @@ func handleAgentsSchedulesDelete(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesArchive(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -682,13 +668,14 @@ func handleAgentsSchedulesArchive(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentScheduleArchiveParams{}
+	params := cadenya.AgentScheduleArchiveParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.Archive(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -714,10 +701,6 @@ func handleAgentsSchedulesArchive(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesPause(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -741,13 +724,14 @@ func handleAgentsSchedulesPause(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentSchedulePauseParams{}
+	params := cadenya.AgentSchedulePauseParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.Pause(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -773,10 +757,6 @@ func handleAgentsSchedulesPause(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesResume(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -800,13 +780,14 @@ func handleAgentsSchedulesResume(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentScheduleResumeParams{}
+	params := cadenya.AgentScheduleResumeParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.Resume(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		params,

@@ -15,7 +15,7 @@ func TestSearchSearchToolsOrToolSets(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"search", "search-tools-or-tool-sets",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--query", "query",
 		)
 	})

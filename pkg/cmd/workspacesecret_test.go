@@ -16,7 +16,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "create",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 		)
@@ -31,7 +31,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "create",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -53,7 +53,7 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"workspace-secrets", "create",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 		)
 	})
 }
@@ -65,8 +65,8 @@ func TestWorkspaceSecretsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "retrieve",
-			"--workspace-id", "workspaceId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
 		)
 	})
 }
@@ -78,8 +78,8 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "update",
-			"--workspace-id", "workspaceId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 			"--update-mask", "updateMask",
@@ -95,8 +95,8 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "update",
-			"--workspace-id", "workspaceId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -120,8 +120,8 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"workspace-secrets", "update",
-			"--workspace-id", "workspaceId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
 		)
 	})
 }
@@ -134,7 +134,7 @@ func TestWorkspaceSecretsList(t *testing.T) {
 			"--api-key", "string",
 			"workspace-secrets", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -153,8 +153,8 @@ func TestWorkspaceSecretsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-secrets", "delete",
-			"--workspace-id", "workspaceId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
 		)
 	})
 }

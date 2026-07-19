@@ -16,10 +16,10 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "create",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, firstUserMessage: firstUserMessage, firstUserMessageData: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, systemPromptData: {}, variationId: variationId}",
+			"--spec", "{schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, firstUserMessage: firstUserMessage, firstUserMessageData: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, systemPromptData: {}, variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP}",
 		)
 	})
 
@@ -32,8 +32,8 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "create",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -42,7 +42,7 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			"--spec.first-user-message-data", "{}",
 			"--spec.overlap-policy", "OVERLAP_POLICY_UNSPECIFIED",
 			"--spec.system-prompt-data", "{}",
-			"--spec.variation-id", "variationId",
+			"--spec.variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
 
@@ -90,13 +90,13 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			"  firstUserMessageData: {}\n" +
 			"  overlapPolicy: OVERLAP_POLICY_UNSPECIFIED\n" +
 			"  systemPromptData: {}\n" +
-			"  variationId: variationId\n")
+			"  variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"agents:schedules", "create",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 		)
 	})
 }
@@ -108,9 +108,9 @@ func TestAgentsSchedulesRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "retrieve",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 		)
 	})
 }
@@ -122,11 +122,11 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "update",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, firstUserMessage: firstUserMessage, firstUserMessageData: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, systemPromptData: {}, variationId: variationId}",
+			"--spec", "{schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, firstUserMessage: firstUserMessage, firstUserMessageData: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, systemPromptData: {}, variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -140,9 +140,9 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "update",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -151,7 +151,7 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			"--spec.first-user-message-data", "{}",
 			"--spec.overlap-policy", "OVERLAP_POLICY_UNSPECIFIED",
 			"--spec.system-prompt-data", "{}",
-			"--spec.variation-id", "variationId",
+			"--spec.variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -200,15 +200,15 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			"  firstUserMessageData: {}\n" +
 			"  overlapPolicy: OVERLAP_POLICY_UNSPECIFIED\n" +
 			"  systemPromptData: {}\n" +
-			"  variationId: variationId\n" +
+			"  variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"agents:schedules", "update",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 		)
 	})
 }
@@ -221,8 +221,8 @@ func TestAgentsSchedulesList(t *testing.T) {
 			"--api-key", "string",
 			"agents:schedules", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -241,9 +241,9 @@ func TestAgentsSchedulesDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "delete",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 		)
 	})
 }
@@ -255,9 +255,9 @@ func TestAgentsSchedulesArchive(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "archive",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 		)
 	})
 }
@@ -269,9 +269,9 @@ func TestAgentsSchedulesPause(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "pause",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 		)
 	})
 }
@@ -283,9 +283,9 @@ func TestAgentsSchedulesResume(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "resume",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 		)
 	})
 }

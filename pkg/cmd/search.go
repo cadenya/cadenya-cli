@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -26,6 +26,7 @@ var searchSearchToolsOrToolSets = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:      "query",
+			Required:  true,
 			QueryPath: "query",
 		},
 	},
@@ -36,10 +37,7 @@ var searchSearchToolsOrToolSets = cli.Command{
 func handleSearchSearchToolsOrToolSets(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -55,16 +53,13 @@ func handleSearchSearchToolsOrToolSets(ctx context.Context, cmd *cli.Command) er
 		return err
 	}
 
-	params := cadenya.SearchSearchToolsOrToolSetsParams{}
+	params := cadenya.SearchSearchToolsOrToolSetsParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Search.SearchToolsOrToolSets(
-		ctx,
-		cmd.Value("workspace-id").(string),
-		params,
-		options...,
-	)
+	_, err = client.Search.SearchToolsOrToolSets(ctx, params, options...)
 	if err != nil {
 		return err
 	}
