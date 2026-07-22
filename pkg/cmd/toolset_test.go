@@ -263,6 +263,24 @@ func TestToolSetsListEvents(t *testing.T) {
 	})
 }
 
+func TestToolSetsListUsage(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"tool-sets", "list-usage",
+			"--max-items", "10",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--cursor", "cursor",
+			"--limit", "0",
+			"--sort-order", "sortOrder",
+			"--tool-id", "tool_01HXKD2E5NQM3T9AYWCFWVYY9K",
+		)
+	})
+}
+
 func TestToolSetsUnarchive(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {

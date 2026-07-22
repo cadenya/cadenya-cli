@@ -317,6 +317,50 @@ var toolSetsListEvents = cli.Command{
 	HideHelpCommand: true,
 }
 
+var toolSetsListUsage = cli.Command{
+	Name:    "list-usage",
+	Usage:   "Lists the agent variations (with their parent agent) that have the tool set\nassigned. Pass tool_id to instead list variations with a direct assignment of\nthat individual tool; variations that receive the tool implicitly through a\nwhole-set assignment are not included in that filtered view.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "cursor",
+			Usage:     "Pagination cursor from previous response",
+			QueryPath: "cursor",
+		},
+		&requestflag.Flag[int64]{
+			Name:      "limit",
+			Usage:     "Maximum number of results to return",
+			QueryPath: "limit",
+		},
+		&requestflag.Flag[string]{
+			Name:      "sort-order",
+			Usage:     "Sort order for results (asc or desc by assignment creation time)",
+			QueryPath: "sortOrder",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-id",
+			Usage:     "When set, lists only variations with a direct assignment of this\n individual tool. When unset, lists variations assigned the whole tool\n set. The tool must belong to the tool set.",
+			QueryPath: "toolId",
+		},
+		&requestflag.Flag[int64]{
+			Name:  "max-items",
+			Usage: "The maximum number of items to return (use -1 for unlimited).",
+		},
+	},
+	Action:          handleToolSetsListUsage,
+	HideHelpCommand: true,
+}
+
 var toolSetsUnarchive = cli.Command{
 	Name:    "unarchive",
 	Usage:   "Transitions an archived tool set back to STATE_ACTIVE. Managed tool sets resume\nsyncing on their next cycle and their tools become available to objectives\nagain.",
@@ -740,6 +784,76 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
 			Title:          "tool-sets list-events",
+			Transform:      transform,
+		})
+	}
+}
+
+func handleToolSetsListUsage(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
+		cmd.Set("tool-set-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ToolSetListUsageParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	if format == "raw" {
+		var res []byte
+		options = append(options, option.WithResponseBodyInto(&res))
+		_, err = client.ToolSets.ListUsage(
+			ctx,
+			cmd.Value("tool-set-id").(string),
+			params,
+			options...,
+		)
+		if err != nil {
+			return err
+		}
+		obj := gjson.ParseBytes(res)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "tool-sets list-usage",
+			Transform:      transform,
+		})
+	} else {
+		iter := client.ToolSets.ListUsageAutoPaging(
+			ctx,
+			cmd.Value("tool-set-id").(string),
+			params,
+			options...,
+		)
+		maxItems := int64(-1)
+		if cmd.IsSet("max-items") {
+			maxItems = cmd.Value("max-items").(int64)
+		}
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "tool-sets list-usage",
 			Transform:      transform,
 		})
 	}

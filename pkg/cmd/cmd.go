@@ -308,6 +308,7 @@ func init() {
 					&toolSetsArchive,
 					&toolSetsGetOpenAPISpec,
 					&toolSetsListEvents,
+					&toolSetsListUsage,
 					&toolSetsUnarchive,
 				},
 			},
