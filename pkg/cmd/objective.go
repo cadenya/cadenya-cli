@@ -249,6 +249,16 @@ var objectivesList = cli.Command{
 			Usage:     "Filter to objectives associated with a tenant. Accepts the canonical\n `tenant_…` form or the `external_id:<value>` form.",
 			QueryPath: "tenantId",
 		},
+		&requestflag.Flag[string]{
+			Name:      "widget-id",
+			Usage:     "Filter to objectives whose conversation ran through a widget. Accepts\n the canonical `wgt_…` form or the `external_id:<value>` form.",
+			QueryPath: "widgetId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "widget-session-id",
+			Usage:     "Filter to objectives created by a specific widget session.",
+			QueryPath: "widgetSessionId",
+		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
 			Usage: "The maximum number of items to return (use -1 for unlimited).",

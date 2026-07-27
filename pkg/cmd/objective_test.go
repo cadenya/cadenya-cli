@@ -135,6 +135,8 @@ func TestObjectivesList(t *testing.T) {
 			"--state", "STATE_UNSPECIFIED",
 			"--subject-id", "subjectId",
 			"--tenant-id", "tenantId",
+			"--widget-id", "widgetId",
+			"--widget-session-id", "widgetSessionId",
 		)
 	})
 }
