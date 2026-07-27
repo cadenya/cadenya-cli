@@ -24,7 +24,10 @@ func TestObjectivesCreate(t *testing.T) {
 			"--first-user-message-data", "{foo: bar}",
 			"--memory-cascade", "{memoryLayerId: memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH, memoryEntryId: mementry_01HXKD2E5NQM3T9AYWCF5E52Z0}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
+			"--pinned-parameters", "{foo: string}",
 			"--secret", "{name: name, value: value}",
+			"--subject", "{id: customer-user-42, name: Jane Doe}",
+			"--tenant", "{id: acme-corp, name: Acme Corp}",
 			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
@@ -48,8 +51,13 @@ func TestObjectivesCreate(t *testing.T) {
 			"--memory-cascade.memory-entry-id", "mementry_01HXKD2E5NQM3T9AYWCF5E52Z0",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
+			"--pinned-parameters", "{foo: string}",
 			"--secret.name", "name",
 			"--secret.value", "value",
+			"--subject.id", "customer-user-42",
+			"--subject.name", "Jane Doe",
+			"--tenant.id", "acme-corp",
+			"--tenant.name", "Acme Corp",
 			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
@@ -72,9 +80,17 @@ func TestObjectivesCreate(t *testing.T) {
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
+			"pinnedParameters:\n" +
+			"  foo: string\n" +
 			"secrets:\n" +
 			"  - name: name\n" +
 			"    value: value\n" +
+			"subject:\n" +
+			"  id: customer-user-42\n" +
+			"  name: Jane Doe\n" +
+			"tenant:\n" +
+			"  id: acme-corp\n" +
+			"  name: Acme Corp\n" +
 			"variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -117,6 +133,8 @@ func TestObjectivesList(t *testing.T) {
 			"--profile-id", "profile_01HXKD2E5NQM3T9AYWCFS0AP08",
 			"--sort-order", "sortOrder",
 			"--state", "STATE_UNSPECIFIED",
+			"--subject-id", "subjectId",
+			"--tenant-id", "tenantId",
 		)
 	})
 }

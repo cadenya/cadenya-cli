@@ -415,6 +415,33 @@ func init() {
 				},
 			},
 			{
+				Name:     "widgets",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&widgetsCreate,
+					&widgetsRetrieve,
+					&widgetsUpdate,
+					&widgetsList,
+					&widgetsDelete,
+					&widgetsArchive,
+					&widgetsUnarchive,
+				},
+			},
+			{
+				Name:     "widget-sessions",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&widgetSessionsCreate,
+					&widgetSessionsRetrieve,
+					&widgetSessionsList,
+					&widgetSessionsDelete,
+					&widgetSessionsDeleteTenant,
+					&widgetSessionsRevoke,
+				},
+			},
+			{
 				Name:            "@manpages",
 				Usage:           "Generate documentation for 'man'",
 				UsageText:       "cadenya @manpages [-o cadenya.1] [--gzip]",

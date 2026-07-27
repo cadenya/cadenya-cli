@@ -60,10 +60,25 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "CreateOperationMetadata contains the user-provided fields for creating\n an operation. Read-only fields (id, account_id, workspace_id, created_at, profile_id)\n are excluded since they are set by the server.",
 			BodyPath: "metadata",
 		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "pinned-parameters",
+			Usage:    "Parameters forced onto this objective's tool calls. A pinned parameter\n is an overlay on a tool's JSON schema: the parameter is removed from\n what the LLM sees, and its value is always overwritten server-side with\n the pinned value — the model cannot choose a different value for it.",
+			BodyPath: "pinnedParameters",
+		},
 		&requestflag.Flag[[]map[string]any]{
 			Name:     "secret",
 			Usage:    "Secrets that can be used in the headers for tool calls using the secret interpolation format.",
 			BodyPath: "secrets",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "subject",
+			Usage:    "SubjectAssertion identifies a person within a tenant in the customer's own\n namespace — typically their user id. Asserting a subject upserts the\n subject record under the asserted tenant and associates the created\n resource with it. A subject assertion is only valid alongside a tenant\n assertion: subject identifiers are scoped to their tenant.",
+			BodyPath: "subject",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "tenant",
+			Usage:    "TenantAssertion identifies a tenant in the customer's own namespace — their\n org, company, or team identifier for an end user. Asserting a tenant\n upserts the tenant record in the workspace (keyed on `id` as the tenant's\n external_id) and associates the created resource with it.",
+			BodyPath: "tenant",
 		},
 		&requestflag.Flag[string]{
 			Name:     "variation-id",
@@ -117,6 +132,30 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 		&requestflag.InnerFlag[string]{
 			Name:       "secret.value",
 			InnerField: "value",
+		},
+	},
+	"subject": {
+		&requestflag.InnerFlag[string]{
+			Name:       "subject.id",
+			Usage:      "The subject identifier in the customer's namespace (e.g. their user id).\n Stored as the subject record's external_id; unique within the tenant.",
+			InnerField: "id",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "subject.name",
+			Usage:      "Optional human-readable name for the subject. Updates the subject\n record's name on every assertion that provides it.",
+			InnerField: "name",
+		},
+	},
+	"tenant": {
+		&requestflag.InnerFlag[string]{
+			Name:       "tenant.id",
+			Usage:      "The tenant identifier in the customer's namespace (e.g. \"acme-corp\").\n Stored as the tenant record's external_id; stable across requests.",
+			InnerField: "id",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "tenant.name",
+			Usage:      "Optional human-readable name for the tenant. Updates the tenant record's\n name on every assertion that provides it.",
+			InnerField: "name",
 		},
 	},
 })
@@ -199,6 +238,16 @@ var objectivesList = cli.Command{
 			Name:      "state",
 			Usage:     "Filter by state",
 			QueryPath: "state",
+		},
+		&requestflag.Flag[string]{
+			Name:      "subject-id",
+			Usage:     "Filter to objectives associated with a subject. Accepts the canonical\n `subj_…` form or the `external_id:<value>` form; the external_id form is\n scoped within a tenant and requires `tenant_id` to also be set.",
+			QueryPath: "subjectId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tenant-id",
+			Usage:     "Filter to objectives associated with a tenant. Accepts the canonical\n `tenant_…` form or the `external_id:<value>` form.",
+			QueryPath: "tenantId",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
