@@ -429,6 +429,24 @@ func init() {
 				},
 			},
 			{
+				Name:     "tenants",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&tenantsRetrieve,
+					&tenantsList,
+					&tenantsDelete,
+				},
+			},
+			{
+				Name:     "tenants:subjects",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&tenantsSubjectsList,
+				},
+			},
+			{
 				Name:     "widget-sessions",
 				Category: "API RESOURCE",
 				Suggest:  true,
