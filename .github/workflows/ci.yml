@@ -15,7 +15,7 @@ on:
       - 'stl-preview-base/**'
 
 env:
-  GOPRIVATE: github.com/cadenya/cadenya-go,github.com/stainless-sdks/cadenya-go
+  GOPRIVATE: github.com/cadenya/cadenya-go,github.com/cadenya/cadenya-go-staging,github.com/stainless-sdks/cadenya-go
 
 jobs:
   lint:
@@ -26,6 +26,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # The staging Go SDK repo is private; setup-go's accessibility check and any
+      # module fetch against it need a token (GO_REPO_READ_TOKEN: Contents:Read on
+      # cadenya/cadenya-go-staging). Inert on the public production repo.
+      - name: Authenticate git for the private Go SDK repo
+        if: github.repository == 'cadenya/cadenya-cli-staging'
+        env:
+          GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
+        run: |
+          git config --global "url.https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
 
       - uses: ./.github/actions/setup-go
         with:
@@ -52,6 +62,16 @@ jobs:
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.fork) && (github.event_name != 'push' || github.event.head_commit.message != 'codegen metadata')
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # The staging Go SDK repo is private; setup-go's accessibility check and any
+      # module fetch against it need a token (GO_REPO_READ_TOKEN: Contents:Read on
+      # cadenya/cadenya-go-staging). Inert on the public production repo.
+      - name: Authenticate git for the private Go SDK repo
+        if: github.repository == 'cadenya/cadenya-cli-staging'
+        env:
+          GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
+        run: |
+          git config --global "url.https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
 
       - uses: ./.github/actions/setup-go
         with:
@@ -99,6 +119,16 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # The staging Go SDK repo is private; setup-go's accessibility check and any
+      # module fetch against it need a token (GO_REPO_READ_TOKEN: Contents:Read on
+      # cadenya/cadenya-go-staging). Inert on the public production repo.
+      - name: Authenticate git for the private Go SDK repo
+        if: github.repository == 'cadenya/cadenya-cli-staging'
+        env:
+          GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
+        run: |
+          git config --global "url.https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
 
       - uses: ./.github/actions/setup-go
         with:
