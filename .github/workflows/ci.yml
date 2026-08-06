@@ -44,11 +44,7 @@ jobs:
           # Verify from a neutral dir and from the checkout (setup-go checks in-repo);
           # surface git's stderr on failure (the token is masked by Actions).
           if ! err=$(git -C "${RUNNER_TEMP}" ls-remote --exit-code "https://github.com/cadenya/cadenya-go-staging" 2>&1 >/dev/null); then
-            echo "::error::neutral-dir go-staging fetch failed: ${err}"
-            exit 1
-          fi
-          if ! err=$(git ls-remote --exit-code "https://github.com/cadenya/cadenya-go-staging" 2>&1 >/dev/null); then
-            echo "::error::in-repo go-staging fetch failed (persisted credential still interfering): ${err}"
+            echo "::error::go-staging fetch failed: ${err}"
             exit 1
           fi
           echo "go-staging auth OK"
@@ -96,11 +92,7 @@ jobs:
           # Verify from a neutral dir and from the checkout (setup-go checks in-repo);
           # surface git's stderr on failure (the token is masked by Actions).
           if ! err=$(git -C "${RUNNER_TEMP}" ls-remote --exit-code "https://github.com/cadenya/cadenya-go-staging" 2>&1 >/dev/null); then
-            echo "::error::neutral-dir go-staging fetch failed: ${err}"
-            exit 1
-          fi
-          if ! err=$(git ls-remote --exit-code "https://github.com/cadenya/cadenya-go-staging" 2>&1 >/dev/null); then
-            echo "::error::in-repo go-staging fetch failed (persisted credential still interfering): ${err}"
+            echo "::error::go-staging fetch failed: ${err}"
             exit 1
           fi
           echo "go-staging auth OK"
@@ -169,11 +161,7 @@ jobs:
           # Verify from a neutral dir and from the checkout (setup-go checks in-repo);
           # surface git's stderr on failure (the token is masked by Actions).
           if ! err=$(git -C "${RUNNER_TEMP}" ls-remote --exit-code "https://github.com/cadenya/cadenya-go-staging" 2>&1 >/dev/null); then
-            echo "::error::neutral-dir go-staging fetch failed: ${err}"
-            exit 1
-          fi
-          if ! err=$(git ls-remote --exit-code "https://github.com/cadenya/cadenya-go-staging" 2>&1 >/dev/null); then
-            echo "::error::in-repo go-staging fetch failed (persisted credential still interfering): ${err}"
+            echo "::error::go-staging fetch failed: ${err}"
             exit 1
           fi
           echo "go-staging auth OK"

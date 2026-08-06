@@ -15,7 +15,10 @@ runs:
       env:
         GO_MODULE_REPO: ${{ github.repository == 'cadenya/cadenya-cli-staging' && 'cadenya/cadenya-go-staging' || 'cadenya/cadenya-go' }}
       run: |
-        if ! git ls-remote --exit-code "https://github.com/${GO_MODULE_REPO}" >/dev/null 2>&1; then
+        # Check from a neutral dir: inside the checkout, actions/checkout's persisted
+        # credential outranks the go-staging insteadOf auth and 404s on private repos.
+        # go's own module fetches run outside the checkout, so they are unaffected.
+        if ! git -C "${RUNNER_TEMP:-/tmp}" ls-remote --exit-code "https://github.com/${GO_MODULE_REPO}" >/dev/null 2>&1; then
           echo "::error::Cannot access the Go SDK module at https://github.com/${GO_MODULE_REPO}."
           echo "::error::If the repo is private, uncomment the 'Authenticate git for the private Go SDK repo' step in .github/workflows/ci.yml and add a GO_REPO_READ_TOKEN secret to this repo."
           exit 1
