@@ -16,8 +16,8 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "create",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {inactivityTimeout: '-160513s', maxSubObjectives: 0, maxToolCalls: 0}, description: description, firstUserMessageTemplate: firstUserMessageTemplate, modelConfig: {modelId: claude/opus-4.6, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0}, systemPromptTemplate: systemPromptTemplate}",
 		)
@@ -32,8 +32,8 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "create",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -80,8 +80,8 @@ func TestAgentsVariationsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents:variations", "create",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 		)
 	})
 }
@@ -93,9 +93,9 @@ func TestAgentsVariationsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "retrieve",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
 }
@@ -107,9 +107,9 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "update",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {inactivityTimeout: '-160513s', maxSubObjectives: 0, maxToolCalls: 0}, description: description, firstUserMessageTemplate: firstUserMessageTemplate, modelConfig: {modelId: claude/opus-4.6, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0}, systemPromptTemplate: systemPromptTemplate}",
 			"--update-mask", "updateMask",
@@ -125,9 +125,9 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "update",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -176,9 +176,9 @@ func TestAgentsVariationsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents:variations", "update",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
 }
@@ -191,8 +191,8 @@ func TestAgentsVariationsList(t *testing.T) {
 			"--api-key", "string",
 			"agents:variations", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -209,9 +209,9 @@ func TestAgentsVariationsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "delete",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
 }
@@ -223,30 +223,26 @@ func TestAgentsVariationsAddAssignment(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "add-assignment",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--variation-id", "variationId",
-			"--sub-agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 			"--tool-id", "tool_01HXKD2E5NQM3T9AYWCFWVYY9K",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
-			"--type", "type",
+			"--type", "toolId",
 		)
 	})
 
 	t.Run("piping data", func(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
-			"subAgentId: agent_01HXKD2E5NQM3T9AYWCFMGWT9Y\n" +
 			"toolId: tool_01HXKD2E5NQM3T9AYWCFWVYY9K\n" +
-			"toolSetId: toolset_01HXKD2E5NQM3T9AYWCFNRMN74\n" +
-			"type: type\n")
+			"type: toolId\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"agents:variations", "add-assignment",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--variation-id", "variationId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
 }
@@ -258,9 +254,9 @@ func TestAgentsVariationsAddMemoryLayer(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "add-memory-layer",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--variation-id", "variationId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
 			"--position", "0",
 		)
@@ -275,9 +271,9 @@ func TestAgentsVariationsAddMemoryLayer(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents:variations", "add-memory-layer",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--variation-id", "variationId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
 }
@@ -289,10 +285,10 @@ func TestAgentsVariationsRemoveAssignment(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "remove-assignment",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--variation-id", "variationId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
+			"--id", "avt_01HXKD2E5NQM3T9AYWCFJE6K89",
 		)
 	})
 }
@@ -304,10 +300,10 @@ func TestAgentsVariationsRemoveMemoryLayer(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "remove-memory-layer",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--variation-id", "variationId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
+			"--id", "avml_01HXKD2E5NQM3T9AYWCFX8AF59",
 		)
 	})
 }
@@ -319,10 +315,10 @@ func TestAgentsVariationsUpdateMemoryLayer(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:variations", "update-memory-layer",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--variation-id", "variationId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
+			"--id", "avml_01HXKD2E5NQM3T9AYWCFX8AF59",
 			"--position", "0",
 		)
 	})
@@ -334,10 +330,10 @@ func TestAgentsVariationsUpdateMemoryLayer(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents:variations", "update-memory-layer",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--variation-id", "variationId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
+			"--id", "avml_01HXKD2E5NQM3T9AYWCFX8AF59",
 		)
 	})
 }

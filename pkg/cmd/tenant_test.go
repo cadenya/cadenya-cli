@@ -15,7 +15,7 @@ func TestTenantsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tenants", "retrieve",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--id", "id",
 			"--include-info=true",
 		)
@@ -30,7 +30,7 @@ func TestTenantsList(t *testing.T) {
 			"--api-key", "string",
 			"tenants", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -48,7 +48,7 @@ func TestTenantsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tenants", "delete",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--id", "id",
 		)
 	})

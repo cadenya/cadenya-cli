@@ -314,21 +314,22 @@ var agentsVariationsAddAssignment = cli.Command{
 			PathParam: "variationId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "sub-agent-id",
-			BodyPath: "subAgentId",
-		},
-		&requestflag.Flag[string]{
 			Name:     "tool-id",
 			BodyPath: "toolId",
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    `Allowed values: "toolId".`,
+			Required: true,
+			BodyPath: "type",
 		},
 		&requestflag.Flag[string]{
 			Name:     "tool-set-id",
 			BodyPath: "toolSetId",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "The JSON name of the variant set in `target` (e.g. \"toolId\"). Required\n on input; drives the discriminated union in the generated OpenAPI.",
-			BodyPath: "type",
+			Name:     "sub-agent-id",
+			BodyPath: "subAgentId",
 		},
 	},
 	Action:          handleAgentsVariationsAddAssignment,

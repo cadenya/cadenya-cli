@@ -26,6 +26,7 @@ var searchSearchToolsOrToolSets = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:      "query",
+			Required:  true,
 			QueryPath: "query",
 		},
 	},

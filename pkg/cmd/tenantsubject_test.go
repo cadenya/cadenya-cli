@@ -16,7 +16,7 @@ func TestTenantsSubjectsList(t *testing.T) {
 			"--api-key", "string",
 			"tenants:subjects", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--tenant-id", "tenantId",
 			"--cursor", "cursor",
 			"--include-info=true",

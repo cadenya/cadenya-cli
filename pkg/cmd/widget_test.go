@@ -16,7 +16,7 @@ func TestWidgetsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widgets", "create",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{agentId: agent_01HXKD2E5NQM3T9AYWCFMGWT9Y, originAllowlist: [string], variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP}",
 		)
@@ -31,7 +31,7 @@ func TestWidgetsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widgets", "create",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -58,7 +58,7 @@ func TestWidgetsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"widgets", "create",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 		)
 	})
 }
@@ -70,7 +70,7 @@ func TestWidgetsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widgets", "retrieve",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--id", "id",
 		)
 	})
@@ -83,7 +83,7 @@ func TestWidgetsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widgets", "update",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{agentId: agent_01HXKD2E5NQM3T9AYWCFMGWT9Y, originAllowlist: [string], variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP}",
@@ -100,7 +100,7 @@ func TestWidgetsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widgets", "update",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
@@ -130,7 +130,7 @@ func TestWidgetsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"widgets", "update",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--id", "id",
 		)
 	})
@@ -144,8 +144,8 @@ func TestWidgetsList(t *testing.T) {
 			"--api-key", "string",
 			"widgets", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -162,7 +162,7 @@ func TestWidgetsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widgets", "delete",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--id", "id",
 		)
 	})
@@ -175,7 +175,7 @@ func TestWidgetsArchive(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widgets", "archive",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--id", "id",
 		)
 	})
@@ -188,7 +188,7 @@ func TestWidgetsUnarchive(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widgets", "unarchive",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--id", "id",
 		)
 	})
