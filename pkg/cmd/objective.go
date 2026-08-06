@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -30,14 +30,55 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "agentId",
 		},
 		&requestflag.Flag[map[string]any]{
-			Name:     "data",
+			Name:     "system-prompt-data",
+			Usage:    "Arbitrary data rendered into the selected variation's system_prompt_template\n (liquid) to produce the objective's system prompt. If the agent has a\n system_prompt_data_schema, this must satisfy it.",
 			Required: true,
-			BodyPath: "data",
+			BodyPath: "systemPromptData",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "episodic-memory",
+			Usage:    "Episodic is used to configure the episodic memory for the objective",
+			BodyPath: "episodicMemory",
+		},
+		&requestflag.Flag[string]{
+			Name:     "first-user-message",
+			Usage:    "Optional explicit first user message for the LLM chat history. When not set,\n the selected variation's first_user_message_template is rendered with\n first_user_message_data instead. If neither this field nor a\n first_user_message_template is present, the request is rejected with InvalidArgument.",
+			BodyPath: "firstUserMessage",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "first-user-message-data",
+			Usage:    "Arbitrary data rendered into the selected variation's first_user_message_template\n (liquid) to produce the first user message. Separate from `system_prompt_data`,\n which renders the system prompt template.",
+			BodyPath: "firstUserMessageData",
+		},
+		&requestflag.Flag[[]map[string]any]{
+			Name:     "memory-cascade",
+			Usage:    "Memory layers/entries layered over the baseline cascade inherited\n from the selected variation — element-level rules over inherited\n styles, in CSS terms.\n\n Array order is resolution order: EARLIER elements are more specific\n and are consulted first. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically based on the episodic key.\n\n Size cap: the TOTAL effective cascade (this field + the variation's\n memory layer assignments) must not exceed 10 entries. A request\n that would produce a larger cascade is rejected with\n InvalidArgument.",
+			BodyPath: "memoryCascade",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
 			Usage:    "CreateOperationMetadata contains the user-provided fields for creating\n an operation. Read-only fields (id, account_id, workspace_id, created_at, profile_id)\n are excluded since they are set by the server.",
 			BodyPath: "metadata",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "pinned-parameters",
+			Usage:    "Parameters forced onto this objective's tool calls. A pinned parameter\n is an overlay on a tool's JSON schema: the parameter is removed from\n what the LLM sees, and its value is always overwritten server-side with\n the pinned value — the model cannot choose a different value for it.",
+			BodyPath: "pinnedParameters",
+		},
+		&requestflag.Flag[[]map[string]any]{
+			Name:     "secret",
+			Usage:    "Secrets that can be used in the headers for tool calls using the secret interpolation format.",
+			BodyPath: "secrets",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "subject",
+			Usage:    "SubjectAssertion identifies a person within a tenant in the customer's own\n namespace — typically their user id. Asserting a subject upserts the\n subject record under the asserted tenant and associates the created\n resource with it. A subject assertion is only valid alongside a tenant\n assertion: subject identifiers are scoped to their tenant.",
+			BodyPath: "subject",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "tenant",
+			Usage:    "TenantAssertion identifies a tenant in the customer's own namespace — their\n org, company, or team identifier for an end user. Asserting a tenant\n upserts the tenant record in the workspace (keyed on `id` as the tenant's\n external_id) and associates the created resource with it.",
+			BodyPath: "tenant",
 		},
 		&requestflag.Flag[string]{
 			Name:     "variation-id",
@@ -48,61 +89,27 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 	Action:          handleObjectivesCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
-	"data": {
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.agent",
-			Usage:      "Agent resource",
-			InnerField: "agent",
-		},
-		&requestflag.InnerFlag[any]{
-			Name:       "data.data",
-			Usage:      "Represents a dynamically typed value which can be either null, a number, a string, a boolean, a recursive struct value, or a list of values.",
-			InnerField: "data",
+	"episodic-memory": {
+		&requestflag.InnerFlag[string]{
+			Name:       "episodic-memory.key",
+			Usage:      "The caller-supplied episodic key. Objectives created with the same key\n (for the same agent) share one episodic memory layer.",
+			InnerField: "key",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "data.initial-message",
-			Usage:      "The initial message sent to the agent. This becomes the first user message in the LLM chat history.",
-			InnerField: "initialMessage",
+			Name:       "episodic-memory.memory-layer-id",
+			Usage:      "The episodic memory layer resolved (created or reused) for this\n objective's key. Populated by the system at objective creation.",
+			InnerField: "memoryLayerId",
 		},
-		&requestflag.InnerFlag[[]map[string]any]{
-			Name:       "data.memory-stack",
-			Usage:      "Memory layers/entries to push onto this objective's memory stack on\n top of the baseline stack inherited from the selected variation.\n\n Array order is push order: the first element sits lower in the\n objective's contribution to the stack; the LAST element ends up on\n top of the effective stack. Entries pinned via memory_entry_id behave\n as single-entry layers at their position.\n\n System-managed layers (e.g., episodic) cannot be referenced here;\n they attach themselves automatically based on episodic_key.\n\n Stack size cap: the TOTAL effective stack (variation's memory layers\n + this field) must not exceed 10 entries. A request that would\n produce an effective stack larger than 10 is rejected with\n InvalidArgument.",
-			InnerField: "memoryStack",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.output",
-			Usage:      "The output of the objective, populated when the objective completes. Will match the schema of output_json_schema or output_json_inferred.",
-			InnerField: "output",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.output-definition",
-			Usage:      "Snapshot of the agent spec's output_definition at objective creation time.\n When present, the objective will run an extraction step after the LLM finishes.",
-			InnerField: "outputDefinition",
+	},
+	"memory-cascade": {
+		&requestflag.InnerFlag[string]{
+			Name:       "memory-cascade.memory-layer-id",
+			InnerField: "memoryLayerId",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "data.parent-objective-id",
-			Usage:      "A parent objective means the objective was spawned off using a separate agent to complete an objective",
-			InnerField: "parentObjectiveId",
-		},
-		&requestflag.InnerFlag[[]map[string]any]{
-			Name:       "data.secrets",
-			Usage:      "Secrets that can be used in the headers for tool calls using the secret interpolation format.",
-			InnerField: "secrets",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "data.source-schedule-id",
-			Usage:      "ID of the AgentSchedule that produced this objective, when applicable.\n Populated when the objective is created from a schedule fire; empty when\n the objective was created via CreateObjective directly.",
-			InnerField: "sourceScheduleId",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "data.system-prompt",
-			Usage:      "system_prompt is read-only, derived from the selected variation's prompt",
-			InnerField: "systemPrompt",
-		},
-		&requestflag.InnerFlag[map[string]any]{
-			Name:       "data.variation",
-			Usage:      "AgentVariation resource",
-			InnerField: "variation",
+			Name:       "memory-cascade.memory-entry-id",
+			Usage:      "When set, inserts only this entry from memory_layer_id into the cascade —\n behaves as a single-entry layer (only this key resolves at this\n position). The entry must belong to memory_layer_id; mismatches are\n rejected with InvalidArgument.",
+			InnerField: "memoryEntryId",
 		},
 	},
 	"metadata": {
@@ -113,8 +120,42 @@ var objectivesCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "metadata.labels",
-			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"priority\": \"high\", \"source\": \"api\", \"workflow\": \"onboarding\"}",
+			Usage:      "Key-value pairs for categorization and filtering. Values are 0-63\n alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys\n follow the same shape and additionally accept an optional DNS-subdomain\n prefix (e.g. \"cadenya.com/\") of at most 253 characters.\n Examples: {\"priority\": \"high\", \"source\": \"api\", \"workflow\": \"onboarding\"}",
 			InnerField: "labels",
+		},
+	},
+	"secret": {
+		&requestflag.InnerFlag[string]{
+			Name:       "secret.name",
+			InnerField: "name",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "secret.value",
+			InnerField: "value",
+		},
+	},
+	"subject": {
+		&requestflag.InnerFlag[string]{
+			Name:       "subject.id",
+			Usage:      "The subject identifier in the customer's namespace (e.g. their user id).\n Stored as the subject record's external_id; unique within the tenant.",
+			InnerField: "id",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "subject.name",
+			Usage:      "Optional human-readable name for the subject. Updates the subject\n record's name on every assertion that provides it.",
+			InnerField: "name",
+		},
+	},
+	"tenant": {
+		&requestflag.InnerFlag[string]{
+			Name:       "tenant.id",
+			Usage:      "The tenant identifier in the customer's namespace (e.g. \"acme-corp\").\n Stored as the tenant record's external_id; stable across requests.",
+			InnerField: "id",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "tenant.name",
+			Usage:      "Optional human-readable name for the tenant. Updates the tenant record's\n name on every assertion that provides it.",
+			InnerField: "name",
 		},
 	},
 })
@@ -169,6 +210,11 @@ var objectivesList = cli.Command{
 			Usage:     "When set to true you may use more of your alloted API rate-limit",
 			QueryPath: "includeInfo",
 		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return",
@@ -192,6 +238,26 @@ var objectivesList = cli.Command{
 			Name:      "state",
 			Usage:     "Filter by state",
 			QueryPath: "state",
+		},
+		&requestflag.Flag[string]{
+			Name:      "subject-id",
+			Usage:     "Filter to objectives associated with a subject. Accepts the canonical\n `subj_…` form or the `external_id:<value>` form; the external_id form is\n scoped within a tenant and requires `tenant_id` to also be set.",
+			QueryPath: "subjectId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tenant-id",
+			Usage:     "Filter to objectives associated with a tenant. Accepts the canonical\n `tenant_…` form or the `external_id:<value>` form.",
+			QueryPath: "tenantId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "widget-id",
+			Usage:     "Filter to objectives whose conversation ran through a widget. Accepts\n the canonical `wgt_…` form or the `external_id:<value>` form.",
+			QueryPath: "widgetId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "widget-session-id",
+			Usage:     "Filter to objectives created by a specific widget session.",
+			QueryPath: "widgetSessionId",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
@@ -270,7 +336,7 @@ var objectivesCompact = requestflag.WithInnerFlags(cli.Command{
 	},
 })
 
-var objectivesContinue = requestflag.WithInnerFlags(cli.Command{
+var objectivesContinue = cli.Command{
 	Name:    "continue",
 	Usage:   "Continues an objective that has completed",
 	Suggest: true,
@@ -285,36 +351,21 @@ var objectivesContinue = requestflag.WithInnerFlags(cli.Command{
 			Required:  true,
 			PathParam: "objectiveId",
 		},
+		&requestflag.Flag[string]{
+			Name:     "message",
+			Usage:    "The message to continue an objective that has completed (or you are enqueing)",
+			Required: true,
+			BodyPath: "message",
+		},
 		&requestflag.Flag[bool]{
 			Name:     "enqueue",
 			Usage:    "When set to true, the message will be enqueued for when the agent loop is available to process it.",
 			BodyPath: "enqueue",
 		},
-		&requestflag.Flag[string]{
-			Name:     "message",
-			Usage:    "The message to continue an objective that has completed (or you are enqueing)",
-			BodyPath: "message",
-		},
-		&requestflag.Flag[[]map[string]any]{
-			Name:     "secret",
-			Usage:    "Secrets that should be included with the message. Helpful for when you need to update secrets on the objective (IE: A secret expires and needs to be refreshed)",
-			BodyPath: "secrets",
-		},
 	},
 	Action:          handleObjectivesContinue,
 	HideHelpCommand: true,
-}, map[string][]requestflag.HasOuterFlag{
-	"secret": {
-		&requestflag.InnerFlag[string]{
-			Name:       "secret.name",
-			InnerField: "name",
-		},
-		&requestflag.InnerFlag[string]{
-			Name:       "secret.value",
-			InnerField: "value",
-		},
-	},
-})
+}
 
 var objectivesListContextWindows = cli.Command{
 	Name:    "list-context-windows",
@@ -340,6 +391,11 @@ var objectivesListContextWindows = cli.Command{
 			Name:      "include-info",
 			Usage:     "When set to true you may use more of your alloted API rate-limit",
 			QueryPath: "includeInfo",
+		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
@@ -380,6 +436,11 @@ var objectivesListEvents = cli.Command{
 			Usage:     "When set to true you may use more of your alloted API rate-limit",
 			QueryPath: "includeInfo",
 		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return",
@@ -409,13 +470,54 @@ var objectivesListEvents = cli.Command{
 	HideHelpCommand: true,
 }
 
+var objectivesRetrieveDiagnostics = cli.Command{
+	Name:    "retrieve-diagnostics",
+	Usage:   "Returns the context-usage breakdown measured for the objective's most recent\niteration: character lengths per context component (system prompt, memory\nappendices, tool definitions, messages by role) alongside the iteration's input\ntoken counts.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
+		},
+	},
+	Action:          handleObjectivesRetrieveDiagnostics,
+	HideHelpCommand: true,
+}
+
+var objectivesStreamEvents = cli.Command{
+	Name:    "stream-events",
+	Usage:   "Streams events for an objective in real-time using server-sent events (SSE)",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "objective-id",
+			Required:  true,
+			PathParam: "objectiveId",
+		},
+		&requestflag.Flag[int64]{
+			Name:  "max-items",
+			Usage: "The maximum number of items to return (use -1 for unlimited).",
+		},
+	},
+	Action:          handleObjectivesStreamEvents,
+	HideHelpCommand: true,
+}
+
 func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -431,16 +533,13 @@ func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ObjectiveNewParams{}
+	params := cadenya.ObjectiveNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Objectives.New(
-		ctx,
-		cmd.Value("workspace-id").(string),
-		params,
-		options...,
-	)
+	_, err = client.Objectives.New(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -461,10 +560,6 @@ func handleObjectivesCreate(ctx context.Context, cmd *cli.Command) error {
 func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -484,12 +579,16 @@ func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.ObjectiveGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 	if err != nil {
@@ -512,10 +611,7 @@ func handleObjectivesRetrieve(ctx context.Context, cmd *cli.Command) error {
 func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -531,7 +627,9 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ObjectiveListParams{}
+	params := cadenya.ObjectiveListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -539,12 +637,7 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.Objectives.List(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		_, err = client.Objectives.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -557,12 +650,7 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	} else {
-		iter := client.Objectives.ListAutoPaging(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		iter := client.Objectives.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -580,10 +668,6 @@ func handleObjectivesList(ctx context.Context, cmd *cli.Command) error {
 func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -603,13 +687,14 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ObjectiveCancelParams{}
+	params := cadenya.ObjectiveCancelParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.Cancel(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		params,
 		options...,
@@ -634,10 +719,6 @@ func handleObjectivesCancel(ctx context.Context, cmd *cli.Command) error {
 func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -657,13 +738,14 @@ func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ObjectiveCompactParams{}
+	params := cadenya.ObjectiveCompactParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.Compact(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		params,
 		options...,
@@ -688,10 +770,6 @@ func handleObjectivesCompact(ctx context.Context, cmd *cli.Command) error {
 func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -711,13 +789,14 @@ func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ObjectiveContinueParams{}
+	params := cadenya.ObjectiveContinueParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.Continue(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		params,
 		options...,
@@ -742,10 +821,6 @@ func handleObjectivesContinue(ctx context.Context, cmd *cli.Command) error {
 func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -765,7 +840,9 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 		return err
 	}
 
-	params := cadenya.ObjectiveListContextWindowsParams{}
+	params := cadenya.ObjectiveListContextWindowsParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -775,7 +852,6 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Objectives.ListContextWindows(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -794,7 +870,6 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 	} else {
 		iter := client.Objectives.ListContextWindowsAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -816,10 +891,6 @@ func handleObjectivesListContextWindows(ctx context.Context, cmd *cli.Command) e
 func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -839,7 +910,9 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ObjectiveListEventsParams{}
+	params := cadenya.ObjectiveListEventsParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -849,7 +922,6 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Objectives.ListEvents(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -868,7 +940,6 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Objectives.ListEventsAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -885,4 +956,103 @@ func handleObjectivesListEvents(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	}
+}
+
+func handleObjectivesRetrieveDiagnostics(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
+		cmd.Set("objective-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ObjectiveGetDiagnosticsParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Objectives.GetDiagnostics(
+		ctx,
+		cmd.Value("objective-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives retrieve-diagnostics",
+		Transform:      transform,
+	})
+}
+
+func handleObjectivesStreamEvents(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
+		cmd.Set("objective-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ObjectiveStreamEventsParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	stream := client.Objectives.StreamEventsStreaming(
+		ctx,
+		cmd.Value("objective-id").(string),
+		params,
+		options...,
+	)
+	maxItems := int64(-1)
+	if cmd.IsSet("max-items") {
+		maxItems = cmd.Value("max-items").(int64)
+	}
+	return ShowJSONIterator(stream, maxItems, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "objectives stream-events",
+		Transform:      transform,
+	})
 }

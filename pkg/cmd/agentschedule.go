@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -52,46 +52,41 @@ var agentsSchedulesCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
 			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
 			InnerField: "externalId",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "metadata.labels",
-			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
+			Usage:      "Key-value pairs for categorization and filtering. Values are 0-63\n alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys\n follow the same shape and additionally accept an optional DNS-subdomain\n prefix (e.g. \"cadenya.com/\") of at most 253 characters.\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
 			InnerField: "labels",
 		},
 	},
 	"spec": {
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.initial-message",
-			Usage:      "The initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history.",
-			InnerField: "initialMessage",
-		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.schedule",
 			Usage:      "Schedule defines WHEN the schedule fires. Temporal-style structured form:\n a list of calendar rules (wall-clock) and/or interval rules (duration),\n OR'd together. At least one rule is required.",
 			InnerField: "schedule",
 		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.first-user-message",
+			Usage:      "Optional explicit first user message passed to CreateObjective on each fire.\n Becomes the first user message in the objective's chat history. When unset, the\n fired objective defers to the selected variation's first_user_message_template.",
+			InnerField: "firstUserMessage",
+		},
 		&requestflag.InnerFlag[any]{
-			Name:       "spec.data",
-			Usage:      "Optional input data passed to the objective. If the agent has an\n input_data_schema, this must satisfy it.",
-			InnerField: "data",
+			Name:       "spec.first-user-message-data",
+			Usage:      "Optional data rendered into the variation's first_user_message_template when\n each fired objective is created. Separate from `system_prompt_data`, which\n renders the system prompt template.",
+			InnerField: "firstUserMessageData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.overlap-policy",
 			Usage:      "What to do when the previous run is still in flight. Defaults to SKIP.",
 			InnerField: "overlapPolicy",
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.status",
-			Usage:      "Lifecycle. Defaults to ACTIVE on create when unspecified.",
-			InnerField: "status",
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.system-prompt-data",
+			Usage:      "Optional data rendered into the variation's system_prompt_template when each\n fired objective is created. If the agent has a system_prompt_data_schema,\n this must satisfy it.",
+			InnerField: "systemPromptData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.variation-id",
@@ -172,46 +167,41 @@ var agentsSchedulesUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
 			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
 			InnerField: "externalId",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "metadata.labels",
-			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
+			Usage:      "Key-value pairs for categorization and filtering. Values are 0-63\n alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys\n follow the same shape and additionally accept an optional DNS-subdomain\n prefix (e.g. \"cadenya.com/\") of at most 253 characters.\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
 			InnerField: "labels",
 		},
 	},
 	"spec": {
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.initial-message",
-			Usage:      "The initial message passed to CreateObjective on each fire. Becomes the\n first user message in the objective's chat history.",
-			InnerField: "initialMessage",
-		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.schedule",
 			Usage:      "Schedule defines WHEN the schedule fires. Temporal-style structured form:\n a list of calendar rules (wall-clock) and/or interval rules (duration),\n OR'd together. At least one rule is required.",
 			InnerField: "schedule",
 		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.first-user-message",
+			Usage:      "Optional explicit first user message passed to CreateObjective on each fire.\n Becomes the first user message in the objective's chat history. When unset, the\n fired objective defers to the selected variation's first_user_message_template.",
+			InnerField: "firstUserMessage",
+		},
 		&requestflag.InnerFlag[any]{
-			Name:       "spec.data",
-			Usage:      "Optional input data passed to the objective. If the agent has an\n input_data_schema, this must satisfy it.",
-			InnerField: "data",
+			Name:       "spec.first-user-message-data",
+			Usage:      "Optional data rendered into the variation's first_user_message_template when\n each fired objective is created. Separate from `system_prompt_data`, which\n renders the system prompt template.",
+			InnerField: "firstUserMessageData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.overlap-policy",
 			Usage:      "What to do when the previous run is still in flight. Defaults to SKIP.",
 			InnerField: "overlapPolicy",
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.status",
-			Usage:      "Lifecycle. Defaults to ACTIVE on create when unspecified.",
-			InnerField: "status",
+		&requestflag.InnerFlag[any]{
+			Name:       "spec.system-prompt-data",
+			Usage:      "Optional data rendered into the variation's system_prompt_template when each\n fired objective is created. If the agent has a system_prompt_data_schema,\n this must satisfy it.",
+			InnerField: "systemPromptData",
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "spec.variation-id",
@@ -237,11 +227,6 @@ var agentsSchedulesList = cli.Command{
 			PathParam: "agentId",
 		},
 		&requestflag.Flag[string]{
-			Name:      "bundle-key",
-			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
-			QueryPath: "bundleKey",
-		},
-		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response.",
 			QueryPath: "cursor",
@@ -250,6 +235,11 @@ var agentsSchedulesList = cli.Command{
 			Name:      "include-info",
 			Usage:     "When true, the `info` field on each returned schedule is populated.\n Requests with this flag count more against your rate limit.",
 			QueryPath: "includeInfo",
+		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
@@ -305,13 +295,84 @@ var agentsSchedulesDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var agentsSchedulesArchive = cli.Command{
+	Name:    "archive",
+	Usage:   "Transitions a schedule to STATE_ARCHIVED and removes its underlying timer.\nArchiving is terminal: archived schedules never fire and cannot be reactivated;\ncreate a new schedule instead.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleAgentsSchedulesArchive,
+	HideHelpCommand: true,
+}
+
+var agentsSchedulesPause = cli.Command{
+	Name:    "pause",
+	Usage:   "Transitions a schedule to STATE_PAUSED. Paused schedules retain history but do\nnot fire.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleAgentsSchedulesPause,
+	HideHelpCommand: true,
+}
+
+var agentsSchedulesResume = cli.Command{
+	Name:    "resume",
+	Usage:   "Transitions a paused schedule back to STATE_ACTIVE so it fires on its cadence\nagain. Archived schedules cannot be resumed.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "agent-id",
+			Required:  true,
+			PathParam: "agentId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleAgentsSchedulesResume,
+	HideHelpCommand: true,
+}
+
 func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -331,13 +392,14 @@ func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentScheduleNewParams{}
+	params := cadenya.AgentScheduleNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.New(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		params,
 		options...,
@@ -362,10 +424,6 @@ func handleAgentsSchedulesCreate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -389,13 +447,17 @@ func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error 
 		return err
 	}
 
+	params := cadenya.AgentScheduleGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 	if err != nil {
@@ -418,10 +480,6 @@ func handleAgentsSchedulesRetrieve(ctx context.Context, cmd *cli.Command) error 
 func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -445,13 +503,14 @@ func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentScheduleUpdateParams{}
+	params := cadenya.AgentScheduleUpdateParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agents.Schedules.Update(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
 		params,
@@ -477,10 +536,6 @@ func handleAgentsSchedulesUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -500,7 +555,9 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.AgentScheduleListParams{}
+	params := cadenya.AgentScheduleListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -510,7 +567,6 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Agents.Schedules.List(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -529,7 +585,6 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Agents.Schedules.ListAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("agent-id").(string),
 			params,
 			options...,
@@ -551,10 +606,6 @@ func handleAgentsSchedulesList(ctx context.Context, cmd *cli.Command) error {
 func handleAgentsSchedulesDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
 		cmd.Set("agent-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -578,11 +629,183 @@ func handleAgentsSchedulesDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.AgentScheduleDeleteParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.Agents.Schedules.Delete(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("agent-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
+}
+
+func handleAgentsSchedulesArchive(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.AgentScheduleArchiveParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Agents.Schedules.Archive(
+		ctx,
+		cmd.Value("agent-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agents:schedules archive",
+		Transform:      transform,
+	})
+}
+
+func handleAgentsSchedulesPause(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.AgentSchedulePauseParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Agents.Schedules.Pause(
+		ctx,
+		cmd.Value("agent-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agents:schedules pause",
+		Transform:      transform,
+	})
+}
+
+func handleAgentsSchedulesResume(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("agent-id") && len(unusedArgs) > 0 {
+		cmd.Set("agent-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.AgentScheduleResumeParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Agents.Schedules.Resume(
+		ctx,
+		cmd.Value("agent-id").(string),
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agents:schedules resume",
+		Transform:      transform,
+	})
 }

@@ -16,10 +16,10 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "create",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{initialMessage: initialMessage, schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, status: AGENT_SCHEDULE_STATUS_UNSPECIFIED, variationId: variationId}",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--spec", "{schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, firstUserMessage: firstUserMessage, firstUserMessageData: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, systemPromptData: {}, variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP}",
 		)
 	})
 
@@ -32,18 +32,17 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "create",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.initial-message", "initialMessage",
 			"--spec.schedule", "{calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}",
-			"--spec.data", "{}",
+			"--spec.first-user-message", "firstUserMessage",
+			"--spec.first-user-message-data", "{}",
 			"--spec.overlap-policy", "OVERLAP_POLICY_UNSPECIFIED",
-			"--spec.status", "AGENT_SCHEDULE_STATUS_UNSPECIFIED",
-			"--spec.variation-id", "variationId",
+			"--spec.system-prompt-data", "{}",
+			"--spec.variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
 
@@ -52,12 +51,10 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  initialMessage: initialMessage\n" +
 			"  schedule:\n" +
 			"    calendars:\n" +
 			"      - comment: comment\n" +
@@ -89,16 +86,17 @@ func TestAgentsSchedulesCreate(t *testing.T) {
 			"      - every: '-160513s'\n" +
 			"        offset: '-160513s'\n" +
 			"    timezone: timezone\n" +
-			"  data: {}\n" +
+			"  firstUserMessage: firstUserMessage\n" +
+			"  firstUserMessageData: {}\n" +
 			"  overlapPolicy: OVERLAP_POLICY_UNSPECIFIED\n" +
-			"  status: AGENT_SCHEDULE_STATUS_UNSPECIFIED\n" +
-			"  variationId: variationId\n")
+			"  systemPromptData: {}\n" +
+			"  variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"agents:schedules", "create",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 		)
 	})
 }
@@ -110,9 +108,9 @@ func TestAgentsSchedulesRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "retrieve",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 		)
 	})
 }
@@ -124,11 +122,11 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "update",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{initialMessage: initialMessage, schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, data: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, status: AGENT_SCHEDULE_STATUS_UNSPECIFIED, variationId: variationId}",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--spec", "{schedule: {calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}, firstUserMessage: firstUserMessage, firstUserMessageData: {}, overlapPolicy: OVERLAP_POLICY_UNSPECIFIED, systemPromptData: {}, variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -142,19 +140,18 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "update",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.initial-message", "initialMessage",
 			"--spec.schedule", "{calendars: [{comment: comment, dayOfMonth: [{end: 0, start: 0, step: 0}], dayOfWeek: [{end: 0, start: 0, step: 0}], hour: [{end: 0, start: 0, step: 0}], minute: [{end: 0, start: 0, step: 0}], month: [{end: 0, start: 0, step: 0}], second: [{end: 0, start: 0, step: 0}]}], intervals: [{every: '-160513s', offset: '-160513s'}], timezone: timezone}",
-			"--spec.data", "{}",
+			"--spec.first-user-message", "firstUserMessage",
+			"--spec.first-user-message-data", "{}",
 			"--spec.overlap-policy", "OVERLAP_POLICY_UNSPECIFIED",
-			"--spec.status", "AGENT_SCHEDULE_STATUS_UNSPECIFIED",
-			"--spec.variation-id", "variationId",
+			"--spec.system-prompt-data", "{}",
+			"--spec.variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -164,12 +161,10 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  initialMessage: initialMessage\n" +
 			"  schedule:\n" +
 			"    calendars:\n" +
 			"      - comment: comment\n" +
@@ -201,18 +196,19 @@ func TestAgentsSchedulesUpdate(t *testing.T) {
 			"      - every: '-160513s'\n" +
 			"        offset: '-160513s'\n" +
 			"    timezone: timezone\n" +
-			"  data: {}\n" +
+			"  firstUserMessage: firstUserMessage\n" +
+			"  firstUserMessageData: {}\n" +
 			"  overlapPolicy: OVERLAP_POLICY_UNSPECIFIED\n" +
-			"  status: AGENT_SCHEDULE_STATUS_UNSPECIFIED\n" +
-			"  variationId: variationId\n" +
+			"  systemPromptData: {}\n" +
+			"  variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"agents:schedules", "update",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 		)
 	})
 }
@@ -225,11 +221,11 @@ func TestAgentsSchedulesList(t *testing.T) {
 			"--api-key", "string",
 			"agents:schedules", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--bundle-key", "bundleKey",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",
@@ -245,9 +241,51 @@ func TestAgentsSchedulesDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents:schedules", "delete",
-			"--workspace-id", "workspaceId",
-			"--agent-id", "agentId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
+		)
+	})
+}
+
+func TestAgentsSchedulesArchive(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agents:schedules", "archive",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
+		)
+	})
+}
+
+func TestAgentsSchedulesPause(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agents:schedules", "pause",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
+		)
+	})
+}
+
+func TestAgentsSchedulesResume(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"agents:schedules", "resume",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--id", "as_01HXKD2E5NQM3T9AYWCFMZZZBD",
 		)
 	})
 }

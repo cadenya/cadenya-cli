@@ -5,33 +5,33 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
 
-var apiKeysAccessList = cli.Command{
+var workspaceAdminMembersList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists the workspaces this API key has access to. Cursor-paginated.",
+	Usage:   "Lists the members of a workspace. Admin only.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:      "id",
+			Name:      "workspace-id",
 			Required:  true,
-			PathParam: "id",
+			PathParam: "workspaceId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
-			Usage:     "Pagination cursor from previous response.",
+			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
-			Usage:     "Maximum number of results to return.",
+			Usage:     "Maximum number of results to return",
 			QueryPath: "limit",
 		},
 		&requestflag.Flag[int64]{
@@ -39,57 +39,59 @@ var apiKeysAccessList = cli.Command{
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
 		},
 	},
-	Action:          handleAPIKeysAccessList,
+	Action:          handleWorkspaceAdminMembersList,
 	HideHelpCommand: true,
 }
 
-var apiKeysAccessAdd = cli.Command{
+var workspaceAdminMembersAdd = cli.Command{
 	Name:    "add",
-	Usage:   "Grants this API key access to the specified workspace. Idempotent — adding an\nalready-associated workspace is a no-op. Returns the updated API key with\nrefreshed workspace preview and total.",
+	Usage:   "Grants a profile access to the workspace by creating (or reactivating) the actor\nthat links the profile to the workspace. Accepts either an existing profile_id\nor an email to resolve-or-invite. Idempotent for an already-active member. Admin\nonly.",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "id",
-			Required:  true,
-			PathParam: "id",
-		},
-		&requestflag.Flag[string]{
-			Name:     "workspace-id",
-			Usage:    "The workspace to grant access to.",
-			BodyPath: "workspaceId",
-		},
-	},
-	Action:          handleAPIKeysAccessAdd,
-	HideHelpCommand: true,
-}
-
-var apiKeysAccessRemove = cli.Command{
-	Name:    "remove",
-	Usage:   "Revokes this API key's access to the specified workspace. Idempotent. A key may\nhave zero workspaces and remains valid.",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "id",
-			Required:  true,
-			PathParam: "id",
-		},
 		&requestflag.Flag[string]{
 			Name:      "workspace-id",
 			Required:  true,
 			PathParam: "workspaceId",
 		},
+		&requestflag.Flag[string]{
+			Name:     "email",
+			Usage:    "Email address to add (resolve-or-invite). Mutually exclusive with profile_id.",
+			BodyPath: "email",
+		},
+		&requestflag.Flag[string]{
+			Name:     "profile-id",
+			Usage:    "An existing account profile to add. Mutually exclusive with email.",
+			BodyPath: "profileId",
+		},
 	},
-	Action:          handleAPIKeysAccessRemove,
+	Action:          handleWorkspaceAdminMembersAdd,
 	HideHelpCommand: true,
 }
 
-func handleAPIKeysAccessList(ctx context.Context, cmd *cli.Command) error {
+var workspaceAdminMembersRemove = cli.Command{
+	Name:    "remove",
+	Usage:   "Revokes a member's access by deactivating their actor; the member is immediately\ncut off. The underlying profile is not deleted. Admin only.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "profile-id",
+			Required:  true,
+			PathParam: "profileId",
+		},
+	},
+	Action:          handleWorkspaceAdminMembersRemove,
+	HideHelpCommand: true,
+}
+
+func handleWorkspaceAdminMembersList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -105,7 +107,9 @@ func handleAPIKeysAccessList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.APIKeyAccessListParams{}
+	params := cadenya.WorkspaceAdminMemberListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -113,12 +117,7 @@ func handleAPIKeysAccessList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.APIKeys.Access.List(
-			ctx,
-			cmd.Value("id").(string),
-			params,
-			options...,
-		)
+		_, err = client.WorkspaceAdmin.Members.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -127,16 +126,11 @@ func handleAPIKeysAccessList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "api-keys:access list",
+			Title:          "workspace-admin:members list",
 			Transform:      transform,
 		})
 	} else {
-		iter := client.APIKeys.Access.ListAutoPaging(
-			ctx,
-			cmd.Value("id").(string),
-			params,
-			options...,
-		)
+		iter := client.WorkspaceAdmin.Members.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -145,19 +139,16 @@ func handleAPIKeysAccessList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "api-keys:access list",
+			Title:          "workspace-admin:members list",
 			Transform:      transform,
 		})
 	}
 }
 
-func handleAPIKeysAccessAdd(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminMembersAdd(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -173,16 +164,13 @@ func handleAPIKeysAccessAdd(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.APIKeyAccessAddParams{}
+	params := cadenya.WorkspaceAdminMemberAddParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.APIKeys.Access.Add(
-		ctx,
-		cmd.Value("id").(string),
-		params,
-		options...,
-	)
+	_, err = client.WorkspaceAdmin.Members.Add(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -195,20 +183,16 @@ func handleAPIKeysAccessAdd(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "api-keys:access add",
+		Title:          "workspace-admin:members add",
 		Transform:      transform,
 	})
 }
 
-func handleAPIKeysAccessRemove(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminMembersRemove(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
+	if !cmd.IsSet("profile-id") && len(unusedArgs) > 0 {
+		cmd.Set("profile-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
 	}
 	if len(unusedArgs) > 0 {
@@ -226,10 +210,14 @@ func handleAPIKeysAccessRemove(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.APIKeys.Access.Remove(
+	params := cadenya.WorkspaceAdminMemberRemoveParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	return client.WorkspaceAdmin.Members.Remove(
 		ctx,
-		cmd.Value("id").(string),
-		cmd.Value("workspace-id").(string),
+		cmd.Value("profile-id").(string),
+		params,
 		options...,
 	)
 }

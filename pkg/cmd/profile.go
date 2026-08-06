@@ -9,32 +9,20 @@ import (
 	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
-	"github.com/cadenya/cadenya-cli/internal/requestflag"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
 
-var searchSearchToolsOrToolSets = cli.Command{
-	Name:    "search-tools-or-tool-sets",
-	Usage:   "Searches for tools or tool sets in the workspace",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "workspace-id",
-			Required:  true,
-			PathParam: "workspaceId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "query",
-			Required:  true,
-			QueryPath: "query",
-		},
-	},
-	Action:          handleSearchSearchToolsOrToolSets,
+var profilesWhoami = cli.Command{
+	Name:            "whoami",
+	Usage:           "Retrieves the profile of the authenticated caller. Useful to check which\nprincipal a token belongs to.",
+	Suggest:         true,
+	Flags:           []cli.Flag{},
+	Action:          handleProfilesWhoami,
 	HideHelpCommand: true,
 }
 
-func handleSearchSearchToolsOrToolSets(ctx context.Context, cmd *cli.Command) error {
+func handleProfilesWhoami(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
@@ -53,13 +41,9 @@ func handleSearchSearchToolsOrToolSets(ctx context.Context, cmd *cli.Command) er
 		return err
 	}
 
-	params := cadenya.SearchSearchToolsOrToolSetsParams{
-		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
-	}
-
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Search.SearchToolsOrToolSets(ctx, params, options...)
+	_, err = client.Profiles.Whoami(ctx, options...)
 	if err != nil {
 		return err
 	}
@@ -72,7 +56,7 @@ func handleSearchSearchToolsOrToolSets(ctx context.Context, cmd *cli.Command) er
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "search search-tools-or-tool-sets",
+		Title:          "profiles whoami",
 		Transform:      transform,
 	})
 }

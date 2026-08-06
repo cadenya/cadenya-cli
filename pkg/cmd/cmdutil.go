@@ -17,7 +17,7 @@ import (
 	"syscall"
 
 	"github.com/cadenya/cadenya-cli/internal/jsonview"
-	"github.com/cadenya/cadenya-go/option"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/charmbracelet/x/term"
 	"github.com/itchyny/json2yaml"
@@ -51,6 +51,9 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 	}
 	if cmd.IsSet("webhook-key") {
 		opts = append(opts, option.WithWebhookKey(cmd.String("webhook-key")))
+	}
+	if cmd.IsSet("workspace-id") {
+		opts = append(opts, option.WithWorkspaceID(cmd.String("workspace-id")))
 	}
 
 	// Override base URL if the --base-url flag is provided

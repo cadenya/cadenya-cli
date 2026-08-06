@@ -14,20 +14,15 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
+var aiProviderKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
-	Usage:   "Creates a new tool in the tool set",
+	Usage:   "Creates a new customer-provided AI provider key in the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:      "workspace-id",
 			Required:  true,
 			PathParam: "workspaceId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "tool-set-id",
-			Required:  true,
-			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
@@ -41,7 +36,7 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "spec",
 		},
 	},
-	Action:          handleToolSetsToolsCreate,
+	Action:          handleAIProviderKeysCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
@@ -64,44 +59,31 @@ var toolSetsToolsCreate = requestflag.WithInnerFlags(cli.Command{
 	"spec": {
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.config",
-			Usage:      "Config defines the adapter to use for the tool.\n This is used to determine how the tool is called.\n For example, if the tool is an HTTP tool, the adapter will be Http.\n If the tool is an inline tool, the adapter will be Inline.",
+			Usage:      "AIProviderConfig holds non-secret, provider-specific settings. The set case\n must correspond to AIProviderKeySpec.provider. Providers with no settings\n (Anthropic, Gemini) simply leave this unset. The endpoint of a named provider\n is fixed and intentionally not overridable here; use the OpenAI-compatible\n provider to target a custom endpoint.",
 			InnerField: "config",
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.description",
-			InnerField: "description",
-		},
 		&requestflag.InnerFlag[map[string]any]{
-			Name:       "spec.parameters",
-			Usage:      "The tool's JSON Schema, as handed to the LLM. Required, but may be the\n empty object `{}` for a tool that takes no arguments. Requiring it rather\n than defaulting it means a misspelled field name (`inputSchema`, say) is a\n 400 instead of a silently parameterless tool.",
-			InnerField: "parameters",
-		},
-		&requestflag.InnerFlag[bool]{
-			Name:       "spec.requires-approval",
-			InnerField: "requiresApproval",
+			Name:       "spec.credentials",
+			Usage:      "AIProviderCredential is the secret material used to authenticate with a\n provider. The set case must correspond to AIProviderKeySpec.provider. The\n server encrypts the serialized message at rest and never returns it on reads.",
+			InnerField: "credentials",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.llm-tool-name",
-			Usage:      "The name provided to the LLM, which may differ from the metadata.name on the tool.\n LLMs have specific length and format requirements, and tool set sources may not comply\n with them, so Cadenya does its best to format names into a usable format.",
-			InnerField: "llmToolName",
+			Name:       "spec.provider",
+			Usage:      "The AI provider this key authenticates against.",
+			InnerField: "provider",
 		},
 	},
 })
 
-var toolSetsToolsRetrieve = cli.Command{
+var aiProviderKeysRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Retrieves a tool by ID from the workspace",
+	Usage:   "Retrieves an AI provider key by ID from the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:      "workspace-id",
 			Required:  true,
 			PathParam: "workspaceId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "tool-set-id",
-			Required:  true,
-			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "id",
@@ -109,24 +91,19 @@ var toolSetsToolsRetrieve = cli.Command{
 			PathParam: "id",
 		},
 	},
-	Action:          handleToolSetsToolsRetrieve,
+	Action:          handleAIProviderKeysRetrieve,
 	HideHelpCommand: true,
 }
 
-var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
+var aiProviderKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "update",
-	Usage:   "Updates a tool in the tool set",
+	Usage:   "Updates an AI provider key's name or key value in the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:      "workspace-id",
 			Required:  true,
 			PathParam: "workspaceId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "tool-set-id",
-			Required:  true,
-			PathParam: "toolSetId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "id",
@@ -144,10 +121,11 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "update-mask",
+			Usage:    "Fields to update.",
 			BodyPath: "updateMask",
 		},
 	},
-	Action:          handleToolSetsToolsUpdate,
+	Action:          handleAIProviderKeysUpdate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
@@ -170,33 +148,25 @@ var toolSetsToolsUpdate = requestflag.WithInnerFlags(cli.Command{
 	"spec": {
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "spec.config",
-			Usage:      "Config defines the adapter to use for the tool.\n This is used to determine how the tool is called.\n For example, if the tool is an HTTP tool, the adapter will be Http.\n If the tool is an inline tool, the adapter will be Inline.",
+			Usage:      "AIProviderConfig holds non-secret, provider-specific settings. The set case\n must correspond to AIProviderKeySpec.provider. Providers with no settings\n (Anthropic, Gemini) simply leave this unset. The endpoint of a named provider\n is fixed and intentionally not overridable here; use the OpenAI-compatible\n provider to target a custom endpoint.",
 			InnerField: "config",
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "spec.description",
-			InnerField: "description",
-		},
 		&requestflag.InnerFlag[map[string]any]{
-			Name:       "spec.parameters",
-			Usage:      "The tool's JSON Schema, as handed to the LLM. Required, but may be the\n empty object `{}` for a tool that takes no arguments. Requiring it rather\n than defaulting it means a misspelled field name (`inputSchema`, say) is a\n 400 instead of a silently parameterless tool.",
-			InnerField: "parameters",
-		},
-		&requestflag.InnerFlag[bool]{
-			Name:       "spec.requires-approval",
-			InnerField: "requiresApproval",
+			Name:       "spec.credentials",
+			Usage:      "AIProviderCredential is the secret material used to authenticate with a\n provider. The set case must correspond to AIProviderKeySpec.provider. The\n server encrypts the serialized message at rest and never returns it on reads.",
+			InnerField: "credentials",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.llm-tool-name",
-			Usage:      "The name provided to the LLM, which may differ from the metadata.name on the tool.\n LLMs have specific length and format requirements, and tool set sources may not comply\n with them, so Cadenya does its best to format names into a usable format.",
-			InnerField: "llmToolName",
+			Name:       "spec.provider",
+			Usage:      "The AI provider this key authenticates against.",
+			InnerField: "provider",
 		},
 	},
 })
 
-var toolSetsToolsList = cli.Command{
+var aiProviderKeysList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists all tools in the tool set",
+	Usage:   "Lists all customer-provided AI provider keys in the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -205,18 +175,13 @@ var toolSetsToolsList = cli.Command{
 			PathParam: "workspaceId",
 		},
 		&requestflag.Flag[string]{
-			Name:      "tool-set-id",
-			Required:  true,
-			PathParam: "toolSetId",
-		},
-		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
 		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",
-			Usage:     "When set to true you may use more of your alloted API rate-limit",
+			Usage:     "When true, populate each item's info (model counts), at the cost of extra\n lookups.",
 			QueryPath: "includeInfo",
 		},
 		&requestflag.Flag[string]{
@@ -229,48 +194,38 @@ var toolSetsToolsList = cli.Command{
 			Usage:     "Maximum number of results to return",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[[]string]{
-			Name:      "name",
-			Usage:     "Filter by tool name (exact match). Multiple values are OR'd together.",
-			QueryPath: "names",
-		},
 		&requestflag.Flag[string]{
 			Name:      "prefix",
 			Usage:     "Filter expression (query param: prefix)",
 			QueryPath: "prefix",
+		},
+		&requestflag.Flag[bool]{
+			Name:      "promotional",
+			Usage:     "When true, return only promotional keys (provided by Cadenya, e.g. for\n onboarding). Defaults to returning all keys, customer-provided and\n promotional alike.",
+			QueryPath: "promotional",
 		},
 		&requestflag.Flag[string]{
 			Name:      "query",
 			Usage:     "Free-form search query",
 			QueryPath: "query",
 		},
-		&requestflag.Flag[bool]{
-			Name:      "requires-approval",
-			Usage:     "Filter by approval requirement. Omitted = no filter; true = only tools\n requiring approval; false = only tools not requiring approval.",
-			QueryPath: "requiresApproval",
-		},
 		&requestflag.Flag[string]{
 			Name:      "sort-order",
 			Usage:     "Sort order for results (asc or desc by creation time)",
 			QueryPath: "sortOrder",
-		},
-		&requestflag.Flag[[]string]{
-			Name:      "state",
-			Usage:     "Filter by tool state. Multiple values are OR'd together.",
-			QueryPath: "states",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
 		},
 	},
-	Action:          handleToolSetsToolsList,
+	Action:          handleAIProviderKeysList,
 	HideHelpCommand: true,
 }
 
-var toolSetsToolsDelete = cli.Command{
+var aiProviderKeysDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Deletes a tool in the tool set",
+	Usage:   "Deletes an AI provider key from the workspace",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -279,77 +234,19 @@ var toolSetsToolsDelete = cli.Command{
 			PathParam: "workspaceId",
 		},
 		&requestflag.Flag[string]{
-			Name:      "tool-set-id",
-			Required:  true,
-			PathParam: "toolSetId",
-		},
-		&requestflag.Flag[string]{
 			Name:      "id",
 			Required:  true,
 			PathParam: "id",
 		},
 	},
-	Action:          handleToolSetsToolsDelete,
+	Action:          handleAIProviderKeysDelete,
 	HideHelpCommand: true,
 }
 
-var toolSetsToolsOmit = cli.Command{
-	Name:    "omit",
-	Usage:   "Transitions a tool to STATE_OMITTED, excluding it from agent use. Fails if the\ntool is currently assigned to agent variations.",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "workspace-id",
-			Required:  true,
-			PathParam: "workspaceId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "tool-set-id",
-			Required:  true,
-			PathParam: "toolSetId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "id",
-			Required:  true,
-			PathParam: "id",
-		},
-	},
-	Action:          handleToolSetsToolsOmit,
-	HideHelpCommand: true,
-}
-
-var toolSetsToolsRestore = cli.Command{
-	Name:    "restore",
-	Usage:   "Transitions an omitted tool back to STATE_AVAILABLE. For managed tool sets, the\nnext sync may omit the tool again if its filters still exclude it.",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "workspace-id",
-			Required:  true,
-			PathParam: "workspaceId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "tool-set-id",
-			Required:  true,
-			PathParam: "toolSetId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "id",
-			Required:  true,
-			PathParam: "id",
-		},
-	},
-	Action:          handleToolSetsToolsRestore,
-	HideHelpCommand: true,
-}
-
-func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
+func handleAIProviderKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
-		cmd.Set("tool-set-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -365,18 +262,13 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolNewParams{
+	params := cadenya.AIProviderKeyNewParams{
 		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
 	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.Tools.New(
-		ctx,
-		cmd.Value("tool-set-id").(string),
-		params,
-		options...,
-	)
+	_, err = client.AIProviderKeys.New(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -389,18 +281,14 @@ func handleToolSetsToolsCreate(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "tool-sets:tools create",
+		Title:          "ai-provider-keys create",
 		Transform:      transform,
 	})
 }
 
-func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
+func handleAIProviderKeysRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
-		cmd.Set("tool-set-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -420,15 +308,14 @@ func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolGetParams{
+	params := cadenya.AIProviderKeyGetParams{
 		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
 	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.Tools.Get(
+	_, err = client.AIProviderKeys.Get(
 		ctx,
-		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -445,18 +332,14 @@ func handleToolSetsToolsRetrieve(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "tool-sets:tools retrieve",
+		Title:          "ai-provider-keys retrieve",
 		Transform:      transform,
 	})
 }
 
-func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
+func handleAIProviderKeysUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
-		cmd.Set("tool-set-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -476,15 +359,14 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolUpdateParams{
+	params := cadenya.AIProviderKeyUpdateParams{
 		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
 	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.Tools.Update(
+	_, err = client.AIProviderKeys.Update(
 		ctx,
-		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -501,18 +383,15 @@ func handleToolSetsToolsUpdate(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "tool-sets:tools update",
+		Title:          "ai-provider-keys update",
 		Transform:      transform,
 	})
 }
 
-func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
+func handleAIProviderKeysList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
-		cmd.Set("tool-set-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -528,7 +407,7 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolListParams{
+	params := cadenya.AIProviderKeyListParams{
 		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
 	}
 
@@ -538,12 +417,7 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.ToolSets.Tools.List(
-			ctx,
-			cmd.Value("tool-set-id").(string),
-			params,
-			options...,
-		)
+		_, err = client.AIProviderKeys.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -552,16 +426,11 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "tool-sets:tools list",
+			Title:          "ai-provider-keys list",
 			Transform:      transform,
 		})
 	} else {
-		iter := client.ToolSets.Tools.ListAutoPaging(
-			ctx,
-			cmd.Value("tool-set-id").(string),
-			params,
-			options...,
-		)
+		iter := client.AIProviderKeys.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -570,19 +439,15 @@ func handleToolSetsToolsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "tool-sets:tools list",
+			Title:          "ai-provider-keys list",
 			Transform:      transform,
 		})
 	}
 }
 
-func handleToolSetsToolsDelete(ctx context.Context, cmd *cli.Command) error {
+func handleAIProviderKeysDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
-		cmd.Set("tool-set-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -602,127 +467,14 @@ func handleToolSetsToolsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetToolDeleteParams{
+	params := cadenya.AIProviderKeyDeleteParams{
 		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
 	}
 
-	return client.ToolSets.Tools.Delete(
+	return client.AIProviderKeys.Delete(
 		ctx,
-		cmd.Value("tool-set-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
 	)
-}
-
-func handleToolSetsToolsOmit(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
-		cmd.Set("tool-set-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	params := cadenya.ToolSetToolOmitParams{
-		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.Tools.Omit(
-		ctx,
-		cmd.Value("tool-set-id").(string),
-		cmd.Value("id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	explicitFormat := cmd.Root().IsSet("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(obj, ShowJSONOpts{
-		ExplicitFormat: explicitFormat,
-		Format:         format,
-		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "tool-sets:tools omit",
-		Transform:      transform,
-	})
-}
-
-func handleToolSetsToolsRestore(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
-		cmd.Set("tool-set-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	params := cadenya.ToolSetToolRestoreParams{
-		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.Tools.Restore(
-		ctx,
-		cmd.Value("tool-set-id").(string),
-		cmd.Value("id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	explicitFormat := cmd.Root().IsSet("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(obj, ShowJSONOpts{
-		ExplicitFormat: explicitFormat,
-		Format:         format,
-		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "tool-sets:tools restore",
-		Transform:      transform,
-	})
 }

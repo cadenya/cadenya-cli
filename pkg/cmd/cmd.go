@@ -86,15 +86,41 @@ func init() {
 				Name:    "webhook-key",
 				Sources: cli.EnvVars("CADENYA_WEBHOOK_KEY"),
 			},
+			&requestflag.Flag[string]{
+				Name:    "workspace-id",
+				Usage:   "Workspace to operate on. Fills the {workspaceId} path parameter on workspace-scoped endpoints unless overridden per request.",
+				Sources: cli.EnvVars("CADENYA_WORKSPACE_ID"),
+			},
 		},
 		Commands: []*cli.Command{
+			{
+				Name:     "ai-provider-keys",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&aiProviderKeysCreate,
+					&aiProviderKeysRetrieve,
+					&aiProviderKeysUpdate,
+					&aiProviderKeysList,
+					&aiProviderKeysDelete,
+				},
+			},
 			{
 				Name:     "account",
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&accountRetrieve,
+					&accountRotateChallengeToken,
 					&accountRotateWebhookSigningKey,
+				},
+			},
+			{
+				Name:     "profiles",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&profilesWhoami,
 				},
 			},
 			{
@@ -107,6 +133,10 @@ func init() {
 					&agentsUpdate,
 					&agentsList,
 					&agentsDelete,
+					&agentsArchive,
+					&agentsPublish,
+					&agentsUnarchive,
+					&agentsUnpublish,
 				},
 			},
 			{
@@ -152,6 +182,9 @@ func init() {
 					&agentsSchedulesUpdate,
 					&agentsSchedulesList,
 					&agentsSchedulesDelete,
+					&agentsSchedulesArchive,
+					&agentsSchedulesPause,
+					&agentsSchedulesResume,
 				},
 			},
 			{
@@ -167,6 +200,8 @@ func init() {
 					&objectivesContinue,
 					&objectivesListContextWindows,
 					&objectivesListEvents,
+					&objectivesRetrieveDiagnostics,
+					&objectivesStreamEvents,
 				},
 			},
 			{
@@ -182,9 +217,11 @@ func init() {
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
+					&objectivesToolCallsRetrieve,
 					&objectivesToolCallsList,
 					&objectivesToolCallsApprove,
 					&objectivesToolCallsDeny,
+					&objectivesToolCallsSetContent,
 				},
 			},
 			{
@@ -245,7 +282,9 @@ func init() {
 				Commands: []*cli.Command{
 					&modelsRetrieve,
 					&modelsList,
-					&modelsSetStatus,
+					&modelsDisable,
+					&modelsEnable,
+					&modelsSwap,
 				},
 			},
 			{
@@ -266,7 +305,11 @@ func init() {
 					&toolSetsUpdate,
 					&toolSetsList,
 					&toolSetsDelete,
+					&toolSetsArchive,
+					&toolSetsGetOpenAPISpec,
 					&toolSetsListEvents,
+					&toolSetsListUsage,
+					&toolSetsUnarchive,
 				},
 			},
 			{
@@ -279,6 +322,20 @@ func init() {
 					&toolSetsToolsUpdate,
 					&toolSetsToolsList,
 					&toolSetsToolsDelete,
+					&toolSetsToolsOmit,
+					&toolSetsToolsRestore,
+				},
+			},
+			{
+				Name:     "tool-sets:secrets",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&toolSetsSecretsCreate,
+					&toolSetsSecretsRetrieve,
+					&toolSetsSecretsUpdate,
+					&toolSetsSecretsList,
+					&toolSetsSecretsDelete,
 				},
 			},
 			{
@@ -291,17 +348,20 @@ func init() {
 					&apiKeysUpdate,
 					&apiKeysList,
 					&apiKeysDelete,
+					&apiKeysDisable,
+					&apiKeysEnable,
 					&apiKeysRotate,
 				},
 			},
 			{
-				Name:     "api-keys:access",
+				Name:     "global-api-key",
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&apiKeysAccessList,
-					&apiKeysAccessAdd,
-					&apiKeysAccessRemove,
+					&globalAPIKeyRetrieve,
+					&globalAPIKeyDisable,
+					&globalAPIKeyEnable,
+					&globalAPIKeyRotate,
 				},
 			},
 			{
@@ -322,25 +382,63 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&workspacesList,
-					&workspacesGet,
 				},
 			},
 			{
-				Name:     "bulk-workspace-resources",
+				Name:     "workspace-admin",
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&bulkWorkspaceResourcesRetrieve,
-					&bulkWorkspaceResourcesList,
-					&bulkWorkspaceResourcesApply,
+					&workspaceAdminCreate,
+					&workspaceAdminRetrieve,
+					&workspaceAdminUpdate,
+					&workspaceAdminList,
+					&workspaceAdminArchive,
 				},
 			},
 			{
-				Name:     "bulk-workspace-resources:results",
+				Name:     "workspace-admin:members",
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&bulkWorkspaceResourcesResultsList,
+					&workspaceAdminMembersList,
+					&workspaceAdminMembersAdd,
+					&workspaceAdminMembersRemove,
+				},
+			},
+			{
+				Name:     "workspace-admin:profiles",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&workspaceAdminProfilesList,
+				},
+			},
+			{
+				Name:     "widgets",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&widgetsCreate,
+					&widgetsRetrieve,
+					&widgetsUpdate,
+					&widgetsList,
+					&widgetsDelete,
+					&widgetsArchive,
+					&widgetsUnarchive,
+				},
+			},
+			{
+				Name:     "widget-sessions",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&widgetSessionsCreate,
+					&widgetSessionsRetrieve,
+					&widgetSessionsList,
+					&widgetSessionsDelete,
+					&widgetSessionsDeleteTenant,
+					&widgetSessionsRevoke,
 				},
 			},
 			{

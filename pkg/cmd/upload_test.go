@@ -16,8 +16,8 @@ func TestUploadsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"uploads", "create",
-			"--workspace-id", "workspaceId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{contentType: contentType, filename: filename, sizeBytes: sizeBytes}",
 		)
 	})
@@ -31,9 +31,8 @@ func TestUploadsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"uploads", "create",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.content-type", "contentType",
@@ -47,7 +46,6 @@ func TestUploadsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -59,7 +57,7 @@ func TestUploadsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"uploads", "create",
-			"--workspace-id", "workspaceId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 		)
 	})
 }
@@ -71,8 +69,8 @@ func TestUploadsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"uploads", "retrieve",
-			"--workspace-id", "workspaceId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "upload_01HXKD2E5NQM3T9AYWCFZ05DNK",
 		)
 	})
 }

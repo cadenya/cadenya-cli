@@ -16,9 +16,9 @@ func TestAPIKeysCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "create",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{description: description, permissions: [string]}",
-			"--initial-workspace-id", "string",
 		)
 	})
 
@@ -31,12 +31,12 @@ func TestAPIKeysCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "create",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.description", "description",
 			"--spec.permissions", "[string]",
-			"--initial-workspace-id", "string",
 		)
 	})
 
@@ -51,13 +51,12 @@ func TestAPIKeysCreate(t *testing.T) {
 			"spec:\n" +
 			"  description: description\n" +
 			"  permissions:\n" +
-			"    - string\n" +
-			"initialWorkspaceIds:\n" +
-			"  - string\n")
+			"    - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"api-keys", "create",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 		)
 	})
 }
@@ -69,7 +68,8 @@ func TestAPIKeysRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "retrieve",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "apikey_01HXKD2E5NQM3T9AYWCFCSPNQY",
 		)
 	})
 }
@@ -81,7 +81,8 @@ func TestAPIKeysUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "update",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "apikey_01HXKD2E5NQM3T9AYWCFCSPNQY",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{description: description, permissions: [string]}",
 			"--update-mask", "updateMask",
@@ -97,7 +98,8 @@ func TestAPIKeysUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "update",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "apikey_01HXKD2E5NQM3T9AYWCFCSPNQY",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -124,7 +126,8 @@ func TestAPIKeysUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"api-keys", "update",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "apikey_01HXKD2E5NQM3T9AYWCFCSPNQY",
 		)
 	})
 }
@@ -137,9 +140,10 @@ func TestAPIKeysList(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "list",
 			"--max-items", "10",
-			"--bundle-key", "bundleKey",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",
@@ -155,7 +159,34 @@ func TestAPIKeysDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "delete",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "apikey_01HXKD2E5NQM3T9AYWCFCSPNQY",
+		)
+	})
+}
+
+func TestAPIKeysDisable(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"api-keys", "disable",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "apikey_01HXKD2E5NQM3T9AYWCFCSPNQY",
+		)
+	})
+}
+
+func TestAPIKeysEnable(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"api-keys", "enable",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "apikey_01HXKD2E5NQM3T9AYWCFCSPNQY",
 		)
 	})
 }
@@ -167,7 +198,8 @@ func TestAPIKeysRotate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"api-keys", "rotate",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "apikey_01HXKD2E5NQM3T9AYWCFCSPNQY",
 		)
 	})
 }

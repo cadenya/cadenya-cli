@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -46,18 +46,13 @@ var toolSetsCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
 			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
 			InnerField: "externalId",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "metadata.labels",
-			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
+			Usage:      "Key-value pairs for categorization and filtering. Values are 0-63\n alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys\n follow the same shape and additionally accept an optional DNS-subdomain\n prefix (e.g. \"cadenya.com/\") of at most 253 characters.\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
 			InnerField: "labels",
 		},
 	},
@@ -132,18 +127,13 @@ var toolSetsUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
 			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
 			InnerField: "externalId",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "metadata.labels",
-			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
+			Usage:      "Key-value pairs for categorization and filtering. Values are 0-63\n alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys\n follow the same shape and additionally accept an optional DNS-subdomain\n prefix (e.g. \"cadenya.com/\") of at most 253 characters.\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
 			InnerField: "labels",
 		},
 	},
@@ -170,11 +160,6 @@ var toolSetsList = cli.Command{
 			PathParam: "workspaceId",
 		},
 		&requestflag.Flag[string]{
-			Name:      "bundle-key",
-			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
-			QueryPath: "bundleKey",
-		},
-		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
@@ -183,6 +168,11 @@ var toolSetsList = cli.Command{
 			Name:      "include-info",
 			Usage:     "When set to true you may use more of your alloted API rate-limit",
 			QueryPath: "includeInfo",
+		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
@@ -203,6 +193,11 @@ var toolSetsList = cli.Command{
 			Name:      "sort-order",
 			Usage:     "Sort order for results (asc or desc by creation time)",
 			QueryPath: "sortOrder",
+		},
+		&requestflag.Flag[string]{
+			Name:      "state",
+			Usage:     "Filter by tool set lifecycle state. Defaults to STATE_ACTIVE when\n unspecified; pass STATE_ARCHIVED to list archived tool sets.",
+			QueryPath: "state",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
@@ -233,6 +228,46 @@ var toolSetsDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var toolSetsArchive = cli.Command{
+	Name:    "archive",
+	Usage:   "Transitions a tool set to STATE_ARCHIVED. Syncing stops, the tool set is hidden\nfrom list results, its tools are no longer offered to objectives, and new\nvariation assignments are rejected. Existing assignments are retained, and\nhistory is preserved — unlike delete, archiving works while the tool set is\nstill assigned to agent variations.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleToolSetsArchive,
+	HideHelpCommand: true,
+}
+
+var toolSetsGetOpenAPISpec = cli.Command{
+	Name:    "get-openapi-spec",
+	Usage:   "Retrieves the current OpenAPI specification JSON that has been consumed by the\ntool set. Only applicable to tool sets using the OpenAPI adapter.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
+		},
+	},
+	Action:          handleToolSetsGetOpenAPISpec,
+	HideHelpCommand: true,
+}
+
 var toolSetsListEvents = cli.Command{
 	Name:    "list-events",
 	Usage:   "Lists all events (including sync status) for a tool set",
@@ -258,6 +293,11 @@ var toolSetsListEvents = cli.Command{
 			Usage:     "When set to true you may use more of your alloted API rate-limit",
 			QueryPath: "includeInfo",
 		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return",
@@ -277,13 +317,74 @@ var toolSetsListEvents = cli.Command{
 	HideHelpCommand: true,
 }
 
+var toolSetsListUsage = cli.Command{
+	Name:    "list-usage",
+	Usage:   "Lists the agent variations (with their parent agent) that have the tool set\nassigned. Pass tool_id to instead list variations with a direct assignment of\nthat individual tool; variations that receive the tool implicitly through a\nwhole-set assignment are not included in that filtered view.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-set-id",
+			Required:  true,
+			PathParam: "toolSetId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "cursor",
+			Usage:     "Pagination cursor from previous response",
+			QueryPath: "cursor",
+		},
+		&requestflag.Flag[int64]{
+			Name:      "limit",
+			Usage:     "Maximum number of results to return",
+			QueryPath: "limit",
+		},
+		&requestflag.Flag[string]{
+			Name:      "sort-order",
+			Usage:     "Sort order for results (asc or desc by assignment creation time)",
+			QueryPath: "sortOrder",
+		},
+		&requestflag.Flag[string]{
+			Name:      "tool-id",
+			Usage:     "When set, lists only variations with a direct assignment of this\n individual tool. When unset, lists variations assigned the whole tool\n set. The tool must belong to the tool set.",
+			QueryPath: "toolId",
+		},
+		&requestflag.Flag[int64]{
+			Name:  "max-items",
+			Usage: "The maximum number of items to return (use -1 for unlimited).",
+		},
+	},
+	Action:          handleToolSetsListUsage,
+	HideHelpCommand: true,
+}
+
+var toolSetsUnarchive = cli.Command{
+	Name:    "unarchive",
+	Usage:   "Transitions an archived tool set back to STATE_ACTIVE. Managed tool sets resume\nsyncing on their next cycle and their tools become available to objectives\nagain.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "workspace-id",
+			Required:  true,
+			PathParam: "workspaceId",
+		},
+		&requestflag.Flag[string]{
+			Name:      "id",
+			Required:  true,
+			PathParam: "id",
+		},
+	},
+	Action:          handleToolSetsUnarchive,
+	HideHelpCommand: true,
+}
+
 func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -299,16 +400,13 @@ func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetNewParams{}
+	params := cadenya.ToolSetNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.ToolSets.New(
-		ctx,
-		cmd.Value("workspace-id").(string),
-		params,
-		options...,
-	)
+	_, err = client.ToolSets.New(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -329,10 +427,6 @@ func handleToolSetsCreate(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -352,12 +446,16 @@ func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.ToolSetGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 	if err != nil {
@@ -380,10 +478,6 @@ func handleToolSetsRetrieve(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -403,13 +497,14 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetUpdateParams{}
+	params := cadenya.ToolSetUpdateParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.ToolSets.Update(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -434,10 +529,7 @@ func handleToolSetsUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -453,7 +545,9 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetListParams{}
+	params := cadenya.ToolSetListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -461,12 +555,7 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.ToolSets.List(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		_, err = client.ToolSets.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -479,12 +568,7 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	} else {
-		iter := client.ToolSets.ListAutoPaging(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		iter := client.ToolSets.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -502,10 +586,6 @@ func handleToolSetsList(ctx context.Context, cmd *cli.Command) error {
 func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -525,21 +605,72 @@ func handleToolSetsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.ToolSetDeleteParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.ToolSets.Delete(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 }
 
-func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
+func handleToolSetsArchive(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
 	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ToolSetArchiveParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.ToolSets.Archive(
+		ctx,
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "tool-sets archive",
+		Transform:      transform,
+	})
+}
+
+func handleToolSetsGetOpenAPISpec(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
 		cmd.Set("tool-set-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -559,7 +690,60 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ToolSetListEventsParams{}
+	params := cadenya.ToolSetGetOpenAPISpecParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.ToolSets.GetOpenAPISpec(
+		ctx,
+		cmd.Value("tool-set-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "tool-sets get-openapi-spec",
+		Transform:      transform,
+	})
+}
+
+func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
+		cmd.Set("tool-set-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ToolSetListEventsParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -569,7 +753,6 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.ToolSets.ListEvents(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("tool-set-id").(string),
 			params,
 			options...,
@@ -588,7 +771,6 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.ToolSets.ListEventsAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("tool-set-id").(string),
 			params,
 			options...,
@@ -605,4 +787,125 @@ func handleToolSetsListEvents(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	}
+}
+
+func handleToolSetsListUsage(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("tool-set-id") && len(unusedArgs) > 0 {
+		cmd.Set("tool-set-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ToolSetListUsageParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	if format == "raw" {
+		var res []byte
+		options = append(options, option.WithResponseBodyInto(&res))
+		_, err = client.ToolSets.ListUsage(
+			ctx,
+			cmd.Value("tool-set-id").(string),
+			params,
+			options...,
+		)
+		if err != nil {
+			return err
+		}
+		obj := gjson.ParseBytes(res)
+		return ShowJSON(obj, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "tool-sets list-usage",
+			Transform:      transform,
+		})
+	} else {
+		iter := client.ToolSets.ListUsageAutoPaging(
+			ctx,
+			cmd.Value("tool-set-id").(string),
+			params,
+			options...,
+		)
+		maxItems := int64(-1)
+		if cmd.IsSet("max-items") {
+			maxItems = cmd.Value("max-items").(int64)
+		}
+		return ShowJSONIterator(iter, maxItems, ShowJSONOpts{
+			ExplicitFormat: explicitFormat,
+			Format:         format,
+			RawOutput:      cmd.Root().Bool("raw-output"),
+			Title:          "tool-sets list-usage",
+			Transform:      transform,
+		})
+	}
+}
+
+func handleToolSetsUnarchive(ctx context.Context, cmd *cli.Command) error {
+	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
+		cmd.Set("id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := cadenya.ToolSetUnarchiveParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.ToolSets.Unarchive(
+		ctx,
+		cmd.Value("id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "tool-sets unarchive",
+		Transform:      transform,
+	})
 }

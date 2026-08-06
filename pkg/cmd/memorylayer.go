@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -46,18 +46,13 @@ var memoryLayersCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
 			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
 			InnerField: "externalId",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "metadata.labels",
-			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
+			Usage:      "Key-value pairs for categorization and filtering. Values are 0-63\n alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys\n follow the same shape and additionally accept an optional DNS-subdomain\n prefix (e.g. \"cadenya.com/\") of at most 253 characters.\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
 			InnerField: "labels",
 		},
 	},
@@ -68,9 +63,19 @@ var memoryLayersCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "type",
 		},
 		&requestflag.InnerFlag[string]{
+			Name:       "spec.agent-id",
+			Usage:      "Server-set on episodic layers: the agent this layer belongs to. Unset for\n non-episodic layers.",
+			InnerField: "agentId",
+		},
+		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
 			Usage:      "Human-readable description of the layer's purpose. Encouraged for\n user-created layers; system-managed layers may have a generated description.",
 			InnerField: "description",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.episodic-key",
+			Usage:      "Server-set on episodic layers: the caller-supplied episodic key the layer\n was created for. Unset for non-episodic layers.",
+			InnerField: "episodicKey",
 		},
 		&requestflag.InnerFlag[any]{
 			Name:       "spec.expires-at",
@@ -79,7 +84,7 @@ var memoryLayersCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[bool]{
 			Name:       "spec.system-managed",
-			Usage:      "Server-set. True for layers managed by the system (e.g., episodic layers\n created automatically when an objective uses an episodic_key). System-managed\n layers cannot be assigned to objective stacks via the API and cannot be\n mutated by clients — their lifecycle is controlled entirely by the runtime.",
+			Usage:      "Server-set. True for layers managed by the system (e.g., episodic layers\n created automatically when an objective uses an episodic_key). System-managed\n layers cannot be assigned to objective cascades via the API and cannot be\n mutated by clients — their lifecycle is controlled entirely by the runtime.",
 			InnerField: "systemManaged",
 		},
 	},
@@ -144,18 +149,13 @@ var memoryLayersUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
-			Name:       "metadata.bundle-key",
-			Usage:      "Optional bundle ownership key. See ResourceMetadata.bundle_key.",
-			InnerField: "bundleKey",
-		},
-		&requestflag.InnerFlag[string]{
 			Name:       "metadata.external-id",
 			Usage:      "External ID for the resource (e.g., a workflow ID from an external system)",
 			InnerField: "externalId",
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "metadata.labels",
-			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
+			Usage:      "Key-value pairs for categorization and filtering. Values are 0-63\n alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys\n follow the same shape and additionally accept an optional DNS-subdomain\n prefix (e.g. \"cadenya.com/\") of at most 253 characters.\n Examples: {\"environment\": \"production\", \"team\": \"platform\", \"version\": \"v2\"}",
 			InnerField: "labels",
 		},
 	},
@@ -166,9 +166,19 @@ var memoryLayersUpdate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "type",
 		},
 		&requestflag.InnerFlag[string]{
+			Name:       "spec.agent-id",
+			Usage:      "Server-set on episodic layers: the agent this layer belongs to. Unset for\n non-episodic layers.",
+			InnerField: "agentId",
+		},
+		&requestflag.InnerFlag[string]{
 			Name:       "spec.description",
 			Usage:      "Human-readable description of the layer's purpose. Encouraged for\n user-created layers; system-managed layers may have a generated description.",
 			InnerField: "description",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.episodic-key",
+			Usage:      "Server-set on episodic layers: the caller-supplied episodic key the layer\n was created for. Unset for non-episodic layers.",
+			InnerField: "episodicKey",
 		},
 		&requestflag.InnerFlag[any]{
 			Name:       "spec.expires-at",
@@ -177,7 +187,7 @@ var memoryLayersUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[bool]{
 			Name:       "spec.system-managed",
-			Usage:      "Server-set. True for layers managed by the system (e.g., episodic layers\n created automatically when an objective uses an episodic_key). System-managed\n layers cannot be assigned to objective stacks via the API and cannot be\n mutated by clients — their lifecycle is controlled entirely by the runtime.",
+			Usage:      "Server-set. True for layers managed by the system (e.g., episodic layers\n created automatically when an objective uses an episodic_key). System-managed\n layers cannot be assigned to objective cascades via the API and cannot be\n mutated by clients — their lifecycle is controlled entirely by the runtime.",
 			InnerField: "systemManaged",
 		},
 	},
@@ -194,19 +204,29 @@ var memoryLayersList = cli.Command{
 			PathParam: "workspaceId",
 		},
 		&requestflag.Flag[string]{
-			Name:      "bundle-key",
-			Usage:     "Filter by bundle_key — return only resources owned by this bundle.",
-			QueryPath: "bundleKey",
+			Name:      "agent-id",
+			Usage:     "Filter to episodic layers belonging to this agent.",
+			QueryPath: "agentId",
 		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
 		},
+		&requestflag.Flag[string]{
+			Name:      "episodic-key-prefix",
+			Usage:     "Filter to episodic layers whose episodic key starts with this prefix\n (e.g. \"customer/\" matches \"customer/42\" and \"customer/43\"). Useful for\n namespaced keys, similar to a redis key scan.",
+			QueryPath: "episodicKeyPrefix",
+		},
 		&requestflag.Flag[bool]{
 			Name:      "include-info",
 			Usage:     "When set to true you may use more of your alloted API rate-limit",
 			QueryPath: "includeInfo",
+		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
@@ -265,10 +285,7 @@ var memoryLayersDelete = cli.Command{
 func handleMemoryLayersCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -284,16 +301,13 @@ func handleMemoryLayersCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.MemoryLayerNewParams{}
+	params := cadenya.MemoryLayerNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.MemoryLayers.New(
-		ctx,
-		cmd.Value("workspace-id").(string),
-		params,
-		options...,
-	)
+	_, err = client.MemoryLayers.New(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -314,10 +328,6 @@ func handleMemoryLayersCreate(ctx context.Context, cmd *cli.Command) error {
 func handleMemoryLayersRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -337,12 +347,16 @@ func handleMemoryLayersRetrieve(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.MemoryLayerGetParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.MemoryLayers.Get(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 	if err != nil {
@@ -365,10 +379,6 @@ func handleMemoryLayersRetrieve(ctx context.Context, cmd *cli.Command) error {
 func handleMemoryLayersUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -388,13 +398,14 @@ func handleMemoryLayersUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.MemoryLayerUpdateParams{}
+	params := cadenya.MemoryLayerUpdateParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.MemoryLayers.Update(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
 		params,
 		options...,
@@ -419,10 +430,7 @@ func handleMemoryLayersUpdate(ctx context.Context, cmd *cli.Command) error {
 func handleMemoryLayersList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -438,7 +446,9 @@ func handleMemoryLayersList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.MemoryLayerListParams{}
+	params := cadenya.MemoryLayerListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -446,12 +456,7 @@ func handleMemoryLayersList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.MemoryLayers.List(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		_, err = client.MemoryLayers.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -464,12 +469,7 @@ func handleMemoryLayersList(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	} else {
-		iter := client.MemoryLayers.ListAutoPaging(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			params,
-			options...,
-		)
+		iter := client.MemoryLayers.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -487,10 +487,6 @@ func handleMemoryLayersList(ctx context.Context, cmd *cli.Command) error {
 func handleMemoryLayersDelete(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
 		cmd.Set("id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -510,10 +506,14 @@ func handleMemoryLayersDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := cadenya.MemoryLayerDeleteParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
+
 	return client.MemoryLayers.Delete(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("id").(string),
+		params,
 		options...,
 	)
 }

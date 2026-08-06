@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -29,6 +29,11 @@ var workspacesList = cli.Command{
 			Usage:     "When set to true you may use more of your alloted API rate-limit",
 			QueryPath: "includeInfo",
 		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return",
@@ -45,15 +50,6 @@ var workspacesList = cli.Command{
 		},
 	},
 	Action:          handleWorkspacesList,
-	HideHelpCommand: true,
-}
-
-var workspacesGet = cli.Command{
-	Name:            "get",
-	Usage:           "Retrieves the workspace associated with the current API token. Useful for\nworkspace-scoped tokens to identify which workspace they belong to.",
-	Suggest:         true,
-	Flags:           []cli.Flag{},
-	Action:          handleWorkspacesGet,
 	HideHelpCommand: true,
 }
 
@@ -110,43 +106,4 @@ func handleWorkspacesList(ctx context.Context, cmd *cli.Command) error {
 			Transform:      transform,
 		})
 	}
-}
-
-func handleWorkspacesGet(ctx context.Context, cmd *cli.Command) error {
-	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Workspaces.Get(ctx, options...)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	explicitFormat := cmd.Root().IsSet("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(obj, ShowJSONOpts{
-		ExplicitFormat: explicitFormat,
-		Format:         format,
-		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "workspaces get",
-		Transform:      transform,
-	})
 }

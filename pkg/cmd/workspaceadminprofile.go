@@ -5,39 +5,29 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
 
-var bulkWorkspaceResourcesResultsList = cli.Command{
+var workspaceAdminProfilesList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists each resource action recorded by a bulk workspace apply operation.",
+	Usage:   "Searches the account's profiles for a member picker, with free-form name/email\nsearch and an optional type filter. Account-scoped; admin only.",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "workspace-id",
-			Required:  true,
-			PathParam: "workspaceId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "bulk-workspace-apply-id",
-			Required:  true,
-			PathParam: "bulkWorkspaceApplyId",
-		},
-		&requestflag.Flag[string]{
-			Name:      "action",
-			Usage:     "Filter by action.",
-			QueryPath: "action",
-		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
+		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
 		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
@@ -45,35 +35,23 @@ var bulkWorkspaceResourcesResultsList = cli.Command{
 			QueryPath: "limit",
 		},
 		&requestflag.Flag[string]{
-			Name:      "sort-order",
-			Usage:     "Sort order for results (asc or desc by creation time)",
-			QueryPath: "sortOrder",
-		},
-		&requestflag.Flag[string]{
-			Name:      "type",
-			Usage:     `Filter by data.type discriminator (e.g., "toolSet", "memoryEntry").`,
-			QueryPath: "type",
+			Name:      "query",
+			Usage:     "Free-form search over profile name and email. Case-insensitive substring\n match; empty returns all profiles.",
+			QueryPath: "query",
 		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
 		},
 	},
-	Action:          handleBulkWorkspaceResourcesResultsList,
+	Action:          handleWorkspaceAdminProfilesList,
 	HideHelpCommand: true,
 }
 
-func handleBulkWorkspaceResourcesResultsList(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminProfilesList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if !cmd.IsSet("bulk-workspace-apply-id") && len(unusedArgs) > 0 {
-		cmd.Set("bulk-workspace-apply-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -89,7 +67,7 @@ func handleBulkWorkspaceResourcesResultsList(ctx context.Context, cmd *cli.Comma
 		return err
 	}
 
-	params := cadenya.BulkWorkspaceResourceResultListParams{}
+	params := cadenya.WorkspaceAdminProfileListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -97,13 +75,7 @@ func handleBulkWorkspaceResourcesResultsList(ctx context.Context, cmd *cli.Comma
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.BulkWorkspaceResources.Results.List(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			cmd.Value("bulk-workspace-apply-id").(string),
-			params,
-			options...,
-		)
+		_, err = client.WorkspaceAdmin.Profiles.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -112,17 +84,11 @@ func handleBulkWorkspaceResourcesResultsList(ctx context.Context, cmd *cli.Comma
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "bulk-workspace-resources:results list",
+			Title:          "workspace-admin:profiles list",
 			Transform:      transform,
 		})
 	} else {
-		iter := client.BulkWorkspaceResources.Results.ListAutoPaging(
-			ctx,
-			cmd.Value("workspace-id").(string),
-			cmd.Value("bulk-workspace-apply-id").(string),
-			params,
-			options...,
-		)
+		iter := client.WorkspaceAdmin.Profiles.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -131,7 +97,7 @@ func handleBulkWorkspaceResourcesResultsList(ctx context.Context, cmd *cli.Comma
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "bulk-workspace-resources:results list",
+			Title:          "workspace-admin:profiles list",
 			Transform:      transform,
 		})
 	}

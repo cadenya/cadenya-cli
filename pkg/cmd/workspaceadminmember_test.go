@@ -8,54 +8,57 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/mocktest"
 )
 
-func TestAPIKeysAccessList(t *testing.T) {
+func TestWorkspaceAdminMembersList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"api-keys:access", "list",
+			"workspace-admin:members", "list",
 			"--max-items", "10",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--cursor", "cursor",
 			"--limit", "0",
 		)
 	})
 }
 
-func TestAPIKeysAccessAdd(t *testing.T) {
+func TestWorkspaceAdminMembersAdd(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"api-keys:access", "add",
-			"--id", "id",
-			"--workspace-id", "workspaceId",
+			"workspace-admin:members", "add",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--email", "email",
+			"--profile-id", "profile_01HXKD2E5NQM3T9AYWCFS0AP08",
 		)
 	})
 
 	t.Run("piping data", func(t *testing.T) {
 		// Test piping YAML data over stdin
-		pipeData := []byte("workspaceId: workspaceId")
+		pipeData := []byte("" +
+			"email: email\n" +
+			"profileId: profile_01HXKD2E5NQM3T9AYWCFS0AP08\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"api-keys:access", "add",
-			"--id", "id",
+			"workspace-admin:members", "add",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 		)
 	})
 }
 
-func TestAPIKeysAccessRemove(t *testing.T) {
+func TestWorkspaceAdminMembersRemove(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"api-keys:access", "remove",
-			"--id", "id",
-			"--workspace-id", "workspaceId",
+			"workspace-admin:members", "remove",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--profile-id", "profile_01HXKD2E5NQM3T9AYWCFS0AP08",
 		)
 	})
 }

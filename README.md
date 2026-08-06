@@ -54,23 +54,29 @@ cadenya [resource] <command> [flags...]
 ```
 
 ```sh
-cadenya account retrieve \
-  --api-key 'My API Key'
+cadenya objectives create \
+  --api-key 'My API Key' \
+  --workspace-id workspace_01HXKD2E5NQXAMPLE0000000 \
+  --agent-id agent_01HXKD2E5NQXAMPLE0000000 \
+  --system-prompt-data '{customer_name: bar}' \
+  --first-user-message 'Summarize the open support tickets from yesterday.'
 ```
 
 For details about specific commands, use the `--help` flag.
 
 ### Environment variables
 
-| Environment variable  | Required | Default value |
-| --------------------- | -------- | ------------- |
-| `CADENYA_API_KEY`     | yes      |               |
-| `CADENYA_WEBHOOK_KEY` | no       | `null`        |
+| Environment variable   | Description                                                                                                                  | Required | Default value |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------- | ------------- |
+| `CADENYA_API_KEY`      |                                                                                                                              | yes      |               |
+| `CADENYA_WEBHOOK_KEY`  |                                                                                                                              | no       | `null`        |
+| `CADENYA_WORKSPACE_ID` | Workspace to operate on. Fills the {workspaceId} path parameter on workspace-scoped endpoints unless overridden per request. | no       | `null`        |
 
 ### Global flags
 
 - `--api-key` (can also be set with `CADENYA_API_KEY` env var)
 - `--webhook-key` (can also be set with `CADENYA_WEBHOOK_KEY` env var)
+- `--workspace-id` - Workspace to operate on. Fills the {workspaceId} path parameter on workspace-scoped endpoints unless overridden per request. (can also be set with `CADENYA_WORKSPACE_ID` env var)
 - `--help` - Show command line usage
 - `--debug` - Enable debug logging (includes HTTP request/response details)
 - `--version`, `-v` - Show the CLI version

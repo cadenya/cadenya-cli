@@ -20,7 +20,7 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/debugmiddleware"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go/option"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/goccy/go-yaml"
 	"github.com/urfave/cli/v3"

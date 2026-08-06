@@ -16,10 +16,10 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "create",
-			"--workspace-id", "workspaceId",
-			"--memory-layer-id", "memoryLayerId",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{key: key, content: content, description: description, uploadId: uploadId}",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--spec", "{content: content, type: content, description: description, key: key}",
 		)
 	})
 
@@ -32,16 +32,12 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "create",
-			"--workspace-id", "workspaceId",
-			"--memory-layer-id", "memoryLayerId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.key", "key",
-			"--spec.content", "content",
-			"--spec.description", "description",
-			"--spec.upload-id", "uploadId",
+			"--spec", "{content: content, type: content, description: description, key: key}",
 		)
 	})
 
@@ -50,21 +46,20 @@ func TestMemoryLayersEntriesCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  key: key\n" +
 			"  content: content\n" +
+			"  type: content\n" +
 			"  description: description\n" +
-			"  uploadId: uploadId\n")
+			"  key: key\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"memory-layers:entries", "create",
-			"--workspace-id", "workspaceId",
-			"--memory-layer-id", "memoryLayerId",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
 		)
 	})
 }
@@ -76,9 +71,9 @@ func TestMemoryLayersEntriesRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "retrieve",
-			"--workspace-id", "workspaceId",
-			"--memory-layer-id", "memoryLayerId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--id", "mementry_01HXKD2E5NQM3T9AYWCF5E52Z0",
 		)
 	})
 }
@@ -90,11 +85,11 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "update",
-			"--workspace-id", "workspaceId",
-			"--memory-layer-id", "memoryLayerId",
-			"--id", "id",
-			"--metadata", "{name: name, bundleKey: bundleKey, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{content: content, description: description, key: key, uploadId: uploadId}",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--id", "mementry_01HXKD2E5NQM3T9AYWCF5E52Z0",
+			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
+			"--spec", "{content: content, description: description, key: key, uploadId: upload_01HXKD2E5NQM3T9AYWCFZ05DNK}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -108,17 +103,16 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "update",
-			"--workspace-id", "workspaceId",
-			"--memory-layer-id", "memoryLayerId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--id", "mementry_01HXKD2E5NQM3T9AYWCF5E52Z0",
 			"--metadata.name", "name",
-			"--metadata.bundle-key", "bundleKey",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
 			"--spec.content", "content",
 			"--spec.description", "description",
 			"--spec.key", "key",
-			"--spec.upload-id", "uploadId",
+			"--spec.upload-id", "upload_01HXKD2E5NQM3T9AYWCFZ05DNK",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -128,7 +122,6 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 		pipeData := []byte("" +
 			"metadata:\n" +
 			"  name: name\n" +
-			"  bundleKey: bundleKey\n" +
 			"  externalId: externalId\n" +
 			"  labels:\n" +
 			"    foo: string\n" +
@@ -136,15 +129,15 @@ func TestMemoryLayersEntriesUpdate(t *testing.T) {
 			"  content: content\n" +
 			"  description: description\n" +
 			"  key: key\n" +
-			"  uploadId: uploadId\n" +
+			"  uploadId: upload_01HXKD2E5NQM3T9AYWCFZ05DNK\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"memory-layers:entries", "update",
-			"--workspace-id", "workspaceId",
-			"--memory-layer-id", "memoryLayerId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--id", "mementry_01HXKD2E5NQM3T9AYWCF5E52Z0",
 		)
 	})
 }
@@ -157,11 +150,11 @@ func TestMemoryLayersEntriesList(t *testing.T) {
 			"--api-key", "string",
 			"memory-layers:entries", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspaceId",
-			"--memory-layer-id", "memoryLayerId",
-			"--bundle-key", "bundleKey",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
 			"--cursor", "cursor",
 			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",
@@ -177,9 +170,9 @@ func TestMemoryLayersEntriesDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers:entries", "delete",
-			"--workspace-id", "workspaceId",
-			"--memory-layer-id", "memoryLayerId",
-			"--id", "id",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--memory-layer-id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--id", "mementry_01HXKD2E5NQM3T9AYWCF5E52Z0",
 		)
 	})
 }

@@ -9,33 +9,35 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
 )
 
-func TestWorkspaceSecretsCreate(t *testing.T) {
+func TestWidgetsCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "create",
+			"widgets", "create",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{value: value}",
+			"--spec", "{agentId: agent_01HXKD2E5NQM3T9AYWCFMGWT9Y, originAllowlist: [string], variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP}",
 		)
 	})
 
 	t.Run("inner flags", func(t *testing.T) {
 		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(workspaceSecretsCreate)
+		requestflag.CheckInnerFlags(widgetsCreate)
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "create",
+			"widgets", "create",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.value", "value",
+			"--spec.agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--spec.origin-allowlist", "[string]",
+			"--spec.variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 		)
 	})
 
@@ -48,59 +50,64 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  value: value\n")
+			"  agentId: agent_01HXKD2E5NQM3T9AYWCFMGWT9Y\n" +
+			"  originAllowlist:\n" +
+			"    - string\n" +
+			"  variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"workspace-secrets", "create",
+			"widgets", "create",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
 		)
 	})
 }
 
-func TestWorkspaceSecretsRetrieve(t *testing.T) {
+func TestWidgetsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "retrieve",
+			"widgets", "retrieve",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--id", "id",
 		)
 	})
 }
 
-func TestWorkspaceSecretsUpdate(t *testing.T) {
+func TestWidgetsUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "update",
+			"widgets", "update",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{value: value}",
+			"--spec", "{agentId: agent_01HXKD2E5NQM3T9AYWCFMGWT9Y, originAllowlist: [string], variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP}",
 			"--update-mask", "updateMask",
 		)
 	})
 
 	t.Run("inner flags", func(t *testing.T) {
 		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(workspaceSecretsUpdate)
+		requestflag.CheckInnerFlags(widgetsUpdate)
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "update",
+			"widgets", "update",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.value", "value",
+			"--spec.agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--spec.origin-allowlist", "[string]",
+			"--spec.variation-id", "agentvar_01HXKD2E5NQM3T9AYWCF32BSPP",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -114,47 +121,75 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 			"  labels:\n" +
 			"    foo: string\n" +
 			"spec:\n" +
-			"  value: value\n" +
+			"  agentId: agent_01HXKD2E5NQM3T9AYWCFMGWT9Y\n" +
+			"  originAllowlist:\n" +
+			"    - string\n" +
+			"  variationId: agentvar_01HXKD2E5NQM3T9AYWCF32BSPP\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"workspace-secrets", "update",
+			"widgets", "update",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--id", "id",
 		)
 	})
 }
 
-func TestWorkspaceSecretsList(t *testing.T) {
+func TestWidgetsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "list",
+			"widgets", "list",
 			"--max-items", "10",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
 			"--limit", "0",
-			"--prefix", "prefix",
-			"--query", "query",
 			"--sort-order", "sortOrder",
 		)
 	})
 }
 
-func TestWorkspaceSecretsDelete(t *testing.T) {
+func TestWidgetsDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "delete",
+			"widgets", "delete",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--id", "id",
+		)
+	})
+}
+
+func TestWidgetsArchive(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"widgets", "archive",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "id",
+		)
+	})
+}
+
+func TestWidgetsUnarchive(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"widgets", "unarchive",
+			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--id", "id",
 		)
 	})
 }

@@ -8,35 +8,46 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/mocktest"
 )
 
-func TestAccountRetrieve(t *testing.T) {
+func TestGlobalAPIKeyRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"account", "retrieve",
+			"global-api-key", "retrieve",
 		)
 	})
 }
 
-func TestAccountRotateChallengeToken(t *testing.T) {
+func TestGlobalAPIKeyDisable(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"account", "rotate-challenge-token",
+			"global-api-key", "disable",
 		)
 	})
 }
 
-func TestAccountRotateWebhookSigningKey(t *testing.T) {
+func TestGlobalAPIKeyEnable(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"account", "rotate-webhook-signing-key",
+			"global-api-key", "enable",
+		)
+	})
+}
+
+func TestGlobalAPIKeyRotate(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"global-api-key", "rotate",
 		)
 	})
 }

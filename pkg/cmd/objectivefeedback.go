@@ -5,11 +5,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
+	"go.cadenya.com/cadenya-go/option"
 
 	"github.com/cadenya/cadenya-cli/internal/apiquery"
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
-	"github.com/cadenya/cadenya-go"
-	"github.com/cadenya/cadenya-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -64,7 +64,7 @@ var objectivesFeedbackCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[map[string]any]{
 			Name:       "metadata.labels",
-			Usage:      "Arbitrary key-value pairs for categorization and filtering\n Examples: {\"priority\": \"high\", \"source\": \"api\", \"workflow\": \"onboarding\"}",
+			Usage:      "Key-value pairs for categorization and filtering. Values are 0-63\n alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys\n follow the same shape and additionally accept an optional DNS-subdomain\n prefix (e.g. \"cadenya.com/\") of at most 253 characters.\n Examples: {\"priority\": \"high\", \"source\": \"api\", \"workflow\": \"onboarding\"}",
 			InnerField: "labels",
 		},
 	},
@@ -90,6 +90,11 @@ var objectivesFeedbackList = cli.Command{
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
 		},
+		&requestflag.Flag[string]{
+			Name:      "labels",
+			Usage:     "Filters by metadata labels. Comma-separated key=value pairs,\n e.g. \"env=prod,team=ai\". A resource matches only if every pair\n matches exactly (AND semantics).",
+			QueryPath: "labels",
+		},
 		&requestflag.Flag[int64]{
 			Name:      "limit",
 			Usage:     "Maximum number of results to return",
@@ -107,10 +112,6 @@ var objectivesFeedbackList = cli.Command{
 func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -130,13 +131,14 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 		return err
 	}
 
-	params := cadenya.ObjectiveFeedbackNewParams{}
+	params := cadenya.ObjectiveFeedbackNewParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Objectives.Feedback.New(
 		ctx,
-		cmd.Value("workspace-id").(string),
 		cmd.Value("objective-id").(string),
 		params,
 		options...,
@@ -161,10 +163,6 @@ func handleObjectivesFeedbackCreate(ctx context.Context, cmd *cli.Command) error
 func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("workspace-id") && len(unusedArgs) > 0 {
-		cmd.Set("workspace-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
 	if !cmd.IsSet("objective-id") && len(unusedArgs) > 0 {
 		cmd.Set("objective-id", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
@@ -184,7 +182,9 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.ObjectiveFeedbackListParams{}
+	params := cadenya.ObjectiveFeedbackListParams{
+		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
+	}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -194,7 +194,6 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 		options = append(options, option.WithResponseBodyInto(&res))
 		_, err = client.Objectives.Feedback.List(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,
@@ -213,7 +212,6 @@ func handleObjectivesFeedbackList(ctx context.Context, cmd *cli.Command) error {
 	} else {
 		iter := client.Objectives.Feedback.ListAutoPaging(
 			ctx,
-			cmd.Value("workspace-id").(string),
 			cmd.Value("objective-id").(string),
 			params,
 			options...,

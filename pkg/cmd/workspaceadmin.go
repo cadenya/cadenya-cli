@@ -14,19 +14,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var workspaceSecretsCreate = requestflag.WithInnerFlags(cli.Command{
+var workspaceAdminCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
-	Usage:   "Creates a new workspace secret in the workspace",
+	Usage:   "Creates a new workspace in the account. Admin only.",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "workspace-id",
-			Required:  true,
-			PathParam: "workspaceId",
-		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
-			Usage:    "CreateResourceMetadata contains the user-provided fields for creating\n a workspace-scoped resource. Read-only fields (id, account_id, workspace_id, profile_id,\n created_at) are excluded since they are set by the server.",
+			Usage:    "CreateAccountResourceMetadata contains the user-provided fields for creating\n an account-scoped resource. Read-only fields (id, account_id, profile_id) are excluded\n since they are set by the server.",
 			Required: true,
 			BodyPath: "metadata",
 		},
@@ -36,13 +31,13 @@ var workspaceSecretsCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "spec",
 		},
 	},
-	Action:          handleWorkspaceSecretsCreate,
+	Action:          handleWorkspaceAdminCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
 		&requestflag.InnerFlag[string]{
 			Name:       "metadata.name",
-			Usage:      `Human-readable name for the resource (e.g., "Customer Support Agent", "Email Tool")`,
+			Usage:      `Human-readable name for the resource (e.g., "Production API Key", "Staging Workspace")`,
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
@@ -58,15 +53,15 @@ var workspaceSecretsCreate = requestflag.WithInnerFlags(cli.Command{
 	},
 	"spec": {
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.value",
-			InnerField: "value",
+			Name:       "spec.description",
+			InnerField: "description",
 		},
 	},
 })
 
-var workspaceSecretsRetrieve = cli.Command{
+var workspaceAdminRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Retrieves a workspace secret by ID from the workspace",
+	Usage:   "Retrieves a workspace in the account by ID. Admin only.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -74,19 +69,14 @@ var workspaceSecretsRetrieve = cli.Command{
 			Required:  true,
 			PathParam: "workspaceId",
 		},
-		&requestflag.Flag[string]{
-			Name:      "id",
-			Required:  true,
-			PathParam: "id",
-		},
 	},
-	Action:          handleWorkspaceSecretsRetrieve,
+	Action:          handleWorkspaceAdminRetrieve,
 	HideHelpCommand: true,
 }
 
-var workspaceSecretsUpdate = requestflag.WithInnerFlags(cli.Command{
+var workspaceAdminUpdate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "update",
-	Usage:   "Updates a workspace secret in the workspace",
+	Usage:   "Updates a workspace's metadata (e.g. name) and spec. Admin only.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -94,14 +84,9 @@ var workspaceSecretsUpdate = requestflag.WithInnerFlags(cli.Command{
 			Required:  true,
 			PathParam: "workspaceId",
 		},
-		&requestflag.Flag[string]{
-			Name:      "id",
-			Required:  true,
-			PathParam: "id",
-		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
-			Usage:    "UpdateResourceMetadata contains the user-provided fields for updating\n a workspace-scoped resource. Read-only fields (id, account_id, workspace_id, profile_id,\n created_at) are excluded since they are set by the server.",
+			Usage:    "UpdateAccountResourceMetadata contains the user-provided fields for updating\n an account-scoped resource. Read-only fields (id, account_id, profile_id) are excluded\n since they are set by the server.",
 			BodyPath: "metadata",
 		},
 		&requestflag.Flag[map[string]any]{
@@ -114,13 +99,13 @@ var workspaceSecretsUpdate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "updateMask",
 		},
 	},
-	Action:          handleWorkspaceSecretsUpdate,
+	Action:          handleWorkspaceAdminUpdate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"metadata": {
 		&requestflag.InnerFlag[string]{
 			Name:       "metadata.name",
-			Usage:      `Human-readable name for the resource (e.g., "Customer Support Agent", "Email Tool")`,
+			Usage:      `Human-readable name for the resource (e.g., "Production API Key", "Staging Workspace")`,
 			InnerField: "name",
 		},
 		&requestflag.InnerFlag[string]{
@@ -136,31 +121,26 @@ var workspaceSecretsUpdate = requestflag.WithInnerFlags(cli.Command{
 	},
 	"spec": {
 		&requestflag.InnerFlag[string]{
-			Name:       "spec.value",
-			InnerField: "value",
+			Name:       "spec.description",
+			InnerField: "description",
 		},
 	},
 })
 
-var workspaceSecretsList = cli.Command{
+var workspaceAdminList = cli.Command{
 	Name:    "list",
-	Usage:   "Lists all workspace secrets in the workspace",
+	Usage:   "Lists every workspace in the account, optionally including archived ones. Admin\nonly.",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "workspace-id",
-			Required:  true,
-			PathParam: "workspaceId",
-		},
 		&requestflag.Flag[string]{
 			Name:      "cursor",
 			Usage:     "Pagination cursor from previous response",
 			QueryPath: "cursor",
 		},
 		&requestflag.Flag[bool]{
-			Name:      "include-info",
-			Usage:     "When set to true you may use more of your alloted API rate-limit",
-			QueryPath: "includeInfo",
+			Name:      "include-archived",
+			Usage:     "When true, archived workspaces are included in the results. Defaults to\n false (active workspaces only).",
+			QueryPath: "includeArchived",
 		},
 		&requestflag.Flag[string]{
 			Name:      "labels",
@@ -172,33 +152,18 @@ var workspaceSecretsList = cli.Command{
 			Usage:     "Maximum number of results to return",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[string]{
-			Name:      "prefix",
-			Usage:     "Filter expression (query param: prefix)",
-			QueryPath: "prefix",
-		},
-		&requestflag.Flag[string]{
-			Name:      "query",
-			Usage:     "Free-form search query",
-			QueryPath: "query",
-		},
-		&requestflag.Flag[string]{
-			Name:      "sort-order",
-			Usage:     "Sort order for results (asc or desc by creation time)",
-			QueryPath: "sortOrder",
-		},
 		&requestflag.Flag[int64]{
 			Name:  "max-items",
 			Usage: "The maximum number of items to return (use -1 for unlimited).",
 		},
 	},
-	Action:          handleWorkspaceSecretsList,
+	Action:          handleWorkspaceAdminList,
 	HideHelpCommand: true,
 }
 
-var workspaceSecretsDelete = cli.Command{
-	Name:    "delete",
-	Usage:   "Deletes a workspace secret from the workspace",
+var workspaceAdminArchive = cli.Command{
+	Name:    "archive",
+	Usage:   "Archives a workspace (soft delete). The workspace is retained, but any\nsubsequent request scoped to it returns a permission error. Archiving the\naccount's last active (non-archived) workspace is not allowed and returns\nFailedPrecondition. Admin only.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -206,17 +171,12 @@ var workspaceSecretsDelete = cli.Command{
 			Required:  true,
 			PathParam: "workspaceId",
 		},
-		&requestflag.Flag[string]{
-			Name:      "id",
-			Required:  true,
-			PathParam: "id",
-		},
 	},
-	Action:          handleWorkspaceSecretsDelete,
+	Action:          handleWorkspaceAdminArchive,
 	HideHelpCommand: true,
 }
 
-func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminCreate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
@@ -235,13 +195,11 @@ func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.WorkspaceSecretNewParams{
-		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
-	}
+	params := cadenya.WorkspaceAdminNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.WorkspaceSecrets.New(ctx, params, options...)
+	_, err = client.WorkspaceAdmin.New(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -254,18 +212,15 @@ func handleWorkspaceSecretsCreate(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "workspace-secrets create",
+		Title:          "workspace-admin create",
 		Transform:      transform,
 	})
 }
 
-func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -281,18 +236,13 @@ func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error
 		return err
 	}
 
-	params := cadenya.WorkspaceSecretGetParams{
+	params := cadenya.WorkspaceAdminGetParams{
 		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
 	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.WorkspaceSecrets.Get(
-		ctx,
-		cmd.Value("id").(string),
-		params,
-		options...,
-	)
+	_, err = client.WorkspaceAdmin.Get(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -305,18 +255,15 @@ func handleWorkspaceSecretsRetrieve(ctx context.Context, cmd *cli.Command) error
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "workspace-secrets retrieve",
+		Title:          "workspace-admin retrieve",
 		Transform:      transform,
 	})
 }
 
-func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -332,18 +279,13 @@ func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.WorkspaceSecretUpdateParams{
+	params := cadenya.WorkspaceAdminUpdateParams{
 		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
 	}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.WorkspaceSecrets.Update(
-		ctx,
-		cmd.Value("id").(string),
-		params,
-		options...,
-	)
+	_, err = client.WorkspaceAdmin.Update(ctx, params, options...)
 	if err != nil {
 		return err
 	}
@@ -356,12 +298,12 @@ func handleWorkspaceSecretsUpdate(ctx context.Context, cmd *cli.Command) error {
 		ExplicitFormat: explicitFormat,
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "workspace-secrets update",
+		Title:          "workspace-admin update",
 		Transform:      transform,
 	})
 }
 
-func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminList(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
@@ -380,9 +322,7 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.WorkspaceSecretListParams{
-		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
-	}
+	params := cadenya.WorkspaceAdminListParams{}
 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
@@ -390,7 +330,7 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 	if format == "raw" {
 		var res []byte
 		options = append(options, option.WithResponseBodyInto(&res))
-		_, err = client.WorkspaceSecrets.List(ctx, params, options...)
+		_, err = client.WorkspaceAdmin.List(ctx, params, options...)
 		if err != nil {
 			return err
 		}
@@ -399,11 +339,11 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "workspace-secrets list",
+			Title:          "workspace-admin list",
 			Transform:      transform,
 		})
 	} else {
-		iter := client.WorkspaceSecrets.ListAutoPaging(ctx, params, options...)
+		iter := client.WorkspaceAdmin.ListAutoPaging(ctx, params, options...)
 		maxItems := int64(-1)
 		if cmd.IsSet("max-items") {
 			maxItems = cmd.Value("max-items").(int64)
@@ -412,19 +352,16 @@ func handleWorkspaceSecretsList(ctx context.Context, cmd *cli.Command) error {
 			ExplicitFormat: explicitFormat,
 			Format:         format,
 			RawOutput:      cmd.Root().Bool("raw-output"),
-			Title:          "workspace-secrets list",
+			Title:          "workspace-admin list",
 			Transform:      transform,
 		})
 	}
 }
 
-func handleWorkspaceSecretsDelete(ctx context.Context, cmd *cli.Command) error {
+func handleWorkspaceAdminArchive(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("id") && len(unusedArgs) > 0 {
-		cmd.Set("id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
+
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
@@ -440,14 +377,9 @@ func handleWorkspaceSecretsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := cadenya.WorkspaceSecretDeleteParams{
+	params := cadenya.WorkspaceAdminArchiveParams{
 		WorkspaceID: cadenya.String(cmd.Value("workspace-id").(string)),
 	}
 
-	return client.WorkspaceSecrets.Delete(
-		ctx,
-		cmd.Value("id").(string),
-		params,
-		options...,
-	)
+	return client.WorkspaceAdmin.Archive(ctx, params, options...)
 }

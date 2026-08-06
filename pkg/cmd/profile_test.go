@@ -8,18 +8,13 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/mocktest"
 )
 
-func TestObjectivesToolsList(t *testing.T) {
+func TestProfilesWhoami(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"objectives:tools", "list",
-			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
-			"--cursor", "cursor",
-			"--limit", "0",
+			"profiles", "whoami",
 		)
 	})
 }

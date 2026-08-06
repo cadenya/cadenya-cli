@@ -9,14 +9,15 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/requestflag"
 )
 
-func TestWorkspaceSecretsCreate(t *testing.T) {
+func TestToolSetsSecretsCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "create",
+			"tool-sets:secrets", "create",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 		)
@@ -24,14 +25,15 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 
 	t.Run("inner flags", func(t *testing.T) {
 		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(workspaceSecretsCreate)
+		requestflag.CheckInnerFlags(toolSetsSecretsCreate)
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "create",
+			"tool-sets:secrets", "create",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -52,34 +54,37 @@ func TestWorkspaceSecretsCreate(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"workspace-secrets", "create",
+			"tool-sets:secrets", "create",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
 		)
 	})
 }
 
-func TestWorkspaceSecretsRetrieve(t *testing.T) {
+func TestToolSetsSecretsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "retrieve",
+			"tool-sets:secrets", "retrieve",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
 		)
 	})
 }
 
-func TestWorkspaceSecretsUpdate(t *testing.T) {
+func TestToolSetsSecretsUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "update",
+			"tool-sets:secrets", "update",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 			"--update-mask", "updateMask",
@@ -88,15 +93,16 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 
 	t.Run("inner flags", func(t *testing.T) {
 		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(workspaceSecretsUpdate)
+		requestflag.CheckInnerFlags(toolSetsSecretsUpdate)
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "update",
+			"tool-sets:secrets", "update",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -119,25 +125,26 @@ func TestWorkspaceSecretsUpdate(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"workspace-secrets", "update",
+			"tool-sets:secrets", "update",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
 		)
 	})
 }
 
-func TestWorkspaceSecretsList(t *testing.T) {
+func TestToolSetsSecretsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "list",
+			"tool-sets:secrets", "list",
 			"--max-items", "10",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
 			"--cursor", "cursor",
 			"--include-info=true",
-			"--labels", "labels",
 			"--limit", "0",
 			"--prefix", "prefix",
 			"--query", "query",
@@ -146,15 +153,16 @@ func TestWorkspaceSecretsList(t *testing.T) {
 	})
 }
 
-func TestWorkspaceSecretsDelete(t *testing.T) {
+func TestToolSetsSecretsDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"workspace-secrets", "delete",
+			"tool-sets:secrets", "delete",
 			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "wsecret_01HXKD2E5NQM3T9AYWCF586W5A",
+			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
 		)
 	})
 }

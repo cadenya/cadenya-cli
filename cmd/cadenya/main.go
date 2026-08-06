@@ -6,12 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.cadenya.com/cadenya-go"
 	"net/http"
 	"os"
 	"slices"
 
 	"github.com/cadenya/cadenya-cli/pkg/cmd"
-	"github.com/cadenya/cadenya-go"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )
@@ -42,7 +42,7 @@ func main() {
 		if errors.As(err, &apierr) {
 			fmt.Fprintf(os.Stderr, "%s %q: %d %s\n", apierr.Request.Method, apierr.Request.URL, apierr.Response.StatusCode, http.StatusText(apierr.Response.StatusCode))
 			format := app.String("format-error")
-			json := gjson.Parse(apierr.JSON.RawJSON())
+			json := gjson.Parse(apierr.RawJSON())
 			show_err := cmd.ShowJSON(json, cmd.ShowJSONOpts{
 				ExplicitFormat: app.IsSet("format-error"),
 				Format:         format,
