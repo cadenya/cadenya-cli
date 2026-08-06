@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.19.0](https://github.com/cadenya/cadenya-cli/compare/v0.18.1...v0.19.0) (2026-08-06)
+
+
+### Features
+
+* regenerate from spec with webhooks and discriminator overlays ([678dde0](https://github.com/cadenya/cadenya-cli/commit/678dde0601508ac6155df1354070319db2a5a41a))
+* sync SDKs to current API spec and add stlc promote/sync workflows ([1b230cd](https://github.com/cadenya/cadenya-cli/commit/1b230cde9aa4771776ca41130f293f80e4505da7))
+
 ## 0.18.1 (2026-06-08)
 
 Full Changelog: [v0.18.0...v0.18.1](https://github.com/cadenya/cadenya-cli/compare/v0.18.0...v0.18.1)
