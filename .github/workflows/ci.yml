@@ -39,6 +39,10 @@ jobs:
           token="$(printf %s "$GO_REPO_READ_TOKEN" | tr -d '[:space:]')"
           echo "token length: ${#token} (raw: ${#GO_REPO_READ_TOKEN})"
           if ! git ls-remote --exit-code "https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
+            for probe in cadenya/cadenya-go-staging cadenya/cadenya-cli-staging user; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${token}" "https://api.github.com/${probe/#cadenya/repos/cadenya}")
+              echo "API probe ${probe}: HTTP ${code}"
+            done
             echo "::error::GO_REPO_READ_TOKEN cannot read cadenya/cadenya-go-staging — check the token's resource owner (must be the cadenya org), repo selection, Contents:Read permission, and org approval state."
             exit 1
           fi
@@ -82,6 +86,10 @@ jobs:
           token="$(printf %s "$GO_REPO_READ_TOKEN" | tr -d '[:space:]')"
           echo "token length: ${#token} (raw: ${#GO_REPO_READ_TOKEN})"
           if ! git ls-remote --exit-code "https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
+            for probe in cadenya/cadenya-go-staging cadenya/cadenya-cli-staging user; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${token}" "https://api.github.com/${probe/#cadenya/repos/cadenya}")
+              echo "API probe ${probe}: HTTP ${code}"
+            done
             echo "::error::GO_REPO_READ_TOKEN cannot read cadenya/cadenya-go-staging — check the token's resource owner (must be the cadenya org), repo selection, Contents:Read permission, and org approval state."
             exit 1
           fi
@@ -146,6 +154,10 @@ jobs:
           token="$(printf %s "$GO_REPO_READ_TOKEN" | tr -d '[:space:]')"
           echo "token length: ${#token} (raw: ${#GO_REPO_READ_TOKEN})"
           if ! git ls-remote --exit-code "https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
+            for probe in cadenya/cadenya-go-staging cadenya/cadenya-cli-staging user; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${token}" "https://api.github.com/${probe/#cadenya/repos/cadenya}")
+              echo "API probe ${probe}: HTTP ${code}"
+            done
             echo "::error::GO_REPO_READ_TOKEN cannot read cadenya/cadenya-go-staging — check the token's resource owner (must be the cadenya org), repo selection, Contents:Read permission, and org approval state."
             exit 1
           fi
