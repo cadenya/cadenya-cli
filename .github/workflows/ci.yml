@@ -35,6 +35,10 @@ jobs:
         env:
           GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
         run: |
+          if ! git ls-remote --exit-code "https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
+            echo "::error::GO_REPO_READ_TOKEN cannot read cadenya/cadenya-go-staging — check the token's resource owner (must be the cadenya org), repo selection, Contents:Read permission, and org approval state."
+            exit 1
+          fi
           git config --global "url.https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
 
       - uses: ./.github/actions/setup-go
@@ -71,6 +75,10 @@ jobs:
         env:
           GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
         run: |
+          if ! git ls-remote --exit-code "https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
+            echo "::error::GO_REPO_READ_TOKEN cannot read cadenya/cadenya-go-staging — check the token's resource owner (must be the cadenya org), repo selection, Contents:Read permission, and org approval state."
+            exit 1
+          fi
           git config --global "url.https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
 
       - uses: ./.github/actions/setup-go
@@ -128,6 +136,10 @@ jobs:
         env:
           GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
         run: |
+          if ! git ls-remote --exit-code "https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
+            echo "::error::GO_REPO_READ_TOKEN cannot read cadenya/cadenya-go-staging — check the token's resource owner (must be the cadenya org), repo selection, Contents:Read permission, and org approval state."
+            exit 1
+          fi
           git config --global "url.https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
 
       - uses: ./.github/actions/setup-go
