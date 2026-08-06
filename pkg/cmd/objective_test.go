@@ -16,7 +16,7 @@ func TestObjectivesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--system-prompt-data", "{foo: bar}",
 			"--episodic-memory", "{key: key}",
@@ -41,7 +41,7 @@ func TestObjectivesCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
 			"--system-prompt-data", "{foo: bar}",
 			"--episodic-memory.key", "key",
@@ -96,7 +96,7 @@ func TestObjectivesCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -108,8 +108,8 @@ func TestObjectivesRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -122,15 +122,15 @@ func TestObjectivesList(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--agent-id", "agentId",
 			"--agent-schedule-id", "agentScheduleId",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
 			"--limit", "0",
 			"--parent-objective-id", "parentObjectiveId",
-			"--profile-id", "profile_01HXKD2E5NQM3T9AYWCFS0AP08",
+			"--profile-id", "profileId",
 			"--sort-order", "sortOrder",
 			"--state", "STATE_UNSPECIFIED",
 			"--subject-id", "subjectId",
@@ -148,8 +148,8 @@ func TestObjectivesCancel(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "cancel",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 			"--reason", "reason",
 		)
 	})
@@ -161,8 +161,8 @@ func TestObjectivesCancel(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives", "cancel",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 		)
 	})
 }
@@ -174,8 +174,8 @@ func TestObjectivesCompact(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "compact",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 			"--compaction-config", "{summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}",
 		)
 	})
@@ -189,8 +189,8 @@ func TestObjectivesCompact(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "compact",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 			"--compaction-config.summarization", "{instructions: instructions}",
 			"--compaction-config.tool-result-clearing", "{preserveRecentResults: 0}",
 			"--compaction-config.trigger-threshold", "0",
@@ -210,8 +210,8 @@ func TestObjectivesCompact(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives", "compact",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 		)
 	})
 }
@@ -223,8 +223,8 @@ func TestObjectivesContinue(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "continue",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 			"--message", "message",
 			"--enqueue=true",
 		)
@@ -239,8 +239,8 @@ func TestObjectivesContinue(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives", "continue",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 		)
 	})
 }
@@ -253,8 +253,8 @@ func TestObjectivesListContextWindows(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "list-context-windows",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -271,8 +271,8 @@ func TestObjectivesListEvents(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "list-events",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -291,8 +291,8 @@ func TestObjectivesRetrieveDiagnostics(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives", "retrieve-diagnostics",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 		)
 	})
 }
@@ -305,8 +305,8 @@ func TestObjectivesStreamEvents(t *testing.T) {
 			"--api-key", "string",
 			"objectives", "stream-events",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 		)
 	})
 }

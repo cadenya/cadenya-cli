@@ -16,7 +16,7 @@ func TestMemoryLayersCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{type: MEMORY_LAYER_TYPE_UNSPECIFIED, description: description}",
 		)
@@ -31,7 +31,7 @@ func TestMemoryLayersCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -55,7 +55,7 @@ func TestMemoryLayersCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"memory-layers", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -67,8 +67,8 @@ func TestMemoryLayersRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -80,8 +80,8 @@ func TestMemoryLayersUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{type: MEMORY_LAYER_TYPE_UNSPECIFIED, description: description}",
 			"--update-mask", "updateMask",
@@ -97,8 +97,8 @@ func TestMemoryLayersUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -124,8 +124,8 @@ func TestMemoryLayersUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"memory-layers", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -138,8 +138,8 @@ func TestMemoryLayersList(t *testing.T) {
 			"--api-key", "string",
 			"memory-layers", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--agent-id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--agent-id", "agentId",
 			"--cursor", "cursor",
 			"--episodic-key-prefix", "episodicKeyPrefix",
 			"--include-info=true",
@@ -160,8 +160,8 @@ func TestMemoryLayersDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"memory-layers", "delete",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "memlyr_01HXKD2E5NQM3T9AYWCFFFBMJH",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }

@@ -148,7 +148,7 @@ var objectivesToolCallsDeny = cli.Command{
 	HideHelpCommand: true,
 }
 
-var objectivesToolCallsSetContent = cli.Command{
+var objectivesToolCallsSetContent = requestflag.WithInnerFlags(cli.Command{
 	Name:    "set-content",
 	Usage:   "For bare tool calls (tool sets with no execution adapter), sets the content an\nexternal API consumer supplies for the call — used for human-in-the-loop tools\nand reverse harnesses that execute tools locally and report results back.",
 	Suggest: true,
@@ -177,7 +177,27 @@ var objectivesToolCallsSetContent = cli.Command{
 	},
 	Action:          handleObjectivesToolCallsSetContent,
 	HideHelpCommand: true,
-}
+}, map[string][]requestflag.HasOuterFlag{
+	"content": {
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "content.audio",
+			InnerField: "audio",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "content.image",
+			InnerField: "image",
+		},
+		&requestflag.InnerFlag[map[string]any]{
+			Name:       "content.text",
+			InnerField: "text",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "content.type",
+			Usage:      "The JSON name of the variant set in `block` (e.g. \"text\"). Required\n on input; drives the discriminated union in the generated OpenAPI.",
+			InnerField: "type",
+		},
+	},
+})
 
 func handleObjectivesToolCallsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := cadenya.NewClient(getDefaultRequestOptions(cmd)...)

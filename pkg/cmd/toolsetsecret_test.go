@@ -16,8 +16,8 @@ func TestToolSetsSecretsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:secrets", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 		)
@@ -32,8 +32,8 @@ func TestToolSetsSecretsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:secrets", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -55,8 +55,8 @@ func TestToolSetsSecretsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"tool-sets:secrets", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
 		)
 	})
 }
@@ -68,9 +68,9 @@ func TestToolSetsSecretsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:secrets", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
-			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
+			"--id", "id",
 		)
 	})
 }
@@ -82,9 +82,9 @@ func TestToolSetsSecretsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:secrets", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
-			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
+			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{value: value}",
 			"--update-mask", "updateMask",
@@ -100,9 +100,9 @@ func TestToolSetsSecretsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:secrets", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
-			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
+			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -126,9 +126,9 @@ func TestToolSetsSecretsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"tool-sets:secrets", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
-			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
+			"--id", "id",
 		)
 	})
 }
@@ -141,8 +141,8 @@ func TestToolSetsSecretsList(t *testing.T) {
 			"--api-key", "string",
 			"tool-sets:secrets", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--limit", "0",
@@ -160,9 +160,9 @@ func TestToolSetsSecretsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"tool-sets:secrets", "delete",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--tool-set-id", "toolset_01HXKD2E5NQM3T9AYWCFNRMN74",
-			"--id", "toolsecret_01HXKD2E5NQM3T9AYWCF8PWC4R",
+			"--workspace-id", "workspaceId",
+			"--tool-set-id", "toolSetId",
+			"--id", "id",
 		)
 	})
 }

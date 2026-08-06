@@ -16,9 +16,9 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"ai-provider-keys", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {openrouter: {region: region}, type: openrouter}, credentials: {apiKey: {apiKey: apiKey}, type: apiKey}, provider: AI_PROVIDER_UNSPECIFIED}",
+			"--spec", "{config: {openai: {organizationId: organizationId, projectId: projectId}, openaiCompatible: {baseUrl: baseUrl}, openrouter: {region: region}, type: type}, credentials: {apiKey: {apiKey: apiKey}, headers: {headers: {foo: string}}, type: type}, provider: AI_PROVIDER_UNSPECIFIED}",
 		)
 	})
 
@@ -31,12 +31,12 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"ai-provider-keys", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.config", "{openrouter: {region: region}, type: openrouter}",
-			"--spec.credentials", "{apiKey: {apiKey: apiKey}, type: apiKey}",
+			"--spec.config", "{openai: {organizationId: organizationId, projectId: projectId}, openaiCompatible: {baseUrl: baseUrl}, openrouter: {region: region}, type: type}",
+			"--spec.credentials", "{apiKey: {apiKey: apiKey}, headers: {headers: {foo: string}}, type: type}",
 			"--spec.provider", "AI_PROVIDER_UNSPECIFIED",
 		)
 	})
@@ -51,19 +51,27 @@ func TestAIProviderKeysCreate(t *testing.T) {
 			"    foo: string\n" +
 			"spec:\n" +
 			"  config:\n" +
+			"    openai:\n" +
+			"      organizationId: organizationId\n" +
+			"      projectId: projectId\n" +
+			"    openaiCompatible:\n" +
+			"      baseUrl: baseUrl\n" +
 			"    openrouter:\n" +
 			"      region: region\n" +
-			"    type: openrouter\n" +
+			"    type: type\n" +
 			"  credentials:\n" +
 			"    apiKey:\n" +
 			"      apiKey: apiKey\n" +
-			"    type: apiKey\n" +
+			"    headers:\n" +
+			"      headers:\n" +
+			"        foo: string\n" +
+			"    type: type\n" +
 			"  provider: AI_PROVIDER_UNSPECIFIED\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"ai-provider-keys", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -75,8 +83,8 @@ func TestAIProviderKeysRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"ai-provider-keys", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "aipk_01HXKD2E5NQM3T9AYWCFQ41VW3",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -88,10 +96,10 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"ai-provider-keys", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "aipk_01HXKD2E5NQM3T9AYWCFQ41VW3",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
-			"--spec", "{config: {openrouter: {region: region}, type: openrouter}, credentials: {apiKey: {apiKey: apiKey}, type: apiKey}, provider: AI_PROVIDER_UNSPECIFIED}",
+			"--spec", "{config: {openai: {organizationId: organizationId, projectId: projectId}, openaiCompatible: {baseUrl: baseUrl}, openrouter: {region: region}, type: type}, credentials: {apiKey: {apiKey: apiKey}, headers: {headers: {foo: string}}, type: type}, provider: AI_PROVIDER_UNSPECIFIED}",
 			"--update-mask", "updateMask",
 		)
 	})
@@ -105,13 +113,13 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"ai-provider-keys", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "aipk_01HXKD2E5NQM3T9AYWCFQ41VW3",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
-			"--spec.config", "{openrouter: {region: region}, type: openrouter}",
-			"--spec.credentials", "{apiKey: {apiKey: apiKey}, type: apiKey}",
+			"--spec.config", "{openai: {organizationId: organizationId, projectId: projectId}, openaiCompatible: {baseUrl: baseUrl}, openrouter: {region: region}, type: type}",
+			"--spec.credentials", "{apiKey: {apiKey: apiKey}, headers: {headers: {foo: string}}, type: type}",
 			"--spec.provider", "AI_PROVIDER_UNSPECIFIED",
 			"--update-mask", "updateMask",
 		)
@@ -127,21 +135,29 @@ func TestAIProviderKeysUpdate(t *testing.T) {
 			"    foo: string\n" +
 			"spec:\n" +
 			"  config:\n" +
+			"    openai:\n" +
+			"      organizationId: organizationId\n" +
+			"      projectId: projectId\n" +
+			"    openaiCompatible:\n" +
+			"      baseUrl: baseUrl\n" +
 			"    openrouter:\n" +
 			"      region: region\n" +
-			"    type: openrouter\n" +
+			"    type: type\n" +
 			"  credentials:\n" +
 			"    apiKey:\n" +
 			"      apiKey: apiKey\n" +
-			"    type: apiKey\n" +
+			"    headers:\n" +
+			"      headers:\n" +
+			"        foo: string\n" +
+			"    type: type\n" +
 			"  provider: AI_PROVIDER_UNSPECIFIED\n" +
 			"updateMask: updateMask\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"ai-provider-keys", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "aipk_01HXKD2E5NQM3T9AYWCFQ41VW3",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -154,7 +170,7 @@ func TestAIProviderKeysList(t *testing.T) {
 			"--api-key", "string",
 			"ai-provider-keys", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -174,8 +190,8 @@ func TestAIProviderKeysDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"ai-provider-keys", "delete",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "aipk_01HXKD2E5NQM3T9AYWCFQ41VW3",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }

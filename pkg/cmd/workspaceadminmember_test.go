@@ -16,7 +16,7 @@ func TestWorkspaceAdminMembersList(t *testing.T) {
 			"--api-key", "string",
 			"workspace-admin:members", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--cursor", "cursor",
 			"--limit", "0",
 		)
@@ -30,7 +30,7 @@ func TestWorkspaceAdminMembersAdd(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-admin:members", "add",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--email", "email",
 			"--profile-id", "profile_01HXKD2E5NQM3T9AYWCFS0AP08",
 		)
@@ -45,7 +45,7 @@ func TestWorkspaceAdminMembersAdd(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"workspace-admin:members", "add",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -57,8 +57,8 @@ func TestWorkspaceAdminMembersRemove(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-admin:members", "remove",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--profile-id", "profile_01HXKD2E5NQM3T9AYWCFS0AP08",
+			"--workspace-id", "workspaceId",
+			"--profile-id", "profileId",
 		)
 	})
 }

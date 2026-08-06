@@ -62,6 +62,32 @@ var memoryLayersEntriesCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "labels",
 		},
 	},
+	"spec": {
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.key",
+			Usage:      "See MemoryEntrySpec.key for the full rule set. Same constraints apply\n here.",
+			InnerField: "key",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.content",
+			Usage:      "Inline content, written directly into the entry.",
+			InnerField: "content",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.description",
+			InnerField: "description",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.type",
+			Usage:      "The JSON name of the variant set in `source` (e.g. \"content\"). Required\n on input; drives the discriminated union in the generated OpenAPI.",
+			InnerField: "type",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "spec.upload-id",
+			Usage:      "ID of a COMPLETE Upload. The server reads the object from storage,\n copies its bytes into the entry, and marks the upload consumed.",
+			InnerField: "uploadId",
+		},
+	},
 })
 
 var memoryLayersEntriesRetrieve = cli.Command{

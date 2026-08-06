@@ -16,8 +16,8 @@ func TestModelsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"models", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "model_01HXKD2E5NQM3T9AYWCFKJ4GED",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -30,7 +30,7 @@ func TestModelsList(t *testing.T) {
 			"--api-key", "string",
 			"models", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--ai-provider-key-id", "aiProviderKeyId",
 			"--cursor", "cursor",
 			"--include-info=true",
@@ -52,8 +52,8 @@ func TestModelsDisable(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"models", "disable",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "model_01HXKD2E5NQM3T9AYWCFKJ4GED",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -65,8 +65,8 @@ func TestModelsEnable(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"models", "enable",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "model_01HXKD2E5NQM3T9AYWCFKJ4GED",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -78,7 +78,7 @@ func TestModelsSwap(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"models", "swap",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--model-swap", "{currentModelId: model_01HXKD2E5NQM3T9AYWCFKJ4GED, disableCurrentAfterSwap: true, nextModelId: model_01HXKD2E5NQM3T9AYWCFKJ4GED}",
 		)
 	})
@@ -92,7 +92,7 @@ func TestModelsSwap(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"models", "swap",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--model-swap.current-model-id", "model_01HXKD2E5NQM3T9AYWCFKJ4GED",
 			"--model-swap.disable-current-after-swap=true",
 			"--model-swap.next-model-id", "model_01HXKD2E5NQM3T9AYWCFKJ4GED",
@@ -110,7 +110,7 @@ func TestModelsSwap(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"models", "swap",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }

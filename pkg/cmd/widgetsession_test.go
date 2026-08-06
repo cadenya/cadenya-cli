@@ -16,7 +16,7 @@ func TestWidgetSessionsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widget-sessions", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--spec", "{widgetId: wgt_01HXKD2E5NQM3T9AYWCFMZZZBD, expiresAt: '2019-12-27T18:11:19.117Z', pinnedParameters: {foo: string}, subject: {id: customer-user-42, name: Jane Doe}, tenant: {id: acme-corp, name: Acme Corp}}",
 			"--metadata", "{externalId: externalId, labels: {foo: string}}",
 			"--secret", "{name: name, value: value}",
@@ -32,7 +32,7 @@ func TestWidgetSessionsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widget-sessions", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--spec.widget-id", "wgt_01HXKD2E5NQM3T9AYWCFMZZZBD",
 			"--spec.expires-at", "2019-12-27T18:11:19.117Z",
 			"--spec.pinned-parameters", "{foo: string}",
@@ -70,7 +70,7 @@ func TestWidgetSessionsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"widget-sessions", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -82,7 +82,7 @@ func TestWidgetSessionsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widget-sessions", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -96,7 +96,7 @@ func TestWidgetSessionsList(t *testing.T) {
 			"--api-key", "string",
 			"widget-sessions", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -117,7 +117,7 @@ func TestWidgetSessionsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widget-sessions", "delete",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})
@@ -130,7 +130,7 @@ func TestWidgetSessionsDeleteTenant(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widget-sessions", "delete-tenant",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--tenant-id", "tenantId",
 		)
 	})
@@ -143,7 +143,7 @@ func TestWidgetSessionsRevoke(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"widget-sessions", "revoke",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--id", "id",
 		)
 	})

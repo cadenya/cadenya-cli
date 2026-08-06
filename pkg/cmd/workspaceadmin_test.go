@@ -62,7 +62,7 @@ func TestWorkspaceAdminRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-admin", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -74,7 +74,7 @@ func TestWorkspaceAdminUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-admin", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{description: description}",
 			"--update-mask", "updateMask",
@@ -90,7 +90,7 @@ func TestWorkspaceAdminUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-admin", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -114,7 +114,7 @@ func TestWorkspaceAdminUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"workspace-admin", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -142,7 +142,7 @@ func TestWorkspaceAdminArchive(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"workspace-admin", "archive",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }

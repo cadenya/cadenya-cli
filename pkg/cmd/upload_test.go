@@ -16,7 +16,7 @@ func TestUploadsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"uploads", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{contentType: contentType, filename: filename, sizeBytes: sizeBytes}",
 		)
@@ -31,7 +31,7 @@ func TestUploadsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"uploads", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -57,7 +57,7 @@ func TestUploadsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"uploads", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -69,8 +69,8 @@ func TestUploadsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"uploads", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "upload_01HXKD2E5NQM3T9AYWCFZ05DNK",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cadenya/cadenya-cli/internal/mocktest"
+	"github.com/cadenya/cadenya-cli/internal/requestflag"
 )
 
 func TestObjectivesToolCallsRetrieve(t *testing.T) {
@@ -15,9 +16,9 @@ func TestObjectivesToolCallsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:tool-calls", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
-			"--tool-call-id", "toolcall_01HXKD2E5NQM3T9AYWCFTANFGV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
+			"--tool-call-id", "toolCallId",
 		)
 	})
 }
@@ -30,8 +31,8 @@ func TestObjectivesToolCallsList(t *testing.T) {
 			"--api-key", "string",
 			"objectives:tool-calls", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
 			"--execution-status", "TOOL_CALL_EXECUTION_STATUS_UNSPECIFIED",
 			"--include-info=true",
@@ -49,9 +50,9 @@ func TestObjectivesToolCallsApprove(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:tool-calls", "approve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
-			"--tool-call-id", "toolcall_01HXKD2E5NQM3T9AYWCFTANFGV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
+			"--tool-call-id", "toolCallId",
 		)
 	})
 }
@@ -63,9 +64,9 @@ func TestObjectivesToolCallsDeny(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:tool-calls", "deny",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
-			"--tool-call-id", "toolcall_01HXKD2E5NQM3T9AYWCFTANFGV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
+			"--tool-call-id", "toolCallId",
 			"--memo", "memo",
 		)
 	})
@@ -77,9 +78,9 @@ func TestObjectivesToolCallsDeny(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"objectives:tool-calls", "deny",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
-			"--tool-call-id", "toolcall_01HXKD2E5NQM3T9AYWCFTANFGV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
+			"--tool-call-id", "toolCallId",
 		)
 	})
 }
@@ -91,10 +92,29 @@ func TestObjectivesToolCallsSetContent(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"objectives:tool-calls", "set-content",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
-			"--tool-call-id", "toolcall_01HXKD2E5NQM3T9AYWCFTANFGV",
-			"--content", "{text: {text: text}, type: text}",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
+			"--tool-call-id", "toolCallId",
+			"--content", "{audio: {data: data, mimeType: mimeType}, image: {data: data, mimeType: mimeType}, text: {text: text}, type: type}",
+		)
+	})
+
+	t.Run("inner flags", func(t *testing.T) {
+		// Check that inner flags have been set up correctly
+		requestflag.CheckInnerFlags(objectivesToolCallsSetContent)
+
+		// Alternative argument passing style using inner flags
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"objectives:tool-calls", "set-content",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
+			"--tool-call-id", "toolCallId",
+			"--content.audio", "{data: data, mimeType: mimeType}",
+			"--content.image", "{data: data, mimeType: mimeType}",
+			"--content.text", "{text: text}",
+			"--content.type", "type",
 		)
 	})
 
@@ -102,16 +122,22 @@ func TestObjectivesToolCallsSetContent(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
 			"content:\n" +
-			"  - text:\n" +
+			"  - audio:\n" +
+			"      data: data\n" +
+			"      mimeType: mimeType\n" +
+			"    image:\n" +
+			"      data: data\n" +
+			"      mimeType: mimeType\n" +
+			"    text:\n" +
 			"      text: text\n" +
-			"    type: text\n")
+			"    type: type\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
 			"objectives:tool-calls", "set-content",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--objective-id", "obj_01HXKD2E5NQM3T9AYWCFQAZGFV",
-			"--tool-call-id", "toolcall_01HXKD2E5NQM3T9AYWCFTANFGV",
+			"--workspace-id", "workspaceId",
+			"--objective-id", "objectiveId",
+			"--tool-call-id", "toolCallId",
 		)
 	})
 }

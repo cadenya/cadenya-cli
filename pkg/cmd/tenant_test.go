@@ -8,33 +8,48 @@ import (
 	"github.com/cadenya/cadenya-cli/internal/mocktest"
 )
 
-func TestObjectivesTasksRetrieve(t *testing.T) {
+func TestTenantsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"objectives:tasks", "retrieve",
+			"tenants", "retrieve",
 			"--workspace-id", "workspaceId",
-			"--objective-id", "objectiveId",
 			"--id", "id",
+			"--include-info=true",
 		)
 	})
 }
 
-func TestObjectivesTasksList(t *testing.T) {
+func TestTenantsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"objectives:tasks", "list",
+			"tenants", "list",
 			"--max-items", "10",
 			"--workspace-id", "workspaceId",
-			"--objective-id", "objectiveId",
 			"--cursor", "cursor",
+			"--include-info=true",
+			"--labels", "labels",
 			"--limit", "0",
+			"--query", "query",
 			"--sort-order", "sortOrder",
+		)
+	})
+}
+
+func TestTenantsDelete(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"tenants", "delete",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }

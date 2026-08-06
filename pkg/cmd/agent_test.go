@@ -16,7 +16,7 @@ func TestAgentsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, outputDefinition: {foo: bar}, systemPromptDataSchema: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
 			"--default-variation", "{metadata: {name: name, externalId: externalId, labels: {foo: string}}, spec: {compactionConfig: {summarization: {instructions: instructions}, toolResultClearing: {preserveRecentResults: 0}, triggerThreshold: 0}, constraints: {inactivityTimeout: '-160513s', maxSubObjectives: 0, maxToolCalls: 0}, description: description, firstUserMessageTemplate: firstUserMessageTemplate, modelConfig: {modelId: claude/opus-4.6, temperature: 0}, progressiveDiscovery: {hints: [string], maxTools: 0}, systemPromptTemplate: systemPromptTemplate}}",
@@ -32,7 +32,7 @@ func TestAgentsCreate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -97,7 +97,7 @@ func TestAgentsCreate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents", "create",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 		)
 	})
 }
@@ -109,8 +109,8 @@ func TestAgentsRetrieve(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "retrieve",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -122,8 +122,8 @@ func TestAgentsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 			"--metadata", "{name: name, externalId: externalId, labels: {foo: string}}",
 			"--spec", "{variationSelectionMode: VARIATION_SELECTION_MODE_UNSPECIFIED, description: description, enableEpisodicMemory: true, episodicMemoryTtl: 0, outputDefinition: {foo: bar}, systemPromptDataSchema: {foo: bar}, webhookEventsUrl: webhookEventsUrl}",
 			"--update-mask", "updateMask",
@@ -139,8 +139,8 @@ func TestAgentsUpdate(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 			"--metadata.name", "name",
 			"--metadata.external-id", "externalId",
 			"--metadata.labels", "{foo: string}",
@@ -178,8 +178,8 @@ func TestAgentsUpdate(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"agents", "update",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -192,7 +192,7 @@ func TestAgentsList(t *testing.T) {
 			"--api-key", "string",
 			"agents", "list",
 			"--max-items", "10",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+			"--workspace-id", "workspaceId",
 			"--cursor", "cursor",
 			"--include-info=true",
 			"--labels", "labels",
@@ -213,8 +213,8 @@ func TestAgentsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "delete",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -226,8 +226,8 @@ func TestAgentsArchive(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "archive",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -239,8 +239,8 @@ func TestAgentsPublish(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "publish",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -252,8 +252,8 @@ func TestAgentsUnarchive(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "unarchive",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
@@ -265,8 +265,8 @@ func TestAgentsUnpublish(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"agents", "unpublish",
-			"--workspace-id", "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
-			"--id", "agent_01HXKD2E5NQM3T9AYWCFMGWT9Y",
+			"--workspace-id", "workspaceId",
+			"--id", "id",
 		)
 	})
 }
