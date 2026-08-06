@@ -35,11 +35,14 @@ jobs:
         env:
           GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
         run: |
-          if ! git ls-remote --exit-code "https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
+          # Strip stray whitespace a paste can smuggle into the secret; log shape only.
+          token="$(printf %s "$GO_REPO_READ_TOKEN" | tr -d '[:space:]')"
+          echo "token length: ${#token} (raw: ${#GO_REPO_READ_TOKEN})"
+          if ! git ls-remote --exit-code "https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
             echo "::error::GO_REPO_READ_TOKEN cannot read cadenya/cadenya-go-staging — check the token's resource owner (must be the cadenya org), repo selection, Contents:Read permission, and org approval state."
             exit 1
           fi
-          git config --global "url.https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
+          git config --global "url.https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
 
       - uses: ./.github/actions/setup-go
         with:
@@ -75,11 +78,14 @@ jobs:
         env:
           GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
         run: |
-          if ! git ls-remote --exit-code "https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
+          # Strip stray whitespace a paste can smuggle into the secret; log shape only.
+          token="$(printf %s "$GO_REPO_READ_TOKEN" | tr -d '[:space:]')"
+          echo "token length: ${#token} (raw: ${#GO_REPO_READ_TOKEN})"
+          if ! git ls-remote --exit-code "https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
             echo "::error::GO_REPO_READ_TOKEN cannot read cadenya/cadenya-go-staging — check the token's resource owner (must be the cadenya org), repo selection, Contents:Read permission, and org approval state."
             exit 1
           fi
-          git config --global "url.https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
+          git config --global "url.https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
 
       - uses: ./.github/actions/setup-go
         with:
@@ -136,11 +142,14 @@ jobs:
         env:
           GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
         run: |
-          if ! git ls-remote --exit-code "https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
+          # Strip stray whitespace a paste can smuggle into the secret; log shape only.
+          token="$(printf %s "$GO_REPO_READ_TOKEN" | tr -d '[:space:]')"
+          echo "token length: ${#token} (raw: ${#GO_REPO_READ_TOKEN})"
+          if ! git ls-remote --exit-code "https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging" >/dev/null 2>&1; then
             echo "::error::GO_REPO_READ_TOKEN cannot read cadenya/cadenya-go-staging — check the token's resource owner (must be the cadenya org), repo selection, Contents:Read permission, and org approval state."
             exit 1
           fi
-          git config --global "url.https://x-access-token:${GO_REPO_READ_TOKEN}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
+          git config --global "url.https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
 
       - uses: ./.github/actions/setup-go
         with:
