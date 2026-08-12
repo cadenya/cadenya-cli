@@ -41,10 +41,10 @@ func ValidateBaseURL(value, source string) error {
 func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 	opts := []option.RequestOption{
 		option.WithHeader("User-Agent", fmt.Sprintf("Cadenya/CLI %s", Version)),
-		option.WithHeader("X-Stainless-Lang", "cli"),
-		option.WithHeader("X-Stainless-Package-Version", Version),
-		option.WithHeader("X-Stainless-Runtime", "cli"),
-		option.WithHeader("X-Stainless-CLI-Command", cmd.FullName()),
+		option.WithHeader("X-Cadenya-Lang", "cli"),
+		option.WithHeader("X-Cadenya-Package-Version", Version),
+		option.WithHeader("X-Cadenya-Runtime", "cli"),
+		option.WithHeader("X-Cadenya-CLI-Command", cmd.FullName()),
 	}
 	if cmd.IsSet("api-key") {
 		opts = append(opts, option.WithAPIKey(cmd.String("api-key")))
