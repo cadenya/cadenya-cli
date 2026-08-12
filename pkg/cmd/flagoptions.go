@@ -608,7 +608,7 @@ func applyDataAliases(cmd *cli.Command, bodyMap map[string]any) {
 // rewriteAliases replaces each alias key in m with the canonical key, preserving the value. The
 // "canonical" key is the name the API itself expects (the OpenAPI property/field name) — e.g. for
 // a top-level flag, the parameter's BodyPath; for an inner flag, the inner field name. Aliases are
-// the user-facing alternate names declared via x-stainless-cli-data-alias.
+// the user-facing alternate names declared via a data-alias extension in the OpenAPI spec.
 func rewriteAliases(m map[string]any, canonical string, aliases []string) {
 	for _, alias := range aliases {
 		if alias == "" || alias == canonical {

@@ -41,10 +41,10 @@ func ValidateBaseURL(value, source string) error {
 func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 	opts := []option.RequestOption{
 		option.WithHeader("User-Agent", fmt.Sprintf("Cadenya/CLI %s", Version)),
-		option.WithHeader("X-Stainless-Lang", "cli"),
-		option.WithHeader("X-Stainless-Package-Version", Version),
-		option.WithHeader("X-Stainless-Runtime", "cli"),
-		option.WithHeader("X-Stainless-CLI-Command", cmd.FullName()),
+		option.WithHeader("X-Cadenya-Lang", "cli"),
+		option.WithHeader("X-Cadenya-Package-Version", Version),
+		option.WithHeader("X-Cadenya-Runtime", "cli"),
+		option.WithHeader("X-Cadenya-CLI-Command", cmd.FullName()),
 	}
 	if cmd.IsSet("api-key") {
 		opts = append(opts, option.WithAPIKey(cmd.String("api-key")))
@@ -105,7 +105,7 @@ func isInputPiped() bool {
 		return true
 	}
 
-	// For pipes/sockets (e.g. `echo foo | stainlesscli`), use an OS-specific check to determine whether
+	// For pipes/sockets (e.g. `echo foo | cadenya`), use an OS-specific check to determine whether
 	// data is actually available. Some environments like Cursor's integrated terminal connect stdin as a
 	// pipe even when nothing is being piped.
 	if mode&(os.ModeNamedPipe|os.ModeSocket) != 0 {
