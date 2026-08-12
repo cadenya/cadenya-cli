@@ -29,23 +29,23 @@ func TestDebugMiddleware(t *testing.T) {
 
 		middleware, logBuf := setup()
 
-		const stainlessUserAgent = "Stainless"
+		const customUserAgent = "Cadenya"
 
 		req := httptest.NewRequest("GET", "https://example.com", nil)
-		req.Header.Set("User-Agent", stainlessUserAgent)
+		req.Header.Set("User-Agent", customUserAgent)
 
 		var nextMiddlewareRan bool
 		middleware.Middleware()(req, func(req *http.Request) (*http.Response, error) {
 			nextMiddlewareRan = true
 
 			// The request sent down through middleware shouldn't be mutated.
-			require.Equal(t, stainlessUserAgent, req.Header.Get("User-Agent"))
+			require.Equal(t, customUserAgent, req.Header.Get("User-Agent"))
 
 			return &http.Response{}, nil
 		})
 
 		require.True(t, nextMiddlewareRan)
-		require.Contains(t, logBuf.String(), "User-Agent: "+stainlessUserAgent)
+		require.Contains(t, logBuf.String(), "User-Agent: "+customUserAgent)
 	})
 
 	const secretToken = "secret-token"

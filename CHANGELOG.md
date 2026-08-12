@@ -7,7 +7,7 @@ Full Changelog: [v0.18.1...v0.19.0](https://github.com/cadenya/cadenya-cli/compa
 ### Features
 
 * regenerate from spec with webhooks and discriminator overlays ([678dde0](https://github.com/cadenya/cadenya-cli/commit/678dde0601508ac6155df1354070319db2a5a41a))
-* sync SDKs to current API spec and add stlc promote/sync workflows ([1b230cd](https://github.com/cadenya/cadenya-cli/commit/1b230cde9aa4771776ca41130f293f80e4505da7))
+* sync SDKs to current API spec and add promote/sync workflows ([1b230cd](https://github.com/cadenya/cadenya-cli/commit/1b230cde9aa4771776ca41130f293f80e4505da7))
 
 ## 0.18.1 (2026-06-08)
 
@@ -15,7 +15,7 @@ Full Changelog: [v0.18.0...v0.18.1](https://github.com/cadenya/cadenya-cli/compa
 
 ### Chores
 
-* align cadenya-go to v0.30.0 to match Stainless codegen ([a62ac1e](https://github.com/cadenya/cadenya-cli/commit/a62ac1e4daab24e408cfa3eac9e1fcecd06c57ba))
+* align cadenya-go to v0.30.0 to match generated code ([a62ac1e](https://github.com/cadenya/cadenya-cli/commit/a62ac1e4daab24e408cfa3eac9e1fcecd06c57ba))
 
 ## 0.18.0 (2026-05-25)
 
@@ -212,7 +212,7 @@ Full Changelog: [v0.2.0...v0.3.0](https://github.com/cadenya/cadenya-cli/compare
 * better error message if scheme forgotten in CLI `*_BASE_URL`/`--base-url` ([f9659e2](https://github.com/cadenya/cadenya-cli/commit/f9659e218740ff4b38bdbdf37b6c2d82c7567d88))
 * binary-only parameters become CLI flags that take filenames only ([3488aa4](https://github.com/cadenya/cadenya-cli/commit/3488aa432bb475f8325a693894f2e29ae67dec72))
 * **cli:** add `--raw-output`/`-r` option to print raw (non-JSON) strings ([934c6a0](https://github.com/cadenya/cadenya-cli/commit/934c6a08a73715a4bb08a81dda8537b2b457feec))
-* **cli:** alias parameters in data with `x-stainless-cli-data-alias` ([c401554](https://github.com/cadenya/cadenya-cli/commit/c401554944a89abed7456ff7b81be965c2528b98))
+* **cli:** alias parameters in data with a CLI data-alias spec extension ([c401554](https://github.com/cadenya/cadenya-cli/commit/c401554944a89abed7456ff7b81be965c2528b98))
 * **cli:** send filename and content type when reading input from files ([f86c389](https://github.com/cadenya/cadenya-cli/commit/f86c389eb950b3eebd0399136ddcfdc091208afc))
 
 

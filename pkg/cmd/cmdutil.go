@@ -105,7 +105,7 @@ func isInputPiped() bool {
 		return true
 	}
 
-	// For pipes/sockets (e.g. `echo foo | stainlesscli`), use an OS-specific check to determine whether
+	// For pipes/sockets (e.g. `echo foo | cadenya`), use an OS-specific check to determine whether
 	// data is actually available. Some environments like Cursor's integrated terminal connect stdin as a
 	// pipe even when nothing is being piped.
 	if mode&(os.ModeNamedPipe|os.ModeSocket) != 0 {

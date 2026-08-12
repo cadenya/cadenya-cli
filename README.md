@@ -2,7 +2,8 @@
 
 The official CLI for the [Cadenya REST API](https://docs.cadenya.com).
 
-It is generated with [Stainless](https://www.stainless.com/).
+It is maintained by Cadenya, including Cadenya's coding agents, and community
+pull requests are welcome.
 
 <!-- x-release-please-start-version -->
 
