@@ -8,3 +8,4 @@ require (
 )
 
 require github.com/tmaxmax/go-sse v0.11.0 // indirect
+
