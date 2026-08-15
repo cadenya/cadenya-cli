@@ -633,7 +633,7 @@ cadenya tool-sets secrets update <tool-set-id> <id> [--workspace-id <value>] [--
 List tools
 
 ```sh
-cadenya tool-sets tools list <tool-set-id> [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--prefix <value>] [--query <value>] [--names <value>]... [--states <value>]... [--requires-approval[=true|false]] [--labels <value>] [--sort-order <value>] [--include-info[=true|false]]
+cadenya tool-sets tools list <tool-set-id> [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--prefix <value>] [--query <value>] [--names <value>]... [--states <value>]... [--requires-approval[=true|false]] [--overlays <value>]... [--labels <value>] [--sort-order <value>] [--include-info[=true|false]]
 ```
 Create a new tool
 

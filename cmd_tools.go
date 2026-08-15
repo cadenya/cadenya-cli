@@ -31,6 +31,7 @@ func toolsCommand() *cli.Command {
 					&cli.StringSliceFlag{Name: "names", Usage: "Filter by tool name (exact match). Multiple values are OR'd together."},
 					&cli.StringSliceFlag{Name: "states", Usage: "Filter by tool state. Multiple values are OR'd together. (one of: STATE_UNSPECIFIED, STATE_AVAILABLE, STATE_OMITTED, STATE_ARCHIVED)"},
 					&cli.BoolFlag{Name: "requires-approval", Usage: "Filter by approval requirement. Omitted = no filter; true = only tools requiring approval; false = only tools not requiring approval."},
+					&cli.StringSliceFlag{Name: "overlays", Usage: "Filter to tools matched by the tool set overlays with these keys (ToolSetSpec.overlays), i.e. tools whose info.overlays contains the key. Multiple values are…"},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
@@ -77,6 +78,9 @@ func toolsCommand() *cli.Command {
 					}
 					if cmd.IsSet("requires-approval") {
 						values["requiresApproval"] = cmd.Bool("requires-approval")
+					}
+					if cmd.IsSet("overlays") {
+						values["overlays"] = cmd.StringSlice("overlays")
 					}
 					if cmd.IsSet("labels") {
 						values["labels"] = cmd.String("labels")
