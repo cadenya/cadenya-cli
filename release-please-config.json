@@ -61,7 +61,6 @@
   ],
   "release-type": "simple",
   "extra-files": [
-    "pkg/cmd/version.go",
-    "README.md"
+    "main.go"
   ]
 }

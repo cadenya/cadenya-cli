@@ -5,6 +5,21 @@ Go SDK.
 
 ## Install
 
+macOS / Linux (Homebrew):
+
+```sh
+brew install cadenya/tools/cadenya
+```
+
+Windows (Chocolatey):
+
+```powershell
+choco install cadenya
+```
+
+Prebuilt archives for every platform (with checksums) are attached to each
+[GitHub release](https://github.com/cadenya/cadenya-cli/releases). Or build from source:
+
 ```sh
 go install go.cadenya.com/cadenya-cli@latest
 ```

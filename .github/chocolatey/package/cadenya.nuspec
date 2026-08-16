@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rendered by .github/chocolatey/publish.ps1; __PLACEHOLDERS__ are filled per release. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>cadenya</id>
+    <version>__VERSION__</version>
+    <title>Cadenya CLI</title>
+    <authors>Cadenya</authors>
+    <owners>Cadenya</owners>
+    <projectUrl>https://cadenya.com</projectUrl>
+    <projectSourceUrl>https://github.com/cadenya/cadenya-cli</projectSourceUrl>
+    <packageSourceUrl>https://github.com/cadenya/cadenya-cli/tree/main/.github/chocolatey</packageSourceUrl>
+    <docsUrl>https://github.com/cadenya/cadenya-cli/blob/main/api.md</docsUrl>
+    <bugTrackerUrl>https://github.com/cadenya/cadenya-cli/issues</bugTrackerUrl>
+    <licenseUrl>https://github.com/cadenya/cadenya-cli/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <tags>cadenya cli api agents</tags>
+    <summary>Command-line interface for the Cadenya API</summary>
+    <description>The official command-line interface for the Cadenya API: manage agents, objectives, tool sets, memory layers, widgets, and more from your terminal or scripts. Responses are JSON by default; see `cadenya --help`.</description>
+    <releaseNotes>https://github.com/cadenya/cadenya-cli/releases/tag/__TAG__</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

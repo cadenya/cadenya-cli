@@ -5,128 +5,57 @@ on:
       - '**'
   pull_request:
 
-env:
-  GOPRIVATE: github.com/cadenya/cadenya-go,github.com/cadenya/cadenya-go-staging
+permissions:
+  contents: read
 
 jobs:
-  lint:
-    timeout-minutes: 10
-    name: lint
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      # The staging Go SDK repo is private; setup-go's accessibility check and any
-      # module fetch against it need a token (GO_REPO_READ_TOKEN: Contents:Read on
-      # cadenya/cadenya-go-staging). Inert on the public production repo.
-      - name: Authenticate git for the private Go SDK repo
-        if: github.repository == 'cadenya/cadenya-cli-staging'
-        env:
-          GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
-        run: |
-          token="$(printf %s "$GO_REPO_READ_TOKEN" | tr -d '[:space:]')"
-          # actions/checkout persists this repo's GITHUB_TOKEN as an http.extraheader
-          # that outranks URL credentials; remove it so the go-staging token can
-          # authenticate (jobs here only fetch — nothing pushes with it).
-          git config --local --unset-all 'http.https://github.com/.extraheader' || true
-          git config --global "url.https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
-          # Verify from a neutral dir and from the checkout (setup-go checks in-repo);
-          # surface git's stderr on failure (the token is masked by Actions).
-          if ! err=$(git -C "${RUNNER_TEMP}" ls-remote --exit-code "https://github.com/cadenya/cadenya-go-staging" 2>&1 >/dev/null); then
-            echo "::error::go-staging fetch failed: ${err}"
-            exit 1
-          fi
-          echo "go-staging auth OK"
-
-      - uses: ./.github/actions/setup-go
-
-      - name: Bootstrap
-        run: ./scripts/bootstrap
-
-      - name: Run lints
-        run: ./scripts/lint
-
   build:
-    timeout-minutes: 10
+    timeout-minutes: 15
     name: build
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
-      # The staging Go SDK repo is private; setup-go's accessibility check and any
-      # module fetch against it need a token (GO_REPO_READ_TOKEN: Contents:Read on
-      # cadenya/cadenya-go-staging). Inert on the public production repo.
-      - name: Authenticate git for the private Go SDK repo
-        if: github.repository == 'cadenya/cadenya-cli-staging'
-        env:
-          GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+
+      - name: Verify go.mod/go.sum are tidy
         run: |
-          token="$(printf %s "$GO_REPO_READ_TOKEN" | tr -d '[:space:]')"
-          # actions/checkout persists this repo's GITHUB_TOKEN as an http.extraheader
-          # that outranks URL credentials; remove it so the go-staging token can
-          # authenticate (jobs here only fetch — nothing pushes with it).
-          git config --local --unset-all 'http.https://github.com/.extraheader' || true
-          git config --global "url.https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
-          # Verify from a neutral dir and from the checkout (setup-go checks in-repo);
-          # surface git's stderr on failure (the token is masked by Actions).
-          if ! err=$(git -C "${RUNNER_TEMP}" ls-remote --exit-code "https://github.com/cadenya/cadenya-go-staging" 2>&1 >/dev/null); then
-            echo "::error::go-staging fetch failed: ${err}"
+          go mod tidy
+          if ! git diff --quiet -- go.mod go.sum; then
+            echo "::error::go.mod/go.sum are not tidy — run 'go mod tidy' and commit."
+            git diff -- go.mod go.sum
             exit 1
           fi
-          echo "go-staging auth OK"
 
-      - uses: ./.github/actions/setup-go
+      - name: gofmt
+        run: |
+          out="$(gofmt -l .)"
+          if [ -n "$out" ]; then
+            echo "::error::gofmt needed on:"; echo "$out"; exit 1
+          fi
 
-      - name: Bootstrap
-        run: ./scripts/bootstrap
+      - name: go vet
+        run: go vet ./...
 
-      - name: Run goreleaser
+      - name: go test
+        run: go test ./...
+
+      # Exercises the real release config end to end (cross-compile every
+      # target, archives, packages, cask rendering) without publishing.
+      - name: goreleaser snapshot
         uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
         with:
-          version: latest
-          args: release --snapshot --clean --skip=publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --snapshot --clean --skip=publish --config .github/goreleaser.yaml
 
-  test:
-    timeout-minutes: 10
-    name: test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      # The staging Go SDK repo is private; setup-go's accessibility check and any
-      # module fetch against it need a token (GO_REPO_READ_TOKEN: Contents:Read on
-      # cadenya/cadenya-go-staging). Inert on the public production repo.
-      - name: Authenticate git for the private Go SDK repo
-        if: github.repository == 'cadenya/cadenya-cli-staging'
-        env:
-          GO_REPO_READ_TOKEN: ${{ secrets.GO_REPO_READ_TOKEN }}
+      - name: Smoke-test the built binary
         run: |
-          token="$(printf %s "$GO_REPO_READ_TOKEN" | tr -d '[:space:]')"
-          # actions/checkout persists this repo's GITHUB_TOKEN as an http.extraheader
-          # that outranks URL credentials; remove it so the go-staging token can
-          # authenticate (jobs here only fetch — nothing pushes with it).
-          git config --local --unset-all 'http.https://github.com/.extraheader' || true
-          git config --global "url.https://x-access-token:${token}@github.com/cadenya/cadenya-go-staging.insteadOf" "https://github.com/cadenya/cadenya-go-staging"
-          # Verify from a neutral dir and from the checkout (setup-go checks in-repo);
-          # surface git's stderr on failure (the token is masked by Actions).
-          if ! err=$(git -C "${RUNNER_TEMP}" ls-remote --exit-code "https://github.com/cadenya/cadenya-go-staging" 2>&1 >/dev/null); then
-            echo "::error::go-staging fetch failed: ${err}"
-            exit 1
-          fi
-          echo "go-staging auth OK"
-
-      - uses: ./.github/actions/setup-go
-
-      - name: Bootstrap
-        run: ./scripts/bootstrap
-
-      - name: Run tests
-        run: ./scripts/test
+          bin="$(find dist -type f -name cadenya -path '*linux_amd64*' | head -1)"
+          "$bin" --version
+          "$bin" --help > /dev/null
