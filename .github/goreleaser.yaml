@@ -62,6 +62,10 @@ release:
   # release (with notes) alongside the tag; attach to it without touching the
   # body, or create it if the tag was pushed by hand.
   mode: keep-existing
+  # Manual re-runs of publish-release.yml (workflow_dispatch on an existing
+  # tag, e.g. after fixing a secret) must be idempotent: without this the
+  # upload 422s with already_exists before the tap/choco steps ever run.
+  replace_existing_artifacts: true
   draft: false
   prerelease: auto
 
