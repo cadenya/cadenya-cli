@@ -13,6 +13,12 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
+// version is the binary release version. Release builds override it with
+// -ldflags "-X main.version=<semver>" (goreleaser); this default is the
+// generator's configured version and is what `go install` builds report.
+// The trailing marker lets release-please bump it in the published repo.
+var version = "1.0.0" // x-release-please-version
+
 func main() {
 	// SIGINT/SIGTERM cancel the command context so long-lived streams close
 	// their connections cleanly instead of dying mid-read.
@@ -21,7 +27,7 @@ func main() {
 	root := &cli.Command{
 		Name:    "cadenya",
 		Usage:   "Command-line interface for the Cadenya API",
-		Version: "1.0.0 (api 1.0)",
+		Version: version + " (api 1.0)",
 		// Slice flags carry JSON documents; never split values on commas.
 		DisableSliceFlagSeparator: true,
 		Flags: []cli.Flag{

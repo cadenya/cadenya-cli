@@ -1,0 +1,133 @@
+# GoReleaser configuration for the cadenya CLI.
+#
+# Why this lives under .github/ instead of the conventional repo root: the
+# generated tree is rsync'd (--delete) into this repo by `just sdk-staging cli`
+# and then promoted wholesale to cadenya/cadenya-cli, and .github/ is the one
+# directory both hops preserve. A root .goreleaser.yaml was silently deleted by
+# the first redwood sync and v1.0.0 shipped with goreleaser defaults. Every
+# invocation must pass `--config .github/goreleaser.yaml`.
+#
+# Release flow: release-please (production repo only) opens a version PR;
+# merging it tags vX.Y.Z and creates the GitHub release with the changelog.
+# The tag push runs .github/workflows/publish-release.yml, which runs this
+# config to build, sign/notarize, attach archives, and update the Homebrew
+# tap; a follow-up Windows job packs and pushes the Chocolatey package.
+version: 2
+project_name: cadenya
+
+before:
+  hooks:
+    # The regenerated go.sum has occasionally lacked the SDK entry (v1.0.0 needed
+    # a manual tidy commit); tidy here so a release never fails on that alone.
+    - go mod tidy
+
+builds:
+  - id: cadenya
+    main: .
+    binary: cadenya
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      # main.version is the package-level var in the generated main.go; the
+      # binary reports "<version> (api <contract>)".
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - id: default
+    ids: [cadenya]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+
+# release-please owns CHANGELOG.md and writes the GitHub release notes when it
+# creates the tag; keep them rather than regenerating from git log.
+changelog:
+  disable: true
+
+release:
+  # The target repo is inferred from the git remote. release-please creates the
+  # release (with notes) alongside the tag; attach to it without touching the
+  # body, or create it if the tag was pushed by hand.
+  mode: keep-existing
+  draft: false
+  prerelease: auto
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+# macOS code signing + notarization via anchore/quill (runs on Linux, no
+# Xcode). Enabled only when the signing secrets are present, so the pipeline
+# keeps shipping unsigned darwin builds until the Apple Developer account is
+# live. Secrets (see publish-release.yml): MACOS_SIGN_P12 (base64 .p12 of the
+# "Developer ID Application" cert), MACOS_SIGN_PASSWORD, and an App Store
+# Connect API key: MACOS_NOTARY_ISSUER_ID, MACOS_NOTARY_KEY_ID,
+# MACOS_NOTARY_KEY (base64 .p8).
+notarize:
+  macos:
+    - enabled: '{{ isEnvSet "MACOS_SIGN_P12" }}'
+      ids: [cadenya]
+      sign:
+        certificate: "{{ .Env.MACOS_SIGN_P12 }}"
+        password: "{{ .Env.MACOS_SIGN_PASSWORD }}"
+      notarize:
+        issuer_id: "{{ .Env.MACOS_NOTARY_ISSUER_ID }}"
+        key_id: "{{ .Env.MACOS_NOTARY_KEY_ID }}"
+        key: "{{ .Env.MACOS_NOTARY_KEY }}"
+        wait: true
+        timeout: 20m
+
+# Homebrew: `brew install cadenya/tools/cadenya` (tap cadenya/homebrew-tools).
+# A cask (not a formula) is goreleaser's supported path for prebuilt binaries.
+homebrew_casks:
+  - name: cadenya
+    ids: [default]
+    binaries: [cadenya]
+    directory: Casks
+    homepage: https://cadenya.com
+    description: Command-line interface for the Cadenya API
+    license: Apache-2.0
+    repository:
+      owner: cadenya
+      name: homebrew-tools
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: cadenya-release-bot
+      email: cadenya-release-bot@users.noreply.github.com
+    commit_msg_template: "cadenya {{ .Tag }}"
+    # Until darwin builds are notarized, Gatekeeper quarantines the binary;
+    # strip the attribute so `brew install` yields a runnable CLI. Harmless
+    # (no-op) once notarization is on.
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/cadenya"]
+          end
+
+# Linux packages attached to the GitHub release (deb/rpm/apk); useful for
+# quick-install docs and container images.
+nfpms:
+  - id: packages
+    ids: [cadenya]
+    package_name: cadenya
+    vendor: Cadenya
+    homepage: https://cadenya.com
+    maintainer: Cadenya <support@cadenya.com>
+    description: Command-line interface for the Cadenya API
+    license: Apache-2.0
+    formats: [deb, rpm, apk]
+    bindir: /usr/bin
