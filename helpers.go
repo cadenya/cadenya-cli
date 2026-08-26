@@ -12,6 +12,31 @@ import (
 	cli "github.com/urfave/cli/v3"
 )
 
+// addAlias clones the command at path onto the root under a new name, so a
+// deeply nested command gains a top-level spelling. A shallow clone shares
+// the target's flags and action; the path is validated at generation time,
+// so a miss here is impossible short of hand-editing — degrade silently.
+func addAlias(root *cli.Command, name string, path ...string) {
+	cmds := root.Commands
+	var target *cli.Command
+	for _, seg := range path {
+		target = nil
+		for _, c := range cmds {
+			if c.Name == seg {
+				target = c
+				break
+			}
+		}
+		if target == nil {
+			return
+		}
+		cmds = target.Commands
+	}
+	clone := *target
+	clone.Name = name
+	root.Commands = append(root.Commands, &clone)
+}
+
 // printJSON writes v to stdout as indented JSON (single-response commands).
 func printJSON(v any) error {
 	enc := json.NewEncoder(os.Stdout)
@@ -28,10 +53,12 @@ func printJSONLine(v any) error {
 }
 
 // displayColumn is one statically-resolved table/extended column: header
-// plus JSON WIRE path segments into the response projection.
+// plus JSON WIRE path segments into the response projection. truncate > 0
+// caps the TABLE cell width (runes); extended output is never cut.
 type displayColumn struct {
-	header string
-	path   []string
+	header   string
+	path     []string
+	truncate int
 }
 
 // displayMode resolves the effective mode: command-local flag, then the
@@ -64,9 +91,26 @@ func lookupPath(value any, path []string) (any, bool) {
 	return current, true
 }
 
+// truncateCell caps a rendered cell at width runes, marking the cut with an
+// ellipsis; width <= 0 leaves it untouched.
+func truncateCell(text string, width int) string {
+	if width <= 0 {
+		return text
+	}
+	runes := []rune(text)
+	if len(runes) <= width {
+		return text
+	}
+	if width == 1 {
+		return "…"
+	}
+	return string(runes[:width-1]) + "…"
+}
+
 // renderCell prints scalars plainly, missing/null as "-", composites as
 // compact JSON, and makes embedded newlines/tabs visible so one value
-// cannot corrupt table structure. Values are never truncated.
+// cannot corrupt table structure. Values are never truncated here — the
+// table renderer applies a column's truncate width, extended never does.
 func renderCell(v any, ok bool) string {
 	if !ok || v == nil {
 		return "-"
@@ -126,7 +170,7 @@ func renderDisplay(mode string, columns []displayColumn, isPage bool, v any) err
 			cells := make([]string, len(columns))
 			for i, c := range columns {
 				value, present := lookupPath(row, c.path)
-				cells[i] = renderCell(value, present)
+				cells[i] = truncateCell(renderCell(value, present), c.truncate)
 			}
 			fmt.Fprintln(w, strings.Join(cells, "\t"))
 		}
@@ -229,6 +273,20 @@ func jsonArg(name, raw string) (json.RawMessage, error) {
 		return nil, fmt.Errorf("--%s: null is not a valid value; omit the flag instead", name)
 	}
 	return json.RawMessage(resolved), nil
+}
+
+// jsonObjectArg parses a --flag JSON document that must be an object (a
+// union arm the generator stamps with its discriminator tag).
+func jsonObjectArg(name, raw string) (map[string]any, error) {
+	doc, err := jsonArg(name, raw)
+	if err != nil {
+		return nil, err
+	}
+	var obj map[string]any
+	if err := json.Unmarshal(doc, &obj); err != nil || obj == nil {
+		return nil, fmt.Errorf("--%s: expected a JSON object", name)
+	}
+	return obj, nil
 }
 
 // jsonSliceArg parses repeated --flag JSON documents.

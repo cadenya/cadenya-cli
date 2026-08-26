@@ -37,11 +37,11 @@ func agentsCommand() *cli.Command {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}, {header: "VARIATION MODE", path: []string{"spec", "variationSelectionMode"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}, {header: "VARIATION MODE", path: []string{"spec", "variationSelectionMode"}}}
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_DRAFT", "STATE_PUBLISHED", "STATE_ARCHIVED"}) {
 						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: STATE_UNSPECIFIED, STATE_DRAFT, STATE_PUBLISHED, STATE_ARCHIVED)", cmd.String("state")), 2)
 					}
@@ -109,11 +109,11 @@ func agentsCommand() *cli.Command {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					_missing := []string{}
 					if !cmd.IsSet("metadata") {
 						_missing = append(_missing, "--metadata")
@@ -193,11 +193,11 @@ func agentsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					if cmd.IsSet("sentiment") && !isOneOf(cmd.String("sentiment"), []string{"FEEDBACK_SENTIMENT_UNSPECIFIED", "FEEDBACK_SENTIMENT_POSITIVE", "FEEDBACK_SENTIMENT_NEGATIVE"}) {
 						return cli.Exit(fmt.Sprintf("--sentiment: invalid value %q (valid: FEEDBACK_SENTIMENT_UNSPECIFIED, FEEDBACK_SENTIMENT_POSITIVE, FEEDBACK_SENTIMENT_NEGATIVE)", cmd.String("sentiment")), 2)
 					}
@@ -269,11 +269,11 @@ func agentsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					if cmd.IsSet("event-type") && !isOneOf(cmd.String("event-type"), []string{"OBJECTIVE_EVENT_TYPE_UNSPECIFIED", "OBJECTIVE_EVENT_TYPE_USER_MESSAGE", "OBJECTIVE_EVENT_TYPE_TOOL_APPROVAL_REQUESTED", "OBJECTIVE_EVENT_TYPE_TOOL_APPROVED", "OBJECTIVE_EVENT_TYPE_TOOL_DENIED", "OBJECTIVE_EVENT_TYPE_TOOL_CALLED", "OBJECTIVE_EVENT_TYPE_ERROR", "OBJECTIVE_EVENT_TYPE_ASSISTANT_MESSAGE", "OBJECTIVE_EVENT_TYPE_TOOL_RESULT", "OBJECTIVE_EVENT_TYPE_TOOL_ERROR", "OBJECTIVE_EVENT_TYPE_CONTEXT_WINDOW_COMPACTED", "OBJECTIVE_EVENT_TYPE_MEMORY_READ", "OBJECTIVE_EVENT_TYPE_CANCELLED", "OBJECTIVE_EVENT_TYPE_SUB_AGENT_SPAWNED", "OBJECTIVE_EVENT_TYPE_SUB_AGENT_UPDATED", "OBJECTIVE_EVENT_TYPE_FINALIZED", "OBJECTIVE_EVENT_TYPE_NOTICE", "OBJECTIVE_EVENT_TYPE_TIMED_OUT", "OBJECTIVE_EVENT_TYPE_REASONING"}) {
 						return cli.Exit(fmt.Sprintf("--event-type: invalid value %q (valid: OBJECTIVE_EVENT_TYPE_UNSPECIFIED, OBJECTIVE_EVENT_TYPE_USER_MESSAGE, OBJECTIVE_EVENT_TYPE_TOOL_APPROVAL_REQUESTED, OBJECTIVE_EVENT_TYPE_TOOL_APPROVED, OBJECTIVE_EVENT_TYPE_TOOL_DENIED, OBJECTIVE_EVENT_TYPE_TOOL_CALLED, OBJECTIVE_EVENT_TYPE_ERROR, OBJECTIVE_EVENT_TYPE_ASSISTANT_MESSAGE, OBJECTIVE_EVENT_TYPE_TOOL_RESULT, OBJECTIVE_EVENT_TYPE_TOOL_ERROR, OBJECTIVE_EVENT_TYPE_CONTEXT_WINDOW_COMPACTED, OBJECTIVE_EVENT_TYPE_MEMORY_READ, OBJECTIVE_EVENT_TYPE_CANCELLED, OBJECTIVE_EVENT_TYPE_SUB_AGENT_SPAWNED, OBJECTIVE_EVENT_TYPE_SUB_AGENT_UPDATED, OBJECTIVE_EVENT_TYPE_FINALIZED, OBJECTIVE_EVENT_TYPE_NOTICE, OBJECTIVE_EVENT_TYPE_TIMED_OUT, OBJECTIVE_EVENT_TYPE_REASONING)", cmd.String("event-type")), 2)
 					}
@@ -328,11 +328,11 @@ func agentsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -411,11 +411,11 @@ func agentsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
@@ -473,11 +473,11 @@ func agentsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -514,11 +514,11 @@ func agentsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -555,11 +555,11 @@ func agentsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -596,11 +596,11 @@ func agentsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {

@@ -1,6 +1,7 @@
 [
   "README.md",
   "api.md",
+  "auth.go",
   "cmd_accounts.go",
   "cmd_agent_schedules.go",
   "cmd_agent_variations.go",
@@ -23,7 +24,9 @@
   "cmd_workspace_admin.go",
   "cmd_workspace_secrets.go",
   "cmd_workspaces.go",
+  "config.go",
   "go.mod",
   "helpers.go",
-  "main.go"
+  "main.go",
+  "schemas.go"
 ]

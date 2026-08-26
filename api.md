@@ -278,7 +278,7 @@ cadenya agents variations update <agent-id> <id> [--workspace-id <value>] [--met
 Add an assignment to a variation
 
 ```sh
-cadenya agents variations add-assignment <agent-id> <variation-id> [--workspace-id <value>] --body <JSON>
+cadenya agents variations add-assignment <agent-id> <variation-id> [--workspace-id <value>] (--tool-id <value> | --tool-set-id <value> | --sub-agent-id <value>)
 ```
 Remove an assignment from a variation
 
