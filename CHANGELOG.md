@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/cadenya/cadenya-cli/compare/v1.0.2...v1.1.0) (2026-08-26)
+
+
+### Features
+
+* auth login, stored config defaults, and command schemas ([#38](https://github.com/cadenya/cadenya-cli/issues/38)) ([cb340bd](https://github.com/cadenya/cadenya-cli/commit/cb340bd5a8b7cc903a591dabe9c6a437aab2bc65))
+
+
+### Build System
+
+* **chocolatey:** point docsUrl at cadenya.com/docs ([#3](https://github.com/cadenya/cadenya-cli/issues/3)) ([cb340bd](https://github.com/cadenya/cadenya-cli/commit/cb340bd5a8b7cc903a591dabe9c6a437aab2bc65))
+* **homebrew:** drop the quarantine-stripping cask hook now that darwin builds are notarized ([#4](https://github.com/cadenya/cadenya-cli/issues/4)) ([cb340bd](https://github.com/cadenya/cadenya-cli/commit/cb340bd5a8b7cc903a591dabe9c6a437aab2bc65))
+
 ## [1.0.2](https://github.com/cadenya/cadenya-cli/compare/v1.0.1...v1.0.2) (2026-08-16)
 
 
