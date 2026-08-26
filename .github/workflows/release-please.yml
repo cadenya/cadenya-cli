@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+  # Manual trigger for when a push event is lost (e.g. during a GitHub
+  # Actions outage) and the release PR never gets opened.
+  workflow_dispatch: {}
 
 permissions:
   contents: write
