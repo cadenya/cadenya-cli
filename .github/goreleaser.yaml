@@ -73,9 +73,11 @@ snapshot:
   version_template: "{{ incpatch .Version }}-next"
 
 # macOS code signing + notarization via anchore/quill (runs on Linux, no
-# Xcode). Enabled only when the signing secrets are present, so the pipeline
-# keeps shipping unsigned darwin builds until the Apple Developer account is
-# live. Secrets (see publish-release.yml): MACOS_SIGN_P12 (base64 .p12 of the
+# Xcode). Enabled only when the signing secrets are present (live on the
+# production repo since v1.0.2); a run without them ships unsigned darwin
+# builds. Apple can take >20m on a first-ever submission (later ones ~20s);
+# if the pipe times out, `xcrun notarytool history` shows the real verdict.
+# Secrets (see publish-release.yml): MACOS_SIGN_P12 (base64 .p12 of the
 # "Developer ID Application" cert), MACOS_SIGN_PASSWORD, and an App Store
 # Connect API key: MACOS_NOTARY_ISSUER_ID, MACOS_NOTARY_KEY_ID,
 # MACOS_NOTARY_KEY (base64 .p8).
@@ -112,15 +114,6 @@ homebrew_casks:
       name: cadenya-release-bot
       email: cadenya-release-bot@users.noreply.github.com
     commit_msg_template: "cadenya {{ .Tag }}"
-    # Until darwin builds are notarized, Gatekeeper quarantines the binary;
-    # strip the attribute so `brew install` yields a runnable CLI. Harmless
-    # (no-op) once notarization is on.
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/cadenya"]
-          end
 
 # Linux packages attached to the GitHub release (deb/rpm/apk); useful for
 # quick-install docs and container images.

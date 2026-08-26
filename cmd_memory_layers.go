@@ -38,11 +38,11 @@ func memoryLayersCommand() *cli.Command {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "TYPE", path: []string{"spec", "type"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "TYPE", path: []string{"spec", "type"}}}
 					if cmd.IsSet("type") && !isOneOf(cmd.String("type"), []string{"MEMORY_LAYER_TYPE_UNSPECIFIED", "MEMORY_LAYER_TYPE_EPISODIC", "MEMORY_LAYER_TYPE_SKILLS"}) {
 						return cli.Exit(fmt.Sprintf("--type: invalid value %q (valid: MEMORY_LAYER_TYPE_UNSPECIFIED, MEMORY_LAYER_TYPE_EPISODIC, MEMORY_LAYER_TYPE_SKILLS)", cmd.String("type")), 2)
 					}
@@ -109,11 +109,11 @@ func memoryLayersCommand() *cli.Command {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_missing := []string{}
 					if !cmd.IsSet("metadata") {
 						_missing = append(_missing, "--metadata")
@@ -177,11 +177,11 @@ func memoryLayersCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -260,11 +260,11 @@ func memoryLayersCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)

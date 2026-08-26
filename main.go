@@ -17,13 +17,19 @@ import (
 // -ldflags "-X main.version=<semver>" (goreleaser); this default is the
 // generator's configured version and is what `go install` builds report.
 // The trailing marker lets release-please bump it in the published repo.
-var version = "1.0.2" // x-release-please-version
+var version = "1.0.0" // x-release-please-version
 
 func main() {
 	// SIGINT/SIGTERM cancel the command context so long-lived streams close
-	// their connections cleanly instead of dying mid-read.
+	// their connections cleanly instead of dying mid-read. The FIRST signal
+	// cancels; stop() then restores default handling so a second Ctrl-C
+	// terminates the process outright even if shutdown were to hang.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	go func() {
+		<-ctx.Done()
+		stop()
+	}()
 	root := &cli.Command{
 		Name:    "cadenya",
 		Usage:   "Command-line interface for the Cadenya API",
@@ -32,11 +38,15 @@ func main() {
 		DisableSliceFlagSeparator: true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "display", Usage: "Output mode for ordinary commands (one of: json, table, extended); command-local --display overrides"},
-			&cli.StringFlag{Name: "api-key", Usage: "API key (default: $CADENYA_API_KEY)"},
+			&cli.StringFlag{Name: "api-key", Usage: "API key (default: $CADENYA_API_KEY, then the stored login)"},
+			&cli.StringFlag{Name: "profile", Value: "default", Usage: "Stored-credentials profile"},
 			&cli.StringFlag{Name: "base-url", Usage: "API base URL"},
 			&cli.StringFlag{Name: "workspace-id", Usage: "Default workspace-id for commands that take one (default: $CADENYA_WORKSPACE_ID)"},
 		},
 		Commands: []*cli.Command{
+			schemaCommand(),
+			authCommand(),
+			configCommand(),
 			accountsCommand(),
 			aPIKeysCommand(),
 			workspaceAdminCommand(),
@@ -56,7 +66,14 @@ func main() {
 			workspaceSecretsCommand(),
 		},
 	}
+	// Top-level alias ([lang.cli.aliases]), validated at generation.
+	addAlias(root, "whoami", "profiles", "whoami")
 	if err := root.Run(ctx, os.Args); err != nil {
+		// An interrupted command (Ctrl-C mid-stream) is not an API failure:
+		// exit 130 (128+SIGINT) with no error line, the shell convention.
+		if ctx.Err() != nil {
+			os.Exit(130)
+		}
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
@@ -75,6 +92,24 @@ func newClient(cmd *cli.Command) (*sdk.Client, error) {
 	}
 	if cmd.Root().IsSet("workspace-id") {
 		opts = append(opts, sdk.WithWorkspaceID(cmd.Root().String("workspace-id")))
+	}
+	if !cmd.Root().IsSet("workspace-id") && os.Getenv("CADENYA_WORKSPACE_ID") == "" {
+		if v := storedConfigValue(cmd, "workspace-id"); v != "" {
+			opts = append(opts, sdk.WithWorkspaceID(v))
+		}
+	}
+	// Stored-login fallback: lowest precedence, after the --api-key
+	// flag and the environment. An explicit source always wins.
+	if !cmd.Root().IsSet("api-key") && os.Getenv("CADENYA_API_KEY") == "" {
+		if prof := storedProfile(cmd); prof != nil {
+			opts = append(opts, sdk.WithAPIKey(prof.Credential))
+			// Exactly one authorized workspace: its id becomes the
+			// default workspace-id, unless the flag, env, or a stored
+			// `config set` default supplied one.
+			if len(prof.Workspaces) == 1 && !cmd.Root().IsSet("workspace-id") && os.Getenv("CADENYA_WORKSPACE_ID") == "" && storedConfigValue(cmd, "workspace-id") == "" {
+				opts = append(opts, sdk.WithWorkspaceID(prof.Workspaces[0].ID))
+			}
+		}
 	}
 	return sdk.NewClient(opts...)
 }

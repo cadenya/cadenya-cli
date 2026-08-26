@@ -42,11 +42,11 @@ func objectivesCommand() *cli.Command {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_PENDING", "STATE_RUNNING", "STATE_WAITING", "STATE_FAILED", "STATE_CANCELLED", "STATE_FINALIZED", "STATE_TIMED_OUT"}) {
 						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: STATE_UNSPECIFIED, STATE_PENDING, STATE_RUNNING, STATE_WAITING, STATE_FAILED, STATE_CANCELLED, STATE_FINALIZED, STATE_TIMED_OUT)", cmd.String("state")), 2)
 					}
@@ -135,11 +135,11 @@ func objectivesCommand() *cli.Command {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					_missing := []string{}
 					if !cmd.IsSet("agent-id") {
 						_missing = append(_missing, "--agent-id")
@@ -263,11 +263,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -308,11 +308,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -361,7 +361,7 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
@@ -412,11 +412,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "TYPE", path: []string{"data", "type"}}, {header: "WINDOW", path: []string{"contextWindowId"}}, {header: "DATA", path: []string{"data"}, truncate: 30}}
 					pos0 := cmd.Args().Get(0) // objective-id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -531,11 +531,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -583,11 +583,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_missing := []string{}
 					if !cmd.IsSet("metadata") {
 						_missing = append(_missing, "--metadata")
@@ -655,7 +655,7 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
@@ -708,7 +708,7 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
@@ -756,11 +756,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATUS", path: []string{"status"}}, {header: "EXECUTION", path: []string{"executionStatus"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATUS", path: []string{"status"}}, {header: "EXECUTION", path: []string{"executionStatus"}}}
 					if cmd.IsSet("status") && !isOneOf(cmd.String("status"), []string{"TOOL_CALL_STATUS_UNSPECIFIED", "TOOL_CALL_STATUS_AUTO_APPROVED", "TOOL_CALL_STATUS_WAITING_FOR_APPROVAL", "TOOL_CALL_STATUS_APPROVED", "TOOL_CALL_STATUS_DENIED"}) {
 						return cli.Exit(fmt.Sprintf("--status: invalid value %q (valid: TOOL_CALL_STATUS_UNSPECIFIED, TOOL_CALL_STATUS_AUTO_APPROVED, TOOL_CALL_STATUS_WAITING_FOR_APPROVAL, TOOL_CALL_STATUS_APPROVED, TOOL_CALL_STATUS_DENIED)", cmd.String("status")), 2)
 					}
@@ -824,11 +824,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<tool-call-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
 					pos1 := cmd.Args().Get(1) // tool-call-id
 					values := map[string]any{}
@@ -869,11 +869,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<tool-call-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
 					pos1 := cmd.Args().Get(1) // tool-call-id
 					values := map[string]any{}
@@ -915,11 +915,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<tool-call-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
 					pos1 := cmd.Args().Get(1) // tool-call-id
 					values := map[string]any{}
@@ -964,11 +964,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<tool-call-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_missing := []string{}
 					if !cmd.IsSet("content") {
 						_missing = append(_missing, "--content")
@@ -1027,7 +1027,7 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
@@ -1075,11 +1075,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -1120,7 +1120,7 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
@@ -1177,11 +1177,11 @@ func objectivesCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<objective-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_missing := []string{}
 					if !cmd.IsSet("message") {
 						_missing = append(_missing, "--message")

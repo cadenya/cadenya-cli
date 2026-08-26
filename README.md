@@ -29,10 +29,43 @@ release builds pin a published SDK version.)
 
 ## Configuration
 
-- `CADENYA_API_KEY` — API key (or `--api-key`)
-- `CADENYA_WORKSPACE_ID` — default workspace-id for commands that take one
+- `CADENYA_API_KEY` — API key (or `--api-key`; without either, the stored login from `cadenya auth login` is used)
+- `CADENYA_WORKSPACE_ID` — default workspace-id for commands that take one (or `cadenya config set workspace-id`)
 - `--base-url` / `CADENYA_BASE_URL` — override the API endpoint
 - `cadenya --version` prints the binary release version plus the API contract version it was generated against
+
+## Logging in
+
+```sh
+cadenya auth login      # opens the browser; approve, and the credential is stored
+cadenya auth status     # is a credential stored for the active profile?
+cadenya auth logout     # delete the stored credential
+```
+
+`auth login` runs a device-authorization flow: it prints a one-time code,
+opens the approval page in your browser (`--no-browser` to print the URL
+instead), and stores the resulting credential in `~/.cadenya/credentials`
+(mode 0600) once you approve. The credential is never printed.
+
+Resolution order for every command: `--api-key` flag, then the environment,
+then the stored login. `auth status` names the source in effect.
+`--profile <name>` selects an alternate credentials
+profile for any command, including `auth login` itself; stored defaults
+(`config set`) follow the same profile. For testing against
+a preview deployment, `CADENYA_AUTH_BASE_URL` rebases both auth endpoints onto a
+different origin (paths are kept).
+
+## Stored defaults
+
+```sh
+cadenya config set workspace-id <value>   # store a per-profile default
+cadenya config list                # effective values and their sources
+cadenya config unset workspace-id         # remove the stored default
+```
+
+Resolution order for workspace-id: `--workspace-id` flag, then `CADENYA_WORKSPACE_ID`, then the stored
+default, then the login's single authorized workspace. An explicit source always wins; `config list` names the
+source in effect.
 
 ## Usage
 
@@ -44,6 +77,14 @@ cadenya api-keys create --metadata @metadata.json --spec @spec.json
 
 Responses print as indented JSON. List commands print one page plus
 `nextCursor`; pass `--cursor` to continue.
+
+## Discovering command schemas
+
+`cadenya schema` lists every command as one JSON object per line, and
+`cadenya schema api-keys list` prints that command's invocation contract:
+positional arguments, typed flags (enum values inline), and a full JSON
+Schema — `$defs` included — for every JSON-valued flag. Built for coding
+assistants and scripts that need to construct requests without guessing.
 
 ## Flag forms
 
@@ -103,6 +144,7 @@ a usage error.
 - `0` success
 - `1` API or transport error (message on stderr)
 - `2` usage error (bad/missing arguments), before any network I/O
+- `130` interrupted (Ctrl-C / SIGTERM), e.g. while following a stream
 
 ## Reference
 

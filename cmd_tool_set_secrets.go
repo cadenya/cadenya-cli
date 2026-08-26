@@ -38,11 +38,11 @@ func toolSetSecretsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<tool-set-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -99,11 +99,11 @@ func toolSetSecretsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<tool-set-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_missing := []string{}
 					if !cmd.IsSet("metadata") {
 						_missing = append(_missing, "--metadata")
@@ -171,11 +171,11 @@ func toolSetSecretsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					pos1 := cmd.Args().Get(1) // id
 					values := map[string]any{}
@@ -262,11 +262,11 @@ func toolSetSecretsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)

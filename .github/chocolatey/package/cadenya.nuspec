@@ -10,7 +10,7 @@
     <projectUrl>https://cadenya.com</projectUrl>
     <projectSourceUrl>https://github.com/cadenya/cadenya-cli</projectSourceUrl>
     <packageSourceUrl>https://github.com/cadenya/cadenya-cli/tree/main/.github/chocolatey</packageSourceUrl>
-    <docsUrl>https://github.com/cadenya/cadenya-cli/blob/main/api.md</docsUrl>
+    <docsUrl>https://cadenya.com/docs</docsUrl>
     <bugTrackerUrl>https://github.com/cadenya/cadenya-cli/issues</bugTrackerUrl>
     <licenseUrl>https://github.com/cadenya/cadenya-cli/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

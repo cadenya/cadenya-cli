@@ -37,11 +37,11 @@ func agentVariationsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // agent-id
 					values := map[string]any{}
 					if cmd.IsSet("workspace-id") {
@@ -95,11 +95,11 @@ func agentVariationsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_missing := []string{}
 					if !cmd.IsSet("metadata") {
 						_missing = append(_missing, "--metadata")
@@ -167,11 +167,11 @@ func agentVariationsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // id
 					values := map[string]any{}
@@ -258,11 +258,11 @@ func agentVariationsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
@@ -313,7 +313,9 @@ func agentVariationsCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "body", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "tool-id", Usage: "Exactly one of --tool-id, --tool-set-id, --sub-agent-id."},
+					&cli.StringFlag{Name: "tool-set-id", Usage: "Exactly one of --tool-id, --tool-set-id, --sub-agent-id."},
+					&cli.StringFlag{Name: "sub-agent-id", Usage: "Exactly one of --tool-id, --tool-set-id, --sub-agent-id."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 2 {
@@ -325,7 +327,7 @@ func agentVariationsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<variation-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
@@ -333,16 +335,21 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("no display columns apply to this command; use --display json", 2)
 					}
 					_columns := []displayColumn(nil)
-					_missing := []string{}
-					if !cmd.IsSet("body") {
-						_missing = append(_missing, "--body")
+					_chosen := []string{}
+					if cmd.IsSet("tool-id") {
+						_chosen = append(_chosen, "--tool-id")
 					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
+					if cmd.IsSet("tool-set-id") {
+						_chosen = append(_chosen, "--tool-set-id")
 					}
-					_stdinInputs := []string{cmd.String("body")}
-					if err := stdinBudget(_stdinInputs); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.IsSet("sub-agent-id") {
+						_chosen = append(_chosen, "--sub-agent-id")
+					}
+					if len(_chosen) == 0 {
+						return cli.Exit("exactly one of --tool-id, --tool-set-id, --sub-agent-id is required", 2)
+					}
+					if len(_chosen) > 1 {
+						return cli.Exit(strings.Join(_chosen, ", ")+" are mutually exclusive; exactly one of --tool-id, --tool-set-id, --sub-agent-id is required", 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // variation-id
@@ -350,12 +357,20 @@ func agentVariationsCommand() *cli.Command {
 					if cmd.IsSet("workspace-id") {
 						values["workspaceId"] = cmd.String("workspace-id")
 					}
-					if cmd.IsSet("body") {
-						doc, err := jsonArg("body", cmd.String("body"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["body"] = doc
+					if cmd.IsSet("tool-id") {
+						body := map[string]any{"type": "toolId"}
+						body["toolId"] = cmd.String("tool-id")
+						values["body"] = body
+					}
+					if cmd.IsSet("tool-set-id") {
+						body := map[string]any{"type": "toolSetId"}
+						body["toolSetId"] = cmd.String("tool-set-id")
+						values["body"] = body
+					}
+					if cmd.IsSet("sub-agent-id") {
+						body := map[string]any{"type": "subAgentId"}
+						body["subAgentId"] = cmd.String("sub-agent-id")
+						values["body"] = body
 					}
 					var params sdk.AgentVariationAddAssignmentParams
 					if err := decodeParams(values, &params); err != nil {
@@ -440,7 +455,7 @@ func agentVariationsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<variation-id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
@@ -552,7 +567,7 @@ func agentVariationsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(2)) == "" {
 						return cli.Exit("<id> must not be empty", 2)
 					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
 					}
