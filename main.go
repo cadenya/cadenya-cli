@@ -19,7 +19,7 @@ import (
 // -ldflags "-X main.version=<semver>" (goreleaser); this default is the
 // generator's configured version and is what `go install` builds report.
 // The trailing marker lets release-please bump it in the published repo.
-var version = "1.0.0" // x-release-please-version
+var version = "1.1.1" // x-release-please-version
 
 func main() {
 	// SIGINT/SIGTERM cancel the command context so long-lived streams close
