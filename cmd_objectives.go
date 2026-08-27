@@ -348,7 +348,7 @@ func objectivesCommand() *cli.Command {
 			{
 				Name:                      "retrieve-diagnostics",
 				DisableSliceFlagSeparator: true,
-				Usage:                     "Get objective context diagnostics",
+				Usage:                     "Get objective context usage",
 				ArgsUsage:                 "<objective-id>",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
