@@ -32,6 +32,7 @@ release builds pin a published SDK version.)
 - `CADENYA_API_KEY` — API key (or `--api-key`; without either, the stored login from `cadenya auth login` is used)
 - `CADENYA_WORKSPACE_ID` — default workspace-id for commands that take one (or `cadenya config set workspace-id`)
 - `--base-url` / `CADENYA_BASE_URL` — override the API endpoint
+- `--debug` / `CADENYA_DEBUG` — dump every HTTP exchange (redacted credentials) to stderr
 - `cadenya --version` prints the binary release version plus the API contract version it was generated against
 
 ## Logging in

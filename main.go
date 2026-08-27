@@ -3,6 +3,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -17,7 +19,7 @@ import (
 // -ldflags "-X main.version=<semver>" (goreleaser); this default is the
 // generator's configured version and is what `go install` builds report.
 // The trailing marker lets release-please bump it in the published repo.
-var version = "1.1.0" // x-release-please-version
+var version = "1.0.0" // x-release-please-version
 
 func main() {
 	// SIGINT/SIGTERM cancel the command context so long-lived streams close
@@ -41,6 +43,7 @@ func main() {
 			&cli.StringFlag{Name: "api-key", Usage: "API key (default: $CADENYA_API_KEY, then the stored login)"},
 			&cli.StringFlag{Name: "profile", Value: "default", Usage: "Stored-credentials profile"},
 			&cli.StringFlag{Name: "base-url", Usage: "API base URL"},
+			&cli.BoolFlag{Name: "debug", Sources: cli.EnvVars("CADENYA_DEBUG"), Usage: "Dump every HTTP exchange (redacted credentials) to stderr"},
 			&cli.StringFlag{Name: "workspace-id", Usage: "Default workspace-id for commands that take one (default: $CADENYA_WORKSPACE_ID)"},
 		},
 		Commands: []*cli.Command{
@@ -75,6 +78,14 @@ func main() {
 			os.Exit(130)
 		}
 		fmt.Fprintln(os.Stderr, "error:", err)
+		// A structured API error often carries the actionable part (e.g.
+		// field violations for "validation failed") in details — show it.
+		var apiErr *sdk.APIError
+		if errors.As(err, &apiErr) && len(apiErr.Details) > 0 {
+			if pretty, jsonErr := json.MarshalIndent(apiErr.Details, "", "  "); jsonErr == nil {
+				fmt.Fprintf(os.Stderr, "details:\n%s\n", pretty)
+			}
+		}
 		os.Exit(1)
 	}
 }
@@ -89,6 +100,9 @@ func newClient(cmd *cli.Command) (*sdk.Client, error) {
 	}
 	if cmd.Root().IsSet("base-url") {
 		opts = append(opts, sdk.WithBaseURL(cmd.Root().String("base-url")))
+	}
+	if cmd.Root().Bool("debug") {
+		opts = append(opts, sdk.WithDebugLog(os.Stderr))
 	}
 	if cmd.Root().IsSet("workspace-id") {
 		opts = append(opts, sdk.WithWorkspaceID(cmd.Root().String("workspace-id")))

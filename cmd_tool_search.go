@@ -22,7 +22,7 @@ func toolSearchCommand() *cli.Command {
 				Usage:                     "Search for tools or tool sets",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
-					&cli.StringFlag{Name: "workspace-id", Usage: "NOTE: `query` is runtime-required (buf.validate min_len), but gnostic does not propagate message-level schema `required` to GET query parameters —…"},
+					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace that contains the tools and tool sets to search."},
 					&cli.StringFlag{Name: "query", Usage: "Required. "},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
