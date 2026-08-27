@@ -435,7 +435,7 @@ List objective context windows
 ```sh
 cadenya objectives list-context-windows <objective-id> [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--include-info[=true|false]] [--labels <value>]
 ```
-Get objective context diagnostics
+Get objective context usage
 
 ```sh
 cadenya objectives retrieve-diagnostics <objective-id> [--workspace-id <value>]
