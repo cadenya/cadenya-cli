@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/cadenya/cadenya-cli/compare/v1.1.1...v1.2.0) (2026-08-28)
+
+
+### Features
+
+* **cli:** flatten request-body fields into flags ([b06bde6](https://github.com/cadenya/cadenya-cli/commit/b06bde66462bdfa06938713d7d4c80590ec50d20))
+
 ## [1.1.1](https://github.com/cadenya/cadenya-cli/compare/v1.1.0...v1.1.1) (2026-08-27)
 
 
