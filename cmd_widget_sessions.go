@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	sdk "go.cadenya.com/cadenya-go"
+	commands "go.cadenya.com/cadenya-cli/internal/commands"
 )
 
 func widgetSessionsCommand() *cli.Command {
@@ -21,9 +21,9 @@ func widgetSessionsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List widget sessions",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return."},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response."},
 					&cli.StringFlag{Name: "widget-id", Usage: "Filter to sessions on a specific widget. Accepts the canonical `wgt_…` form or the `external_id:<value>` form."},
 					&cli.StringFlag{Name: "tenant-id", Usage: "Filter to sessions belonging to a tenant. Accepts the canonical `tenant_…` form or the `external_id:<value>` form."},
@@ -38,53 +38,22 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}, {header: "WIDGET", path: []string{"spec", "widgetId"}}}
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_ACTIVE", "STATE_EXPIRED", "STATE_REVOKED", "STATE_EXHAUSTED"}) {
 						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: STATE_UNSPECIFIED, STATE_ACTIVE, STATE_EXPIRED, STATE_REVOKED, STATE_EXHAUSTED)", cmd.String("state")), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("widget-id") {
-						values["widgetId"] = cmd.String("widget-id")
-					}
-					if cmd.IsSet("tenant-id") {
-						values["tenantId"] = cmd.String("tenant-id")
-					}
-					if cmd.IsSet("subject-id") {
-						values["subjectId"] = cmd.String("subject-id")
-					}
-					if cmd.IsSet("state") {
-						values["state"] = cmd.String("state")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					if cmd.IsSet("sort-order") {
-						values["sortOrder"] = cmd.String("sort-order")
-					}
-					if cmd.IsSet("include-info") {
-						values["includeInfo"] = cmd.Bool("include-info")
-					}
-					var params sdk.WidgetSessionListParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetSessionsListConversion
+					if err := commands.ConvertWidgetSessionsList(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.WidgetSessions().List(ctx, &params)
+					page, err := client.WidgetSessions().List(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -96,67 +65,54 @@ func widgetSessionsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Create a widget session",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringSliceFlag{Name: "secrets", Usage: "Secrets to attach to the session."},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the operation (e.g., a workflow ID from an external system)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "widget-id", Usage: "Required. Widget this session is minted against. Accepts the canonical `wgt_…` form or the `external_id:<value>` form."},
+					&cli.StringFlag{Name: "tenant", Usage: "Optional tenant assertion — the customer's org/company identifier for the visitor. Upserts the tenant record in the workspace and tags the session and every…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "tenant-id", Usage: "The tenant identifier in the customer's namespace (e.g. \"acme-corp\"). Stored as the tenant record's external_id; stable across requests."},
+					&cli.StringFlag{Name: "tenant-name", Usage: "Optional human-readable name for the tenant. Updates the tenant record's name on every assertion that provides it."},
+					&cli.StringFlag{Name: "subject", Usage: "Optional subject assertion — the visitor within the tenant (e.g. their user id in the customer's namespace). Requires `tenant`; a subject asserted without a…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "subject-id", Usage: "The subject identifier in the customer's namespace (e.g. their user id). Stored as the subject record's external_id; unique within the tenant."},
+					&cli.StringFlag{Name: "subject-name", Usage: "Optional human-readable name for the subject. Updates the subject record's name on every assertion that provides it."},
+					&cli.StringFlag{Name: "expires-at", Usage: "Hard session expiry. Tokens never outlive it; after it passes the session transitions to STATE_EXPIRED. Defaults to a server-chosen horizon when unset. RFC 3339 timestamp."},
+					&cli.StringSliceFlag{Name: "pinned-parameter", Usage: "Parameters forced onto tool calls made by this session's conversations. A pinned parameter is removed from the tool schema the LLM sees, and its value is…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringSliceFlag{Name: "secret", Usage: "Secrets to attach to the session. key=value,... over name, value (repeatable; or a document). NAME=VALUE is also accepted."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_missing := []string{}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
-					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secrets")...)
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("spec"), cmd.String("widget-id"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("pinned-parameter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.WidgetSessionsCreateConversion
+					if err := commands.ConvertWidgetSessionsCreate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					if cmd.IsSet("secrets") {
-						items, err := jsonSliceArg("secrets", cmd.StringSlice("secrets"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["secrets"] = items
-					}
-					var params sdk.WidgetSessionCreateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WidgetSessions().Create(ctx, &params)
+					out, err := client.WidgetSessions().Create(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -168,7 +124,7 @@ func widgetSessionsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Delete all of a tenant's widget sessions",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.StringFlag{Name: "tenant-id", Usage: "Tenant whose sessions to delete. Required — an empty value is rejected rather than matching everything. Accepts the canonical `tenant_…` form or the…"},
 				},
@@ -177,29 +133,22 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("tenant-id") {
-						values["tenantId"] = cmd.String("tenant-id")
-					}
-					var params sdk.WidgetSessionDeleteTenantParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetSessionsDeleteTenantConversion
+					if err := commands.ConvertWidgetSessionsDeleteTenant(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WidgetSessions().DeleteTenant(ctx, &params)
+					out, err := client.WidgetSessions().DeleteTenant(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -212,7 +161,7 @@ func widgetSessionsCommand() *cli.Command {
 				Usage:                     "Get a widget session by ID",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -223,24 +172,20 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WidgetSessionRetrieveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetSessionsRetrieveConversion
+					if err := commands.ConvertWidgetSessionsRetrieve(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WidgetSessions().Retrieve(ctx, pos0, &params)
+					out, err := client.WidgetSessions().Retrieve(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -253,7 +198,7 @@ func widgetSessionsCommand() *cli.Command {
 				Usage:                     "Delete a widget session",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -264,26 +209,22 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WidgetSessionDeleteParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetSessionsDeleteConversion
+					if err := commands.ConvertWidgetSessionsDelete(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.WidgetSessions().Delete(ctx, pos0, &params)
+					return client.WidgetSessions().Delete(ctx, pos0, &converted.Params)
 				},
 			},
 			{
@@ -292,7 +233,7 @@ func widgetSessionsCommand() *cli.Command {
 				Usage:                     "Revoke a widget session",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -303,24 +244,20 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WidgetSessionRevokeParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetSessionsRevokeConversion
+					if err := commands.ConvertWidgetSessionsRevoke(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WidgetSessions().Revoke(ctx, pos0, &params)
+					out, err := client.WidgetSessions().Revoke(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}

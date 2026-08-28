@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	sdk "go.cadenya.com/cadenya-go"
+	commands "go.cadenya.com/cadenya-cli/internal/commands"
 )
 
 func agentVariationsCommand() *cli.Command {
@@ -22,9 +22,9 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "List variations",
 				ArgsUsage:                 "<agent-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When true, the `info` field on each returned variation is populated. Requests with this flag count more against your rate limit."},
@@ -38,39 +38,20 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // agent-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("sort-order") {
-						values["sortOrder"] = cmd.String("sort-order")
-					}
-					if cmd.IsSet("include-info") {
-						values["includeInfo"] = cmd.Bool("include-info")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					var params sdk.AgentVariationListParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentVariationsListConversion
+					if err := commands.ConvertAgentVariationsList(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Agents().Variations().List(ctx, pos0, &params)
+					page, err := client.Agents().Variations().List(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -83,10 +64,41 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "Create a new variation",
 				ArgsUsage:                 "<agent-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "system-prompt-template", Usage: "Liquid template for the system prompt of objectives using this variation. Rendered with CreateObjectiveRequest.system_prompt_data into Objective.system_prompt."},
+					&cli.StringFlag{Name: "discovery", Usage: "ProgressiveDiscovery is an optional config that, when set, will load a Cadenya provided tool that can search for tools in the assigned tool sets or tools.…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Int32Flag{Name: "discovery-max-tools", Usage: "The most tool names tool_search will load in a single call. Requesting more than this returns an error telling the model to retry in smaller batches -- it is a…."},
+					&cli.StringSliceFlag{Name: "discovery-hint", Usage: "Free-text guidance appended to the discoverable-tools appendix in the system prompt. Hints steer the model's choice of tool names; they do not filter or rank…. Repeatable."},
+					&cli.StringFlag{Name: "constraints", Usage: "Execution constraints. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Int32Flag{Name: "constraints-max-tool-calls", Usage: "The maximum number of tool calls that can be made. 0 means no limit."},
+					&cli.Int32Flag{Name: "constraints-max-sub-objectives", Usage: "The maximum number of sub-objectives that can be created. 0 means no limit."},
+					&cli.StringFlag{Name: "constraints-inactivity-timeout", Usage: "How long an objective may sit with no activity (no user messages, no LLM calls) before it is finalized as timed out. Between 1 minute and 24 hours, expressed…."},
+					&cli.StringFlag{Name: "description", Usage: "Human-readable description of what this variation does or when it should be used."},
+					&cli.StringFlag{Name: "model", Usage: "Model configuration for this variation. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "model-id", Usage: "The model identifier for the agent variation to use. Should be either the reference key (ai-provider.model-name) or the canonical model ID (e.g.:…."},
+					&cli.Float32Flag{Name: "model-temperature", Usage: "Sampling temperature for model inference (0.0 to 1.0) Lower values produce more deterministic outputs, higher values increase randomness. Presence-tracked so a…."},
+					&cli.Float32Flag{Name: "model-top-p", Usage: "Nucleus sampling: only tokens comprising the top_p probability mass are considered. Requires the model's \"topP\" capability."},
+					&cli.Int32Flag{Name: "model-top-k", Usage: "Only sample from the top_k most likely tokens. Requires the model's \"topK\" capability."},
+					&cli.StringSliceFlag{Name: "model-stop-sequence", Usage: "Sequences that stop generation when produced. Empty means none. No count cap here — providers impose their own limits (surfaced as the \"stopSequences\"…. Repeatable."},
+					&cli.Int32Flag{Name: "model-max-output-tokens", Usage: "Cap on output tokens per LLM call. Must not exceed the model's spec.max_output_tokens. Requires the model's \"maxOutputTokens\" capability."},
+					&cli.StringFlag{Name: "model-reasoning-effort", Usage: "Reasoning effort. Requires the model's \"reasoning\" capability. One of: none, low, medium, high."},
+					&cli.BoolFlag{Name: "model-caching-enabled", Usage: "Prompt/token caching. Requires the model's \"caching\" capability. Presence-tracked tri-state: unset means the default — caching is ON whenever the model has…."},
+					&cli.StringFlag{Name: "compaction", Usage: "Compaction configuration for managing context window limits during long-running objectives. When not set, the system uses a default summarization strategy at…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Float32Flag{Name: "compaction-trigger-threshold", Usage: "Trigger threshold as a percentage of the model's context window (0.0 to 1.0). When input tokens reach this percentage of the model's limit, compaction…."},
+					&cli.StringFlag{Name: "compaction-summarization", Usage: "Strategies — set one or more. When multiple are set, they execute in order: tool_result_clearing → summarization. When none are set, defaults to…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "compaction-summarization-instructions", Usage: "Custom instructions that guide what the summarizer preserves. Replaces the default summarization prompt entirely. Example: \"Preserve all code snippets,…."},
+					&cli.StringFlag{Name: "compaction-tool-result-clearing", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Int32Flag{Name: "compaction-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
+					&cli.StringFlag{Name: "first-user-message-template", Usage: "Liquid template for the first user message of objectives using this variation. Rendered with CreateObjectiveRequest.first_user_message_data into…."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 1 {
@@ -96,52 +108,28 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_missing := []string{}
-					if !cmd.IsSet("metadata") {
-						_missing = append(_missing, "--metadata")
-					}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("system-prompt-template"), cmd.String("discovery"), cmd.String("constraints"), cmd.String("constraints-inactivity-timeout"), cmd.String("description"), cmd.String("model"), cmd.String("model-id"), cmd.String("compaction"), cmd.String("compaction-summarization"), cmd.String("compaction-summarization-instructions"), cmd.String("compaction-tool-result-clearing"), cmd.String("first-user-message-template")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.AgentVariationsCreateConversion
+					if err := commands.ConvertAgentVariationsCreate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					var params sdk.AgentVariationCreateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Variations().Create(ctx, pos0, &params)
+					out, err := client.Agents().Variations().Create(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -154,7 +142,7 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "Get a variation by ID",
 				ArgsUsage:                 "<agent-id> <id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -168,25 +156,21 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentVariationRetrieveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentVariationsRetrieveConversion
+					if err := commands.ConvertAgentVariationsRetrieve(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Variations().Retrieve(ctx, pos0, pos1, &params)
+					out, err := client.Agents().Variations().Retrieve(ctx, pos0, pos1, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -199,7 +183,7 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "Delete a variation",
 				ArgsUsage:                 "<agent-id> <id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -213,27 +197,23 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentVariationDeleteParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentVariationsDeleteConversion
+					if err := commands.ConvertAgentVariationsDelete(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.Agents().Variations().Delete(ctx, pos0, pos1, &params)
+					return client.Agents().Variations().Delete(ctx, pos0, pos1, &converted.Params)
 				},
 			},
 			{
@@ -242,11 +222,42 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "Update a variation",
 				ArgsUsage:                 "<agent-id> <id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "system-prompt-template", Usage: "Liquid template for the system prompt of objectives using this variation. Rendered with CreateObjectiveRequest.system_prompt_data into Objective.system_prompt."},
+					&cli.StringFlag{Name: "discovery", Usage: "ProgressiveDiscovery is an optional config that, when set, will load a Cadenya provided tool that can search for tools in the assigned tool sets or tools.…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Int32Flag{Name: "discovery-max-tools", Usage: "The most tool names tool_search will load in a single call. Requesting more than this returns an error telling the model to retry in smaller batches -- it is a…."},
+					&cli.StringSliceFlag{Name: "discovery-hint", Usage: "Free-text guidance appended to the discoverable-tools appendix in the system prompt. Hints steer the model's choice of tool names; they do not filter or rank…. Repeatable."},
+					&cli.StringFlag{Name: "constraints", Usage: "Execution constraints. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Int32Flag{Name: "constraints-max-tool-calls", Usage: "The maximum number of tool calls that can be made. 0 means no limit."},
+					&cli.Int32Flag{Name: "constraints-max-sub-objectives", Usage: "The maximum number of sub-objectives that can be created. 0 means no limit."},
+					&cli.StringFlag{Name: "constraints-inactivity-timeout", Usage: "How long an objective may sit with no activity (no user messages, no LLM calls) before it is finalized as timed out. Between 1 minute and 24 hours, expressed…."},
+					&cli.StringFlag{Name: "description", Usage: "Human-readable description of what this variation does or when it should be used."},
+					&cli.StringFlag{Name: "model", Usage: "Model configuration for this variation. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "model-id", Usage: "The model identifier for the agent variation to use. Should be either the reference key (ai-provider.model-name) or the canonical model ID (e.g.:…."},
+					&cli.Float32Flag{Name: "model-temperature", Usage: "Sampling temperature for model inference (0.0 to 1.0) Lower values produce more deterministic outputs, higher values increase randomness. Presence-tracked so a…."},
+					&cli.Float32Flag{Name: "model-top-p", Usage: "Nucleus sampling: only tokens comprising the top_p probability mass are considered. Requires the model's \"topP\" capability."},
+					&cli.Int32Flag{Name: "model-top-k", Usage: "Only sample from the top_k most likely tokens. Requires the model's \"topK\" capability."},
+					&cli.StringSliceFlag{Name: "model-stop-sequence", Usage: "Sequences that stop generation when produced. Empty means none. No count cap here — providers impose their own limits (surfaced as the \"stopSequences\"…. Repeatable."},
+					&cli.Int32Flag{Name: "model-max-output-tokens", Usage: "Cap on output tokens per LLM call. Must not exceed the model's spec.max_output_tokens. Requires the model's \"maxOutputTokens\" capability."},
+					&cli.StringFlag{Name: "model-reasoning-effort", Usage: "Reasoning effort. Requires the model's \"reasoning\" capability. One of: none, low, medium, high."},
+					&cli.BoolFlag{Name: "model-caching-enabled", Usage: "Prompt/token caching. Requires the model's \"caching\" capability. Presence-tracked tri-state: unset means the default — caching is ON whenever the model has…."},
+					&cli.StringFlag{Name: "compaction", Usage: "Compaction configuration for managing context window limits during long-running objectives. When not set, the system uses a default summarization strategy at…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Float32Flag{Name: "compaction-trigger-threshold", Usage: "Trigger threshold as a percentage of the model's context window (0.0 to 1.0). When input tokens reach this percentage of the model's limit, compaction…."},
+					&cli.StringFlag{Name: "compaction-summarization", Usage: "Strategies — set one or more. When multiple are set, they execute in order: tool_result_clearing → summarization. When none are set, defaults to…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "compaction-summarization-instructions", Usage: "Custom instructions that guide what the summarizer preserves. Replaces the default summarization prompt entirely. Example: \"Preserve all code snippets,…."},
+					&cli.StringFlag{Name: "compaction-tool-result-clearing", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Int32Flag{Name: "compaction-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
+					&cli.StringFlag{Name: "first-user-message-template", Usage: "Liquid template for the first user message of objectives using this variation. Rendered with CreateObjectiveRequest.first_user_message_data into…."},
+					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 2 {
@@ -259,46 +270,29 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("system-prompt-template"), cmd.String("discovery"), cmd.String("constraints"), cmd.String("constraints-inactivity-timeout"), cmd.String("description"), cmd.String("model"), cmd.String("model-id"), cmd.String("compaction"), cmd.String("compaction-summarization"), cmd.String("compaction-summarization-instructions"), cmd.String("compaction-tool-result-clearing"), cmd.String("first-user-message-template"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.AgentVariationsUpdateConversion
+					if err := commands.ConvertAgentVariationsUpdate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					if cmd.IsSet("update-mask") {
-						values["updateMask"] = cmd.String("update-mask")
-					}
-					var params sdk.AgentVariationUpdateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Variations().Update(ctx, pos0, pos1, &params)
+					out, err := client.Agents().Variations().Update(ctx, pos0, pos1, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -311,11 +305,15 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "Add an assignment to a variation",
 				ArgsUsage:                 "<agent-id> <variation-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "tool-id", Usage: "Exactly one of --tool-id, --tool-set-id, --sub-agent-id."},
-					&cli.StringFlag{Name: "tool-set-id", Usage: "Exactly one of --tool-id, --tool-set-id, --sub-agent-id."},
-					&cli.StringFlag{Name: "sub-agent-id", Usage: "Exactly one of --tool-id, --tool-set-id, --sub-agent-id."},
+					&cli.StringFlag{Name: "type", Usage: "Required. One of: tool-id, tool-set-id, sub-agent-id; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "tool-id", Usage: "Required.", Category: "type = tool-id"},
+					&cli.StringFlag{Name: "tool-set-id", Usage: "Required.", Category: "type = tool-set-id"},
+					&cli.StringFlag{Name: "sub-agent-id", Usage: "Required.", Category: "type = sub-agent-id"},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 2 {
@@ -328,59 +326,31 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<variation-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
-					_chosen := []string{}
-					if cmd.IsSet("tool-id") {
-						_chosen = append(_chosen, "--tool-id")
-					}
-					if cmd.IsSet("tool-set-id") {
-						_chosen = append(_chosen, "--tool-set-id")
-					}
-					if cmd.IsSet("sub-agent-id") {
-						_chosen = append(_chosen, "--sub-agent-id")
-					}
-					if len(_chosen) == 0 {
-						return cli.Exit("exactly one of --tool-id, --tool-set-id, --sub-agent-id is required", 2)
-					}
-					if len(_chosen) > 1 {
-						return cli.Exit(strings.Join(_chosen, ", ")+" are mutually exclusive; exactly one of --tool-id, --tool-set-id, --sub-agent-id is required", 2)
+					_stdinInputs := []string{cmd.String("file"), cmd.String("type"), cmd.String("tool-id"), cmd.String("tool-set-id"), cmd.String("sub-agent-id")}
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // variation-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.AgentVariationsAddAssignmentConversion
+					if err := commands.ConvertAgentVariationsAddAssignment(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("tool-id") {
-						body := map[string]any{"type": "toolId"}
-						body["toolId"] = cmd.String("tool-id")
-						values["body"] = body
-					}
-					if cmd.IsSet("tool-set-id") {
-						body := map[string]any{"type": "toolSetId"}
-						body["toolSetId"] = cmd.String("tool-set-id")
-						values["body"] = body
-					}
-					if cmd.IsSet("sub-agent-id") {
-						body := map[string]any{"type": "subAgentId"}
-						body["subAgentId"] = cmd.String("sub-agent-id")
-						values["body"] = body
-					}
-					var params sdk.AgentVariationAddAssignmentParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Variations().AddAssignment(ctx, pos0, pos1, &params)
+					out, err := client.Agents().Variations().AddAssignment(ctx, pos0, pos1, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -393,7 +363,7 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "Remove an assignment from a variation",
 				ArgsUsage:                 "<agent-id> <variation-id> <id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -410,28 +380,24 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // variation-id
 					pos2 := cmd.Args().Get(2) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentVariationRemoveAssignmentParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentVariationsRemoveAssignmentConversion
+					if err := commands.ConvertAgentVariationsRemoveAssignment(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.Agents().Variations().RemoveAssignment(ctx, pos0, pos1, pos2, &params)
+					return client.Agents().Variations().RemoveAssignment(ctx, pos0, pos1, pos2, &converted.Params)
 				},
 			},
 			{
@@ -440,10 +406,13 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "Attach a memory layer to a variation",
 				ArgsUsage:                 "<agent-id> <variation-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.StringFlag{Name: "memory-layer-id", Usage: "Required. Layer to attach. Accepts the canonical `memlyr_…` form or the `external_id:<value>` form."},
-					&cli.IntFlag{Name: "position", Usage: "Position in the baseline cascade (lower = more specific). If omitted, the server appends at the most general end (max existing position + 1)."},
+					&cli.Int32Flag{Name: "position", Usage: "Position in the baseline cascade (lower = more specific). If omitted, the server appends at the most general end (max existing position + 1)."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 2 {
@@ -456,41 +425,31 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<variation-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
-					_missing := []string{}
-					if !cmd.IsSet("memory-layer-id") {
-						_missing = append(_missing, "--memory-layer-id")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
+					_stdinInputs := []string{cmd.String("file"), cmd.String("memory-layer-id")}
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // variation-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.AgentVariationsAddMemoryLayerConversion
+					if err := commands.ConvertAgentVariationsAddMemoryLayer(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("memory-layer-id") {
-						values["memoryLayerId"] = cmd.String("memory-layer-id")
-					}
-					if cmd.IsSet("position") {
-						values["position"] = cmd.Int("position")
-					}
-					var params sdk.AgentVariationAddMemoryLayerParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Variations().AddMemoryLayer(ctx, pos0, pos1, &params)
+					out, err := client.Agents().Variations().AddMemoryLayer(ctx, pos0, pos1, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -503,7 +462,7 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "Remove a memory layer assignment from a variation",
 				ArgsUsage:                 "<agent-id> <variation-id> <id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -520,28 +479,24 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // variation-id
 					pos2 := cmd.Args().Get(2) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentVariationRemoveMemoryLayerParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentVariationsRemoveMemoryLayerConversion
+					if err := commands.ConvertAgentVariationsRemoveMemoryLayer(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.Agents().Variations().RemoveMemoryLayer(ctx, pos0, pos1, pos2, &params)
+					return client.Agents().Variations().RemoveMemoryLayer(ctx, pos0, pos1, pos2, &converted.Params)
 				},
 			},
 			{
@@ -550,9 +505,12 @@ func agentVariationsCommand() *cli.Command {
 				Usage:                     "Update a variation's memory layer assignment",
 				ArgsUsage:                 "<agent-id> <variation-id> <id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.IntFlag{Name: "position", Usage: "New position. Only field currently updatable on an assignment."},
+					&cli.Int32Flag{Name: "position", Usage: "New position. Only field currently updatable on an assignment."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 3 {
@@ -568,32 +526,32 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
+					_stdinInputs := []string{cmd.String("file")}
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // variation-id
 					pos2 := cmd.Args().Get(2) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.AgentVariationsUpdateMemoryLayerConversion
+					if err := commands.ConvertAgentVariationsUpdateMemoryLayer(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("position") {
-						values["position"] = cmd.Int("position")
-					}
-					var params sdk.AgentVariationUpdateMemoryLayerParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Variations().UpdateMemoryLayer(ctx, pos0, pos1, pos2, &params)
+					out, err := client.Agents().Variations().UpdateMemoryLayer(ctx, pos0, pos1, pos2, &converted.Params)
 					if err != nil {
 						return err
 					}

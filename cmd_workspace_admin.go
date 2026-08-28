@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	sdk "go.cadenya.com/cadenya-go"
+	commands "go.cadenya.com/cadenya-cli/internal/commands"
 )
 
 func workspaceAdminCommand() *cli.Command {
@@ -21,8 +21,8 @@ func workspaceAdminCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Search account profiles",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "query", Usage: "Free-form search over profile name and email. Case-insensitive substring match; empty returns all profiles."},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
@@ -32,32 +32,19 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "TYPE", path: []string{"spec", "type"}}}
-					values := map[string]any{}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("query") {
-						values["query"] = cmd.String("query")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					var params sdk.WorkspaceAdminListProfilesParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WorkspaceAdminListProfilesConversion
+					if err := commands.ConvertWorkspaceAdminListProfiles(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.WorkspaceAdmin().ListProfiles(ctx, &params)
+					page, err := client.WorkspaceAdmin().ListProfiles(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -69,8 +56,8 @@ func workspaceAdminCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List all workspaces in the account",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.BoolFlag{Name: "include-archived", Usage: "When true, archived workspaces are included in the results. Defaults to false (active workspaces only)."},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
@@ -80,32 +67,19 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					values := map[string]any{}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("include-archived") {
-						values["includeArchived"] = cmd.Bool("include-archived")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					var params sdk.WorkspaceAdminListAccountParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WorkspaceAdminListAccountConversion
+					if err := commands.ConvertWorkspaceAdminListAccount(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.WorkspaceAdmin().ListAccount(ctx, &params)
+					page, err := client.WorkspaceAdmin().ListAccount(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -117,57 +91,43 @@ func workspaceAdminCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Create a workspace",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
-					&cli.StringFlag{Name: "metadata", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Production API Key\", \"Staging Workspace\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: ""},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_missing := []string{}
-					if !cmd.IsSet("metadata") {
-						_missing = append(_missing, "--metadata")
-					}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
+					var converted commands.WorkspaceAdminCreateConversion
+					if err := commands.ConvertWorkspaceAdminCreate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					var params sdk.WorkspaceAdminCreateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WorkspaceAdmin().Create(ctx, &params)
+					out, err := client.WorkspaceAdmin().Create(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -179,7 +139,7 @@ func workspaceAdminCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Get a workspace by ID",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID to retrieve (path)."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -187,23 +147,19 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WorkspaceAdminRetrieveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WorkspaceAdminRetrieveConversion
+					if err := commands.ConvertWorkspaceAdminRetrieve(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WorkspaceAdmin().Retrieve(ctx, &params)
+					out, err := client.WorkspaceAdmin().Retrieve(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -215,7 +171,7 @@ func workspaceAdminCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Archive a workspace",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID to archive (path)."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -223,25 +179,21 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WorkspaceAdminArchiveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WorkspaceAdminArchiveConversion
+					if err := commands.ConvertWorkspaceAdminArchive(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.WorkspaceAdmin().Archive(ctx, &params)
+					return client.WorkspaceAdmin().Archive(ctx, &converted.Params)
 				},
 			},
 			{
@@ -249,55 +201,45 @@ func workspaceAdminCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Update a workspace",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID to update (path)."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Production API Key\", \"Staging Workspace\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: ""},
 					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.WorkspaceAdminUpdateConversion
+					if err := commands.ConvertWorkspaceAdminUpdate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					if cmd.IsSet("update-mask") {
-						values["updateMask"] = cmd.String("update-mask")
-					}
-					var params sdk.WorkspaceAdminUpdateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WorkspaceAdmin().Update(ctx, &params)
+					out, err := client.WorkspaceAdmin().Update(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -309,9 +251,9 @@ func workspaceAdminCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List workspace members",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace whose members will be listed (path)."},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -319,29 +261,19 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "PROFILE", path: []string{"profileId"}}, {header: "ACTOR", path: []string{"actorId"}}}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					var params sdk.WorkspaceAdminListMembersParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WorkspaceAdminListMembersConversion
+					if err := commands.ConvertWorkspaceAdminListMembers(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.WorkspaceAdmin().ListMembers(ctx, &params)
+					page, err := client.WorkspaceAdmin().ListMembers(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -353,42 +285,42 @@ func workspaceAdminCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Add a member to a workspace",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace to add the member to (path)."},
 					&cli.StringFlag{Name: "profile-id", Usage: "An existing account profile to add. Mutually exclusive with email."},
 					&cli.StringFlag{Name: "email", Usage: "Email address to add (resolve-or-invite). Mutually exclusive with profile_id."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("profile-id") {
-						values["profileId"] = cmd.String("profile-id")
-					}
-					if cmd.IsSet("email") {
-						values["email"] = cmd.String("email")
-					}
-					var params sdk.WorkspaceAdminAddMemberParams
-					if err := decodeParams(values, &params); err != nil {
+					_stdinInputs := []string{cmd.String("file"), cmd.String("profile-id"), cmd.String("email")}
+					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
+					}
+					var converted commands.WorkspaceAdminAddMemberConversion
+					if err := commands.ConvertWorkspaceAdminAddMember(cmd, &converted); err != nil {
+						return err
+					}
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WorkspaceAdmin().AddMember(ctx, &params)
+					out, err := client.WorkspaceAdmin().AddMember(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -401,7 +333,7 @@ func workspaceAdminCommand() *cli.Command {
 				Usage:                     "Remove a member from a workspace",
 				ArgsUsage:                 "<profile-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace to remove the member from (path)."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -412,26 +344,22 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit("<profile-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // profile-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WorkspaceAdminRemoveMemberParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WorkspaceAdminRemoveMemberConversion
+					if err := commands.ConvertWorkspaceAdminRemoveMember(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.WorkspaceAdmin().RemoveMember(ctx, pos0, &params)
+					return client.WorkspaceAdmin().RemoveMember(ctx, pos0, &converted.Params)
 				},
 			},
 		},

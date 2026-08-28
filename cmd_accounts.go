@@ -18,15 +18,15 @@ func accountsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Retrieves the current account for the token accessing the API",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					client, err := newClient(cmd)
@@ -45,18 +45,18 @@ func accountsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Rotates the challenge token for the account",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
 					client, err := newClient(cmd)
@@ -75,18 +75,18 @@ func accountsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Rotates the webhook signing key for the account",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
 					client, err := newClient(cmd)

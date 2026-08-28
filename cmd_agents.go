@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	sdk "go.cadenya.com/cadenya-go"
+	commands "go.cadenya.com/cadenya-cli/internal/commands"
 )
 
 func agentsCommand() *cli.Command {
@@ -21,9 +21,9 @@ func agentsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List agents",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "prefix", Usage: "Filter expression (query param: prefix)"},
 					&cli.StringFlag{Name: "query", Usage: "Free-form search query"},
@@ -38,8 +38,8 @@ func agentsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}, {header: "VARIATION MODE", path: []string{"spec", "variationSelectionMode"}}}
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_DRAFT", "STATE_PUBLISHED", "STATE_ARCHIVED"}) {
@@ -48,46 +48,15 @@ func agentsCommand() *cli.Command {
 					if cmd.IsSet("variation-selection-mode") && !isOneOf(cmd.String("variation-selection-mode"), []string{"VARIATION_SELECTION_MODE_UNSPECIFIED", "VARIATION_SELECTION_MODE_RANDOM", "VARIATION_SELECTION_MODE_WEIGHTED"}) {
 						return cli.Exit(fmt.Sprintf("--variation-selection-mode: invalid value %q (valid: VARIATION_SELECTION_MODE_UNSPECIFIED, VARIATION_SELECTION_MODE_RANDOM, VARIATION_SELECTION_MODE_WEIGHTED)", cmd.String("variation-selection-mode")), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("prefix") {
-						values["prefix"] = cmd.String("prefix")
-					}
-					if cmd.IsSet("query") {
-						values["query"] = cmd.String("query")
-					}
-					if cmd.IsSet("state") {
-						values["state"] = cmd.String("state")
-					}
-					if cmd.IsSet("variation-selection-mode") {
-						values["variationSelectionMode"] = cmd.String("variation-selection-mode")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					if cmd.IsSet("sort-order") {
-						values["sortOrder"] = cmd.String("sort-order")
-					}
-					if cmd.IsSet("include-info") {
-						values["includeInfo"] = cmd.Bool("include-info")
-					}
-					var params sdk.AgentListParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentsListConversion
+					if err := commands.ConvertAgentsList(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Agents().List(ctx, &params)
+					page, err := client.Agents().List(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -99,69 +68,82 @@ func agentsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Create a new agent",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "default-variation", Usage: "JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: "Description of the agent's purpose."},
+					&cli.StringFlag{Name: "webhook-events-url", Usage: "The URL that Cadenya will send events for any objective assigned to the agent."},
+					&cli.StringFlag{Name: "variation-selection-mode", Usage: "Required. Controls how variations are automatically selected when creating objectives Defaults to RANDOM when unspecified. One of: random, weighted."},
+					&cli.StringSliceFlag{Name: "system-prompt-data-schema", Usage: "SystemPromptDataSchema enforces the shape of system_prompt_data when objectives are created. This is valuable when using liquid formatting in agent variation…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.StringSliceFlag{Name: "output-definition", Usage: "Optional output definition for objectives created for this agent. When provided, Cadenya will append a tool to that will be called by the LLM in use by the…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.BoolFlag{Name: "enable-episodic-memory", Usage: "Enable episodic memory for objectives created for this agent. When true, objective creation requires an episodic_memory key and the system finds or creates a…."},
+					&cli.Int32Flag{Name: "episodic-memory-ttl", Usage: "How long episodic memories should be retained. Each new objective slides the layer's expiry forward by this duration, and stored entries expire this long after…."},
+					&cli.StringFlag{Name: "default-variation", Usage: "Optional default variation to add to the agent on create. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "default-variation-name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "default-variation-external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "default-variation-label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "default-variation-system-prompt-template", Usage: "Liquid template for the system prompt of objectives using this variation. Rendered with CreateObjectiveRequest.system_prompt_data into Objective.system_prompt."},
+					&cli.StringFlag{Name: "default-variation-discovery", Usage: "ProgressiveDiscovery is an optional config that, when set, will load a Cadenya provided tool that can search for tools in the assigned tool sets or tools.…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Int32Flag{Name: "default-variation-discovery-max-tools", Usage: "The most tool names tool_search will load in a single call. Requesting more than this returns an error telling the model to retry in smaller batches -- it is a…."},
+					&cli.StringSliceFlag{Name: "default-variation-discovery-hint", Usage: "Free-text guidance appended to the discoverable-tools appendix in the system prompt. Hints steer the model's choice of tool names; they do not filter or rank…. Repeatable."},
+					&cli.StringFlag{Name: "default-variation-constraints", Usage: "Execution constraints. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Int32Flag{Name: "default-variation-constraints-max-tool-calls", Usage: "The maximum number of tool calls that can be made. 0 means no limit."},
+					&cli.Int32Flag{Name: "default-variation-constraints-max-sub-objectives", Usage: "The maximum number of sub-objectives that can be created. 0 means no limit."},
+					&cli.StringFlag{Name: "default-variation-constraints-inactivity-timeout", Usage: "How long an objective may sit with no activity (no user messages, no LLM calls) before it is finalized as timed out. Between 1 minute and 24 hours, expressed…."},
+					&cli.StringFlag{Name: "default-variation-description", Usage: "Human-readable description of what this variation does or when it should be used."},
+					&cli.StringFlag{Name: "default-variation-model", Usage: "Model configuration for this variation. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "default-variation-model-id", Usage: "The model identifier for the agent variation to use. Should be either the reference key (ai-provider.model-name) or the canonical model ID (e.g.:…."},
+					&cli.Float32Flag{Name: "default-variation-model-temperature", Usage: "Sampling temperature for model inference (0.0 to 1.0) Lower values produce more deterministic outputs, higher values increase randomness. Presence-tracked so a…."},
+					&cli.Float32Flag{Name: "default-variation-model-top-p", Usage: "Nucleus sampling: only tokens comprising the top_p probability mass are considered. Requires the model's \"topP\" capability."},
+					&cli.Int32Flag{Name: "default-variation-model-top-k", Usage: "Only sample from the top_k most likely tokens. Requires the model's \"topK\" capability."},
+					&cli.StringSliceFlag{Name: "default-variation-model-stop-sequence", Usage: "Sequences that stop generation when produced. Empty means none. No count cap here — providers impose their own limits (surfaced as the \"stopSequences\"…. Repeatable."},
+					&cli.Int32Flag{Name: "default-variation-model-max-output-tokens", Usage: "Cap on output tokens per LLM call. Must not exceed the model's spec.max_output_tokens. Requires the model's \"maxOutputTokens\" capability."},
+					&cli.StringFlag{Name: "default-variation-model-reasoning-effort", Usage: "Reasoning effort. Requires the model's \"reasoning\" capability. One of: none, low, medium, high."},
+					&cli.BoolFlag{Name: "default-variation-model-caching-enabled", Usage: "Prompt/token caching. Requires the model's \"caching\" capability. Presence-tracked tri-state: unset means the default — caching is ON whenever the model has…."},
+					&cli.StringFlag{Name: "default-variation-compaction", Usage: "Compaction configuration for managing context window limits during long-running objectives. When not set, the system uses a default summarization strategy at…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Float32Flag{Name: "default-variation-compaction-trigger-threshold", Usage: "Trigger threshold as a percentage of the model's context window (0.0 to 1.0). When input tokens reach this percentage of the model's limit, compaction…."},
+					&cli.StringFlag{Name: "default-variation-compaction-summarization", Usage: "Strategies — set one or more. When multiple are set, they execute in order: tool_result_clearing → summarization. When none are set, defaults to…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "default-variation-compaction-summarization-instructions", Usage: "Custom instructions that guide what the summarizer preserves. Replaces the default summarization prompt entirely. Example: \"Preserve all code snippets,…."},
+					&cli.StringFlag{Name: "default-variation-compaction-tool-result-clearing", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.Int32Flag{Name: "default-variation-compaction-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
+					&cli.StringFlag{Name: "default-variation-first-user-message-template", Usage: "Liquid template for the first user message of objectives using this variation. Rendered with CreateObjectiveRequest.first_user_message_data into…."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_missing := []string{}
-					if !cmd.IsSet("metadata") {
-						_missing = append(_missing, "--metadata")
-					}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec"), cmd.String("default-variation")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("webhook-events-url"), cmd.String("default-variation"), cmd.String("default-variation-name"), cmd.String("default-variation-external-id"), cmd.String("default-variation-system-prompt-template"), cmd.String("default-variation-discovery"), cmd.String("default-variation-constraints"), cmd.String("default-variation-constraints-inactivity-timeout"), cmd.String("default-variation-description"), cmd.String("default-variation-model"), cmd.String("default-variation-model-id"), cmd.String("default-variation-compaction"), cmd.String("default-variation-compaction-summarization"), cmd.String("default-variation-compaction-summarization-instructions"), cmd.String("default-variation-compaction-tool-result-clearing"), cmd.String("default-variation-first-user-message-template")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("system-prompt-data-schema")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("output-definition")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("default-variation-label")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.AgentsCreateConversion
+					if err := commands.ConvertAgentsCreate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					if cmd.IsSet("default-variation") {
-						doc, err := jsonArg("default-variation", cmd.String("default-variation"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["defaultVariation"] = doc
-					}
-					var params sdk.AgentCreateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Create(ctx, &params)
+					out, err := client.Agents().Create(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -174,9 +156,9 @@ func agentsCommand() *cli.Command {
 				Usage:                     "List feedback for an agent",
 				ArgsUsage:                 "<agent-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return."},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response."},
 					&cli.StringFlag{Name: "query", Usage: "Free-text search applied to the feedback comment. Case-insensitive substring match."},
 					&cli.StringFlag{Name: "sentiment", Usage: "Filter by sentiment. UNSPECIFIED returns feedback regardless of score. (one of: FEEDBACK_SENTIMENT_UNSPECIFIED, FEEDBACK_SENTIMENT_POSITIVE, FEEDBACK_SENTIMENT_NEGATIVE)"},
@@ -194,54 +176,23 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					if cmd.IsSet("sentiment") && !isOneOf(cmd.String("sentiment"), []string{"FEEDBACK_SENTIMENT_UNSPECIFIED", "FEEDBACK_SENTIMENT_POSITIVE", "FEEDBACK_SENTIMENT_NEGATIVE"}) {
 						return cli.Exit(fmt.Sprintf("--sentiment: invalid value %q (valid: FEEDBACK_SENTIMENT_UNSPECIFIED, FEEDBACK_SENTIMENT_POSITIVE, FEEDBACK_SENTIMENT_NEGATIVE)", cmd.String("sentiment")), 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("query") {
-						values["query"] = cmd.String("query")
-					}
-					if cmd.IsSet("sentiment") {
-						values["sentiment"] = cmd.String("sentiment")
-					}
-					if cmd.IsSet("agent-variation-id") {
-						values["agentVariationId"] = cmd.String("agent-variation-id")
-					}
-					if cmd.IsSet("created-after") {
-						values["createdAfter"] = cmd.String("created-after")
-					}
-					if cmd.IsSet("created-before") {
-						values["createdBefore"] = cmd.String("created-before")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					if cmd.IsSet("include-info") {
-						values["includeInfo"] = cmd.Bool("include-info")
-					}
-					var params sdk.AgentListFeedbackParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentsListFeedbackConversion
+					if err := commands.ConvertAgentsListFeedback(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Agents().ListFeedback(ctx, pos0, &params)
+					page, err := client.Agents().ListFeedback(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -254,10 +205,10 @@ func agentsCommand() *cli.Command {
 				Usage:                     "List webhook deliveries",
 				ArgsUsage:                 "<agent-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "objective-id", Usage: "Optional filter by objective ID"},
 					&cli.StringFlag{Name: "event-type", Usage: "Optional filter by event type (one of: OBJECTIVE_EVENT_TYPE_UNSPECIFIED, OBJECTIVE_EVENT_TYPE_USER_MESSAGE, OBJECTIVE_EVENT_TYPE_TOOL_APPROVAL_REQUESTED, OBJECTIVE_EVENT_TYPE_TOOL_APPROVED, OBJECTIVE_EVENT_TYPE_TOOL_DENIED, OBJECTIVE_EVENT_TYPE_TOOL_CALLED, OBJECTIVE_EVENT_TYPE_ERROR, OBJECTIVE_EVENT_TYPE_ASSISTANT_MESSAGE, OBJECTIVE_EVENT_TYPE_TOOL_RESULT, OBJECTIVE_EVENT_TYPE_TOOL_ERROR, OBJECTIVE_EVENT_TYPE_CONTEXT_WINDOW_COMPACTED, OBJECTIVE_EVENT_TYPE_MEMORY_READ, OBJECTIVE_EVENT_TYPE_CANCELLED, OBJECTIVE_EVENT_TYPE_SUB_AGENT_SPAWNED, OBJECTIVE_EVENT_TYPE_SUB_AGENT_UPDATED, OBJECTIVE_EVENT_TYPE_FINALIZED, OBJECTIVE_EVENT_TYPE_NOTICE, OBJECTIVE_EVENT_TYPE_TIMED_OUT, OBJECTIVE_EVENT_TYPE_REASONING)"},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
@@ -270,42 +221,23 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					if cmd.IsSet("event-type") && !isOneOf(cmd.String("event-type"), []string{"OBJECTIVE_EVENT_TYPE_UNSPECIFIED", "OBJECTIVE_EVENT_TYPE_USER_MESSAGE", "OBJECTIVE_EVENT_TYPE_TOOL_APPROVAL_REQUESTED", "OBJECTIVE_EVENT_TYPE_TOOL_APPROVED", "OBJECTIVE_EVENT_TYPE_TOOL_DENIED", "OBJECTIVE_EVENT_TYPE_TOOL_CALLED", "OBJECTIVE_EVENT_TYPE_ERROR", "OBJECTIVE_EVENT_TYPE_ASSISTANT_MESSAGE", "OBJECTIVE_EVENT_TYPE_TOOL_RESULT", "OBJECTIVE_EVENT_TYPE_TOOL_ERROR", "OBJECTIVE_EVENT_TYPE_CONTEXT_WINDOW_COMPACTED", "OBJECTIVE_EVENT_TYPE_MEMORY_READ", "OBJECTIVE_EVENT_TYPE_CANCELLED", "OBJECTIVE_EVENT_TYPE_SUB_AGENT_SPAWNED", "OBJECTIVE_EVENT_TYPE_SUB_AGENT_UPDATED", "OBJECTIVE_EVENT_TYPE_FINALIZED", "OBJECTIVE_EVENT_TYPE_NOTICE", "OBJECTIVE_EVENT_TYPE_TIMED_OUT", "OBJECTIVE_EVENT_TYPE_REASONING"}) {
 						return cli.Exit(fmt.Sprintf("--event-type: invalid value %q (valid: OBJECTIVE_EVENT_TYPE_UNSPECIFIED, OBJECTIVE_EVENT_TYPE_USER_MESSAGE, OBJECTIVE_EVENT_TYPE_TOOL_APPROVAL_REQUESTED, OBJECTIVE_EVENT_TYPE_TOOL_APPROVED, OBJECTIVE_EVENT_TYPE_TOOL_DENIED, OBJECTIVE_EVENT_TYPE_TOOL_CALLED, OBJECTIVE_EVENT_TYPE_ERROR, OBJECTIVE_EVENT_TYPE_ASSISTANT_MESSAGE, OBJECTIVE_EVENT_TYPE_TOOL_RESULT, OBJECTIVE_EVENT_TYPE_TOOL_ERROR, OBJECTIVE_EVENT_TYPE_CONTEXT_WINDOW_COMPACTED, OBJECTIVE_EVENT_TYPE_MEMORY_READ, OBJECTIVE_EVENT_TYPE_CANCELLED, OBJECTIVE_EVENT_TYPE_SUB_AGENT_SPAWNED, OBJECTIVE_EVENT_TYPE_SUB_AGENT_UPDATED, OBJECTIVE_EVENT_TYPE_FINALIZED, OBJECTIVE_EVENT_TYPE_NOTICE, OBJECTIVE_EVENT_TYPE_TIMED_OUT, OBJECTIVE_EVENT_TYPE_REASONING)", cmd.String("event-type")), 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("objective-id") {
-						values["objectiveId"] = cmd.String("objective-id")
-					}
-					if cmd.IsSet("event-type") {
-						values["eventType"] = cmd.String("event-type")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					var params sdk.AgentListWebhookDeliveriesParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentsListWebhookDeliveriesConversion
+					if err := commands.ConvertAgentsListWebhookDeliveries(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Agents().ListWebhookDeliveries(ctx, pos0, &params)
+					page, err := client.Agents().ListWebhookDeliveries(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -318,7 +250,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Get an agent by ID",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -329,24 +261,20 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentRetrieveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentsRetrieveConversion
+					if err := commands.ConvertAgentsRetrieve(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Retrieve(ctx, pos0, &params)
+					out, err := client.Agents().Retrieve(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -359,7 +287,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Delete an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -370,26 +298,22 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentDeleteParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentsDeleteConversion
+					if err := commands.ConvertAgentsDelete(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.Agents().Delete(ctx, pos0, &params)
+					return client.Agents().Delete(ctx, pos0, &converted.Params)
 				},
 			},
 			{
@@ -398,11 +322,24 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Update an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: "Description of the agent's purpose."},
+					&cli.StringFlag{Name: "webhook-events-url", Usage: "The URL that Cadenya will send events for any objective assigned to the agent."},
+					&cli.StringFlag{Name: "variation-selection-mode", Usage: "Controls how variations are automatically selected when creating objectives Defaults to RANDOM when unspecified. One of: random, weighted."},
+					&cli.StringSliceFlag{Name: "system-prompt-data-schema", Usage: "SystemPromptDataSchema enforces the shape of system_prompt_data when objectives are created. This is valuable when using liquid formatting in agent variation…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.StringSliceFlag{Name: "output-definition", Usage: "Optional output definition for objectives created for this agent. When provided, Cadenya will append a tool to that will be called by the LLM in use by the…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.BoolFlag{Name: "enable-episodic-memory", Usage: "Enable episodic memory for objectives created for this agent. When true, objective creation requires an episodic_memory key and the system finds or creates a…."},
+					&cli.Int32Flag{Name: "episodic-memory-ttl", Usage: "How long episodic memories should be retained. Each new objective slides the layer's expiry forward by this duration, and stored entries expire this long after…."},
+					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 1 {
@@ -412,45 +349,30 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("webhook-events-url"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("system-prompt-data-schema")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("output-definition")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.AgentsUpdateConversion
+					if err := commands.ConvertAgentsUpdate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					if cmd.IsSet("update-mask") {
-						values["updateMask"] = cmd.String("update-mask")
-					}
-					var params sdk.AgentUpdateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Update(ctx, pos0, &params)
+					out, err := client.Agents().Update(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -463,7 +385,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Archive an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -474,24 +396,20 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentArchiveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentsArchiveConversion
+					if err := commands.ConvertAgentsArchive(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Archive(ctx, pos0, &params)
+					out, err := client.Agents().Archive(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -504,7 +422,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Publish an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -515,24 +433,20 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentPublishParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentsPublishConversion
+					if err := commands.ConvertAgentsPublish(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Publish(ctx, pos0, &params)
+					out, err := client.Agents().Publish(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -545,7 +459,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Unarchive an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -556,24 +470,20 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentUnarchiveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentsUnarchiveConversion
+					if err := commands.ConvertAgentsUnarchive(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Unarchive(ctx, pos0, &params)
+					out, err := client.Agents().Unarchive(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -586,7 +496,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Unpublish an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -597,24 +507,20 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AgentUnpublishParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AgentsUnpublishConversion
+					if err := commands.ConvertAgentsUnpublish(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Unpublish(ctx, pos0, &params)
+					out, err := client.Agents().Unpublish(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}

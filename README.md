@@ -73,7 +73,7 @@ source in effect.
 ```sh
 cadenya api-keys list
 cadenya api-keys retrieve <id>
-cadenya api-keys create --metadata @metadata.json --spec @spec.json
+cadenya api-keys create --name <name>
 ```
 
 Responses print as indented JSON. List commands print one page plus
@@ -81,11 +81,11 @@ Responses print as indented JSON. List commands print one page plus
 
 ## Discovering command schemas
 
-`cadenya schema` lists every command as one JSON object per line, and
-`cadenya schema api-keys list` prints that command's invocation contract:
-positional arguments, typed flags (enum values inline), and a full JSON
-Schema — `$defs` included — for every JSON-valued flag. Built for coding
-assistants and scripts that need to construct requests without guessing.
+`cadenya schema` lists every command, and `cadenya schema api-keys list`
+prints that command's invocation contract: positional arguments, every
+flag with its wire path and enum values, and a JSON Schema — `$defs`
+included — for every document input. Built for coding assistants and
+scripts that need to construct requests without guessing.
 
 ## Flag forms
 
@@ -94,26 +94,57 @@ Boolean flags take no space-separated value: `--include-info` enables,
 usage error — `false` would parse as a positional argument).
 
 Repeatable flags (shown as `[--flag <value>]...` in the reference) take
-one value per occurrence; comma splitting is disabled so values — JSON
-documents especially — may contain commas:
+one value per occurrence; comma splitting is disabled so values may
+contain commas:
 
 ```sh
 cadenya tool-sets tools list --names a --names b
 ```
 
-## JSON and secret input
+Enum flags accept a short form (the value without its shared prefix,
+lowercase) as well as the wire value; `--help` lists the short forms.
 
-Every JSON-valued flag accepts a literal document, `@path/to/file.json`,
-or `-` to read stdin (`-` may be used by AT MOST ONE JSON argument per
-invocation — stdin is a single document). Keep secrets out of shell
-history. Repeatable JSON flags take one document per occurrence:
+## Request bodies
+
+Every scalar field of a request body is a flag, named by its path with
+the `metadata`/`spec` envelopes dropped. String maps are repeatable
+`KEY=VALUE` flags, scalar lists repeat a value, and a discriminated
+union collapses onto its arms: `--<arm>-<field>` flags select the arm,
+so the tag flag is only needed when none of the arm's fields are set.
 
 ```sh
-cadenya api-keys create --metadata @metadata.json --spec @spec.json
+cadenya api-keys create --name <name>
 ```
 
-A repeatable JSON flag (shown `[--flag <JSON>]...` in the reference)
-takes one document per occurrence.
+Three input sources layer, deepest wins — a whole-body file, a document
+for one subtree, and individual flags:
+
+```sh
+cadenya api-keys create -f body.yml                     # YAML or JSON, @path or - for stdin
+cadenya api-keys create -f body.yml --name staging      # a flag overrides the file
+```
+
+Document inputs (`<doc>` in the reference) take a YAML/JSON literal,
+`@path`, or `-` for stdin (at most one input per invocation reads stdin —
+plain string flags accept `@path`/`-` too, so secrets stay out of shell
+history; write `@@` for a literal leading `@`). Fields the request does not
+accept — `id`, timestamps, state from a pasted `get` — are dropped with a
+warning (`--strict` makes that an error), so `get --display yaml`, edit,
+`update -f` round-trips. Enum values inside documents accept short forms.
+
+Flat list items take `key=value,...` shorthand (`{name, value}` items
+also accept `NAME=VALUE`); untyped maps take `KEY=VALUE` for strings and
+`KEY:=JSON` for typed values. Anything deeper is a document.
+
+`--dry-run` prints the assembled body instead of sending it — the fastest
+way to learn the file format is to build with flags once and keep it:
+
+```sh
+cadenya api-keys create --name <name> --dry-run > body.yml
+```
+
+Partial updates derive their field mask from the flags and documents
+supplied; pass the mask flag explicitly to override.
 
 ## Streaming
 
@@ -130,8 +161,8 @@ cleanly. Ordinary single-response commands keep indented JSON.
 
 ## Display modes
 
-`--display json|table|extended` (root or per-command; json is ALWAYS the
-default so scripts stay stable). `table` renders the configured columns via
+`--display json|yaml|table|extended` (root or per-command). `yaml` prints
+the same document as YAML (handy with `update -f`). `table` renders the configured columns via
 aligned text for objects and list pages — a page shows only the current
 page, with the next cursor reported on stderr so stdout rows stay clean.
 `extended` prints the same columns as psql-style vertical records. Missing

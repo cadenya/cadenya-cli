@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	sdk "go.cadenya.com/cadenya-go"
+	commands "go.cadenya.com/cadenya-cli/internal/commands"
 )
 
 func widgetsCommand() *cli.Command {
@@ -21,9 +21,9 @@ func widgetsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List widgets",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return."},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response."},
 					&cli.StringFlag{Name: "agent-id", Usage: "Filter to widgets bound to a specific agent. Accepts the canonical `agent_…` form or the `external_id:<value>` form."},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
@@ -35,41 +35,19 @@ func widgetsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}, {header: "AGENT", path: []string{"spec", "agentId"}}}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("agent-id") {
-						values["agentId"] = cmd.String("agent-id")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					if cmd.IsSet("sort-order") {
-						values["sortOrder"] = cmd.String("sort-order")
-					}
-					if cmd.IsSet("include-info") {
-						values["includeInfo"] = cmd.Bool("include-info")
-					}
-					var params sdk.WidgetListParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetsListConversion
+					if err := commands.ConvertWidgetsList(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Widgets().List(ctx, &params)
+					page, err := client.Widgets().List(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -81,61 +59,46 @@ func widgetsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Create a new widget",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "agent-id", Usage: "Required. Agent this widget is bound to. Accepts the canonical `agent_…` form or the `external_id:<value>` form. Sessions copy the agent at mint: re-pointing a…."},
+					&cli.StringFlag{Name: "variation-id", Usage: "Optional explicit variation pin. Must belong to the widget's agent. When set, every objective created through the widget runs this variation — bypassing the…."},
+					&cli.StringSliceFlag{Name: "origin-allowlist", Usage: "Web origins allowed to embed and use this widget, enforced at the edge on every browser request. Exact origins only (scheme + host + optional port), no paths,…. Repeatable."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_missing := []string{}
-					if !cmd.IsSet("metadata") {
-						_missing = append(_missing, "--metadata")
-					}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("agent-id"), cmd.String("variation-id")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.WidgetsCreateConversion
+					if err := commands.ConvertWidgetsCreate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					var params sdk.WidgetCreateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Widgets().Create(ctx, &params)
+					out, err := client.Widgets().Create(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -148,7 +111,7 @@ func widgetsCommand() *cli.Command {
 				Usage:                     "Get a widget by ID",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -159,24 +122,20 @@ func widgetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WidgetRetrieveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetsRetrieveConversion
+					if err := commands.ConvertWidgetsRetrieve(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Widgets().Retrieve(ctx, pos0, &params)
+					out, err := client.Widgets().Retrieve(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -189,7 +148,7 @@ func widgetsCommand() *cli.Command {
 				Usage:                     "Delete a widget",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -200,26 +159,22 @@ func widgetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WidgetDeleteParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetsDeleteConversion
+					if err := commands.ConvertWidgetsDelete(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.Widgets().Delete(ctx, pos0, &params)
+					return client.Widgets().Delete(ctx, pos0, &converted.Params)
 				},
 			},
 			{
@@ -228,11 +183,20 @@ func widgetsCommand() *cli.Command {
 				Usage:                     "Update a widget",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "agent-id", Usage: "Agent this widget is bound to. Accepts the canonical `agent_…` form or the `external_id:<value>` form. Sessions copy the agent at mint: re-pointing a…."},
+					&cli.StringFlag{Name: "variation-id", Usage: "Optional explicit variation pin. Must belong to the widget's agent. When set, every objective created through the widget runs this variation — bypassing the…."},
+					&cli.StringSliceFlag{Name: "origin-allowlist", Usage: "Web origins allowed to embed and use this widget, enforced at the edge on every browser request. Exact origins only (scheme + host + optional port), no paths,…. Repeatable."},
 					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 1 {
@@ -242,45 +206,28 @@ func widgetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.WidgetsUpdateConversion
+					if err := commands.ConvertWidgetsUpdate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					if cmd.IsSet("update-mask") {
-						values["updateMask"] = cmd.String("update-mask")
-					}
-					var params sdk.WidgetUpdateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Widgets().Update(ctx, pos0, &params)
+					out, err := client.Widgets().Update(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -293,7 +240,7 @@ func widgetsCommand() *cli.Command {
 				Usage:                     "Archive a widget",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -304,24 +251,20 @@ func widgetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WidgetArchiveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetsArchiveConversion
+					if err := commands.ConvertWidgetsArchive(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Widgets().Archive(ctx, pos0, &params)
+					out, err := client.Widgets().Archive(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -334,7 +277,7 @@ func widgetsCommand() *cli.Command {
 				Usage:                     "Unarchive a widget",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -345,24 +288,20 @@ func widgetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.WidgetUnarchiveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.WidgetsUnarchiveConversion
+					if err := commands.ConvertWidgetsUnarchive(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Widgets().Unarchive(ctx, pos0, &params)
+					out, err := client.Widgets().Unarchive(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}

@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	sdk "go.cadenya.com/cadenya-go"
+	commands "go.cadenya.com/cadenya-cli/internal/commands"
 )
 
 func toolSetsCommand() *cli.Command {
@@ -21,9 +21,9 @@ func toolSetsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List tool sets",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "prefix", Usage: "Filter expression (query param: prefix)"},
 					&cli.StringFlag{Name: "query", Usage: "Free-form search query"},
@@ -37,50 +37,22 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_ACTIVE", "STATE_ARCHIVED"}) {
 						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: STATE_UNSPECIFIED, STATE_ACTIVE, STATE_ARCHIVED)", cmd.String("state")), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("prefix") {
-						values["prefix"] = cmd.String("prefix")
-					}
-					if cmd.IsSet("query") {
-						values["query"] = cmd.String("query")
-					}
-					if cmd.IsSet("state") {
-						values["state"] = cmd.String("state")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					if cmd.IsSet("sort-order") {
-						values["sortOrder"] = cmd.String("sort-order")
-					}
-					if cmd.IsSet("include-info") {
-						values["includeInfo"] = cmd.Bool("include-info")
-					}
-					var params sdk.ToolSetListParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.ToolSetsListConversion
+					if err := commands.ConvertToolSetsList(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.ToolSets().List(ctx, &params)
+					page, err := client.ToolSets().List(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -92,61 +64,95 @@ func toolSetsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Create a new tool set",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: ""},
+					&cli.StringFlag{Name: "adapter", Usage: "Required. One of: mcp, http, openapi, bare; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "mcp", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-url", Usage: "", Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-include-tools", Usage: "Include/exclude with flat filters. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-include-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-include-tools-operator", Usage: "One of: and, or.", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-exclude-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-exclude-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-exclude-tools-operator", Usage: "One of: and, or.", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-tool-approvals", Usage: "Setting for how to assign tool approval requirements when they are synced from an MCP server. One of: always, only; inferred from the arm's flags. Or a YAML/JSON document.", Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-tool-approvals-always", Usage: "", Category: "mcp-tool-approvals = always"},
+					&cli.StringFlag{Name: "mcp-tool-approvals-only", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "mcp-tool-approvals = only"},
+					&cli.StringSliceFlag{Name: "mcp-tool-approvals-only-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "mcp-tool-approvals = only"},
+					&cli.StringFlag{Name: "mcp-tool-approvals-only-operator", Usage: "One of: and, or.", Category: "mcp-tool-approvals = only"},
+					&cli.StringFlag{Name: "mcp-just-in-time", Usage: "When enabled, tools are loaded from the MCP server just-in-time at objective creation using the objective's resolved secrets, instead of being synced ahead of…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-just-in-time-enabled", Usage: "", Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-just-in-time-fail-objective-on-tool-list-error", Usage: "If set, an objective will automatically be failed if tools cannot be loaded in the initial stages of an objective being created. Tools are loaded….", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "http", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = http"},
+					&cli.StringFlag{Name: "http-base-url", Usage: "Base URL for dispatching tool calls. May be templated. Two reference forms are supported, and they resolve in a single pass each so neither can inject into the….", Category: "adapter = http"},
+					&cli.StringSliceFlag{Name: "http-header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "adapter = http"},
+					&cli.StringFlag{Name: "openapi", Usage: "Required. One of: url, upload-id; inferred from the arm's flags. Or a YAML/JSON document.", Category: "adapter = openapi"},
+					&cli.StringFlag{Name: "openapi-url", Usage: "Required. URL to fetch the OpenAPI spec from. Synced automatically every hour.", Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-header", Usage: "Headers sent when fetching the spec from a URL and when dispatching tool calls. KEY=VALUE (repeatable; or a document).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-include-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-include-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-include-tools-operator", Usage: "One of: and, or.", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-exclude-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-exclude-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-exclude-tools-operator", Usage: "One of: and, or.", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-tool-approvals", Usage: "One of: always, only; inferred from the arm's flags. Or a YAML/JSON document.", Category: "openapi = url"},
+					&cli.BoolFlag{Name: "openapi-tool-approvals-always", Usage: "", Category: "openapi-tool-approvals = always"},
+					&cli.StringFlag{Name: "openapi-tool-approvals-only", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi-tool-approvals = only"},
+					&cli.StringSliceFlag{Name: "openapi-tool-approvals-only-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi-tool-approvals = only"},
+					&cli.StringFlag{Name: "openapi-tool-approvals-only-operator", Usage: "One of: and, or.", Category: "openapi-tool-approvals = only"},
+					&cli.StringFlag{Name: "openapi-base-url", Usage: "Base URL for dispatching tool calls. If set, overrides the server resolved from the spec's servers array. May be templated with the same two reference forms….", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-server-name", Usage: "Name of the server entry in the spec's servers array (OpenAPI 3.2 server.name field). Used to select which server URL to dispatch to when base_url is not set.….", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-upload-id", Usage: "Required. ID of a COMPLETE Upload containing the OpenAPI spec document.", Category: "openapi = upload-id"},
+					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = bare"},
+					&cli.Int32Flag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely.", Category: "adapter = bare"},
+					&cli.StringSliceFlag{Name: "overlay", Usage: "Overlays applied to this tool set's tools, evaluated in order. See ToolOverlay. Overlay keys must be unique within the list. As a repeated field this is…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_missing := []string{}
-					if !cmd.IsSet("metadata") {
-						_missing = append(_missing, "--metadata")
-					}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("adapter"), cmd.String("mcp"), cmd.String("mcp-url"), cmd.String("mcp-include-tools"), cmd.String("mcp-exclude-tools"), cmd.String("mcp-tool-approvals"), cmd.String("mcp-tool-approvals-only"), cmd.String("mcp-just-in-time"), cmd.String("http"), cmd.String("http-base-url"), cmd.String("openapi"), cmd.String("openapi-url"), cmd.String("openapi-include-tools"), cmd.String("openapi-exclude-tools"), cmd.String("openapi-tool-approvals"), cmd.String("openapi-tool-approvals-only"), cmd.String("openapi-base-url"), cmd.String("openapi-server-name"), cmd.String("openapi-upload-id"), cmd.String("bare")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-include-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-exclude-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-tool-approvals-only-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("http-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-include-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-exclude-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-tool-approvals-only-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("overlay")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.ToolSetsCreateConversion
+					if err := commands.ConvertToolSetsCreate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					var params sdk.ToolSetCreateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Create(ctx, &params)
+					out, err := client.ToolSets().Create(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -159,7 +165,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Get a tool set by ID",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -170,24 +176,20 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.ToolSetRetrieveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.ToolSetsRetrieveConversion
+					if err := commands.ConvertToolSetsRetrieve(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Retrieve(ctx, pos0, &params)
+					out, err := client.ToolSets().Retrieve(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -200,7 +202,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Delete a tool set",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -211,26 +213,22 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.ToolSetDeleteParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.ToolSetsDeleteConversion
+					if err := commands.ConvertToolSetsDelete(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.ToolSets().Delete(ctx, pos0, &params)
+					return client.ToolSets().Delete(ctx, pos0, &converted.Params)
 				},
 			},
 			{
@@ -239,11 +237,59 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Update a tool set",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "update-mask"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: ""},
+					&cli.StringFlag{Name: "adapter", Usage: "One of: mcp, http, openapi, bare; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "mcp", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-url", Usage: "", Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-include-tools", Usage: "Include/exclude with flat filters. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-include-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-include-tools-operator", Usage: "One of: and, or.", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-exclude-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-exclude-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-exclude-tools-operator", Usage: "One of: and, or.", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-tool-approvals", Usage: "Setting for how to assign tool approval requirements when they are synced from an MCP server. One of: always, only; inferred from the arm's flags. Or a YAML/JSON document.", Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-tool-approvals-always", Usage: "", Category: "mcp-tool-approvals = always"},
+					&cli.StringFlag{Name: "mcp-tool-approvals-only", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "mcp-tool-approvals = only"},
+					&cli.StringSliceFlag{Name: "mcp-tool-approvals-only-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "mcp-tool-approvals = only"},
+					&cli.StringFlag{Name: "mcp-tool-approvals-only-operator", Usage: "One of: and, or.", Category: "mcp-tool-approvals = only"},
+					&cli.StringFlag{Name: "mcp-just-in-time", Usage: "When enabled, tools are loaded from the MCP server just-in-time at objective creation using the objective's resolved secrets, instead of being synced ahead of…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-just-in-time-enabled", Usage: "", Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-just-in-time-fail-objective-on-tool-list-error", Usage: "If set, an objective will automatically be failed if tools cannot be loaded in the initial stages of an objective being created. Tools are loaded….", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "http", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = http"},
+					&cli.StringFlag{Name: "http-base-url", Usage: "Base URL for dispatching tool calls. May be templated. Two reference forms are supported, and they resolve in a single pass each so neither can inject into the….", Category: "adapter = http"},
+					&cli.StringSliceFlag{Name: "http-header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "adapter = http"},
+					&cli.StringFlag{Name: "openapi", Usage: "One of: url, upload-id; inferred from the arm's flags. Or a YAML/JSON document.", Category: "adapter = openapi"},
+					&cli.StringFlag{Name: "openapi-url", Usage: "URL to fetch the OpenAPI spec from. Synced automatically every hour.", Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-header", Usage: "Headers sent when fetching the spec from a URL and when dispatching tool calls. KEY=VALUE (repeatable; or a document).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-include-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-include-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-include-tools-operator", Usage: "One of: and, or.", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-exclude-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-exclude-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-exclude-tools-operator", Usage: "One of: and, or.", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-tool-approvals", Usage: "One of: always, only; inferred from the arm's flags. Or a YAML/JSON document.", Category: "openapi = url"},
+					&cli.BoolFlag{Name: "openapi-tool-approvals-always", Usage: "", Category: "openapi-tool-approvals = always"},
+					&cli.StringFlag{Name: "openapi-tool-approvals-only", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi-tool-approvals = only"},
+					&cli.StringSliceFlag{Name: "openapi-tool-approvals-only-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi-tool-approvals = only"},
+					&cli.StringFlag{Name: "openapi-tool-approvals-only-operator", Usage: "One of: and, or.", Category: "openapi-tool-approvals = only"},
+					&cli.StringFlag{Name: "openapi-base-url", Usage: "Base URL for dispatching tool calls. If set, overrides the server resolved from the spec's servers array. May be templated with the same two reference forms….", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-server-name", Usage: "Name of the server entry in the spec's servers array (OpenAPI 3.2 server.name field). Used to select which server URL to dispatch to when base_url is not set.….", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-upload-id", Usage: "ID of a COMPLETE Upload containing the OpenAPI spec document.", Category: "openapi = upload-id"},
+					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = bare"},
+					&cli.Int32Flag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely.", Category: "adapter = bare"},
+					&cli.StringSliceFlag{Name: "overlay", Usage: "Overlays applied to this tool set's tools, evaluated in order. See ToolOverlay. Overlay keys must be unique within the list. As a repeated field this is…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "update-mask", Usage: ""},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 1 {
@@ -253,45 +299,38 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("adapter"), cmd.String("mcp"), cmd.String("mcp-url"), cmd.String("mcp-include-tools"), cmd.String("mcp-exclude-tools"), cmd.String("mcp-tool-approvals"), cmd.String("mcp-tool-approvals-only"), cmd.String("mcp-just-in-time"), cmd.String("http"), cmd.String("http-base-url"), cmd.String("openapi"), cmd.String("openapi-url"), cmd.String("openapi-include-tools"), cmd.String("openapi-exclude-tools"), cmd.String("openapi-tool-approvals"), cmd.String("openapi-tool-approvals-only"), cmd.String("openapi-base-url"), cmd.String("openapi-server-name"), cmd.String("openapi-upload-id"), cmd.String("bare"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-include-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-exclude-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-tool-approvals-only-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("http-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-include-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-exclude-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-tool-approvals-only-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("overlay")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.ToolSetsUpdateConversion
+					if err := commands.ConvertToolSetsUpdate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					if cmd.IsSet("update-mask") {
-						values["updateMask"] = cmd.String("update-mask")
-					}
-					var params sdk.ToolSetUpdateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Update(ctx, pos0, &params)
+					out, err := client.ToolSets().Update(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -304,7 +343,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Archive a tool set",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -315,24 +354,20 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.ToolSetArchiveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.ToolSetsArchiveConversion
+					if err := commands.ConvertToolSetsArchive(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Archive(ctx, pos0, &params)
+					out, err := client.ToolSets().Archive(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -345,7 +380,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Unarchive a tool set",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -356,24 +391,20 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.ToolSetUnarchiveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.ToolSetsUnarchiveConversion
+					if err := commands.ConvertToolSetsUnarchive(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Unarchive(ctx, pos0, &params)
+					out, err := client.ToolSets().Unarchive(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -386,9 +417,9 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "List tool set events",
 				ArgsUsage:                 "<tool-set-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
@@ -402,39 +433,20 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<tool-set-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("sort-order") {
-						values["sortOrder"] = cmd.String("sort-order")
-					}
-					if cmd.IsSet("include-info") {
-						values["includeInfo"] = cmd.Bool("include-info")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					var params sdk.ToolSetListEventsParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.ToolSetsListEventsConversion
+					if err := commands.ConvertToolSetsListEvents(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.ToolSets().ListEvents(ctx, pos0, &params)
+					page, err := client.ToolSets().ListEvents(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -447,7 +459,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Get consumed OpenAPI spec",
 				ArgsUsage:                 "<tool-set-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -458,27 +470,23 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<tool-set-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
 					pos0 := cmd.Args().Get(0) // tool-set-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.ToolSetRetrieveOpenAPISpecParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.ToolSetsRetrieveOpenAPISpecConversion
+					if err := commands.ConvertToolSetsRetrieveOpenAPISpec(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().RetrieveOpenAPISpec(ctx, pos0, &params)
+					out, err := client.ToolSets().RetrieveOpenAPISpec(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -491,10 +499,10 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "List tool set usage",
 				ArgsUsage:                 "<tool-set-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.StringFlag{Name: "tool-id", Usage: "When set, lists only variations with a direct assignment of this individual tool. When unset, lists variations assigned the whole tool set. The tool must…"},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by assignment creation time)"},
 				},
@@ -506,36 +514,20 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<tool-set-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ASSIGNED", path: []string{"assignedAt"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("tool-id") {
-						values["toolId"] = cmd.String("tool-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("sort-order") {
-						values["sortOrder"] = cmd.String("sort-order")
-					}
-					var params sdk.ToolSetListUsageParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.ToolSetsListUsageConversion
+					if err := commands.ConvertToolSetsListUsage(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.ToolSets().ListUsage(ctx, pos0, &params)
+					page, err := client.ToolSets().ListUsage(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
