@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	sdk "go.cadenya.com/cadenya-go"
+	commands "go.cadenya.com/cadenya-cli/internal/commands"
 )
 
 func toolSearchCommand() *cli.Command {
@@ -21,7 +21,7 @@ func toolSearchCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Search for tools or tool sets",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace that contains the tools and tool sets to search."},
 					&cli.StringFlag{Name: "query", Usage: "Required. "},
 				},
@@ -30,11 +30,11 @@ func toolSearchCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
 					_missing := []string{}
@@ -44,22 +44,15 @@ func toolSearchCommand() *cli.Command {
 					if len(_missing) > 0 {
 						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("query") {
-						values["query"] = cmd.String("query")
-					}
-					var params sdk.ToolSearchSearchOrSetsParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.ToolSearchSearchOrSetsConversion
+					if err := commands.ConvertToolSearchSearchOrSets(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSearch().SearchOrSets(ctx, &params)
+					out, err := client.ToolSearch().SearchOrSets(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}

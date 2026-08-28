@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	sdk "go.cadenya.com/cadenya-go"
+	commands "go.cadenya.com/cadenya-cli/internal/commands"
 )
 
 func aIProviderKeysCommand() *cli.Command {
@@ -21,9 +21,9 @@ func aIProviderKeysCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List AI provider keys",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace whose keys will be listed."},
-					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "prefix", Usage: "Filter expression (query param: prefix)"},
 					&cli.StringFlag{Name: "query", Usage: "Free-form search query"},
@@ -37,47 +37,19 @@ func aIProviderKeysCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					if cmd.IsSet("limit") {
-						values["limit"] = cmd.Int("limit")
-					}
-					if cmd.IsSet("cursor") {
-						values["cursor"] = cmd.String("cursor")
-					}
-					if cmd.IsSet("prefix") {
-						values["prefix"] = cmd.String("prefix")
-					}
-					if cmd.IsSet("query") {
-						values["query"] = cmd.String("query")
-					}
-					if cmd.IsSet("promotional") {
-						values["promotional"] = cmd.Bool("promotional")
-					}
-					if cmd.IsSet("labels") {
-						values["labels"] = cmd.String("labels")
-					}
-					if cmd.IsSet("sort-order") {
-						values["sortOrder"] = cmd.String("sort-order")
-					}
-					if cmd.IsSet("include-info") {
-						values["includeInfo"] = cmd.Bool("include-info")
-					}
-					var params sdk.AIProviderKeyListParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AIProviderKeysListConversion
+					if err := commands.ConvertAIProviderKeysList(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.AIProviderKeys().List(ctx, &params)
+					page, err := client.AIProviderKeys().List(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -89,61 +61,56 @@ func aIProviderKeysCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Create a new AI provider key",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace that will own this key."},
-					&cli.StringFlag{Name: "metadata", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "provider", Usage: "The AI provider this key authenticates against. One of: openrouter, openai, anthropic, gemini, openai-compatible."},
+					&cli.StringFlag{Name: "credentials", Usage: "The provider credential. Accepted on create/update; never populated in responses (the server returns an empty value to avoid leaking the secret). One of: api-key, headers; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "api-key", Usage: "", Category: "credentials = api-key"},
+					&cli.StringSliceFlag{Name: "header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "credentials = headers"},
+					&cli.StringFlag{Name: "config", Usage: "Non-secret, provider-specific settings (OpenAI org/project, OpenRouter region, OpenAI-compatible base URL). The set case must correspond to `provider`.…. One of: openrouter, openai, openai-compatible; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "openrouter", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openrouter"},
+					&cli.StringFlag{Name: "openrouter-region", Usage: "Data-residency region (e.g. \"us\", \"eu\"). Empty uses the provider default.", Category: "config = openrouter"},
+					&cli.StringFlag{Name: "openai", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openai"},
+					&cli.StringFlag{Name: "openai-organization-id", Usage: "Sent as the OpenAI-Organization header when set.", Category: "config = openai"},
+					&cli.StringFlag{Name: "openai-project-id", Usage: "Sent as the OpenAI-Project header when set.", Category: "config = openai"},
+					&cli.StringFlag{Name: "openai-compatible", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openai-compatible"},
+					&cli.StringFlag{Name: "openai-compatible-base-url", Usage: "", Category: "config = openai-compatible"},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_missing := []string{}
-					if !cmd.IsSet("metadata") {
-						_missing = append(_missing, "--metadata")
-					}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("credentials"), cmd.String("api-key"), cmd.String("config"), cmd.String("openrouter"), cmd.String("openrouter-region"), cmd.String("openai"), cmd.String("openai-organization-id"), cmd.String("openai-project-id"), cmd.String("openai-compatible"), cmd.String("openai-compatible-base-url")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("header")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.AIProviderKeysCreateConversion
+					if err := commands.ConvertAIProviderKeysCreate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					var params sdk.AIProviderKeyCreateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.AIProviderKeys().Create(ctx, &params)
+					out, err := client.AIProviderKeys().Create(ctx, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -156,7 +123,7 @@ func aIProviderKeysCommand() *cli.Command {
 				Usage:                     "Get an AI provider key by ID",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace the key belongs to."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -167,24 +134,20 @@ func aIProviderKeysCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AIProviderKeyRetrieveParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AIProviderKeysRetrieveConversion
+					if err := commands.ConvertAIProviderKeysRetrieve(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.AIProviderKeys().Retrieve(ctx, pos0, &params)
+					out, err := client.AIProviderKeys().Retrieve(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
@@ -197,7 +160,7 @@ func aIProviderKeysCommand() *cli.Command {
 				Usage:                     "Delete an AI provider key",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace the key belongs to."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -208,26 +171,22 @@ func aIProviderKeysCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
-					}
-					var params sdk.AIProviderKeyDeleteParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					var converted commands.AIProviderKeysDeleteConversion
+					if err := commands.ConvertAIProviderKeysDelete(cmd, &converted); err != nil {
+						return err
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.AIProviderKeys().Delete(ctx, pos0, &params)
+					return client.AIProviderKeys().Delete(ctx, pos0, &converted.Params)
 				},
 			},
 			{
@@ -236,11 +195,29 @@ func aIProviderKeysCommand() *cli.Command {
 				Usage:                     "Update an AI provider key",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace the key belongs to."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "provider", Usage: "The AI provider this key authenticates against. One of: openrouter, openai, anthropic, gemini, openai-compatible."},
+					&cli.StringFlag{Name: "credentials", Usage: "The provider credential. Accepted on create/update; never populated in responses (the server returns an empty value to avoid leaking the secret). One of: api-key, headers; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "api-key", Usage: "", Category: "credentials = api-key"},
+					&cli.StringSliceFlag{Name: "header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "credentials = headers"},
+					&cli.StringFlag{Name: "config", Usage: "Non-secret, provider-specific settings (OpenAI org/project, OpenRouter region, OpenAI-compatible base URL). The set case must correspond to `provider`.…. One of: openrouter, openai, openai-compatible; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "openrouter", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openrouter"},
+					&cli.StringFlag{Name: "openrouter-region", Usage: "Data-residency region (e.g. \"us\", \"eu\"). Empty uses the provider default.", Category: "config = openrouter"},
+					&cli.StringFlag{Name: "openai", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openai"},
+					&cli.StringFlag{Name: "openai-organization-id", Usage: "Sent as the OpenAI-Organization header when set.", Category: "config = openai"},
+					&cli.StringFlag{Name: "openai-project-id", Usage: "Sent as the OpenAI-Project header when set.", Category: "config = openai"},
+					&cli.StringFlag{Name: "openai-compatible", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openai-compatible"},
+					&cli.StringFlag{Name: "openai-compatible-base-url", Usage: "", Category: "config = openai-compatible"},
 					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 1 {
@@ -250,45 +227,29 @@ func aIProviderKeysCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("credentials"), cmd.String("api-key"), cmd.String("config"), cmd.String("openrouter"), cmd.String("openrouter-region"), cmd.String("openai"), cmd.String("openai-organization-id"), cmd.String("openai-project-id"), cmd.String("openai-compatible"), cmd.String("openai-compatible-base-url"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("header")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					values := map[string]any{}
-					if cmd.IsSet("workspace-id") {
-						values["workspaceId"] = cmd.String("workspace-id")
+					var converted commands.AIProviderKeysUpdateConversion
+					if err := commands.ConvertAIProviderKeysUpdate(cmd, &converted); err != nil {
+						return err
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["metadata"] = doc
-					}
-					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
-							return cli.Exit(err.Error(), 2)
-						}
-						values["spec"] = doc
-					}
-					if cmd.IsSet("update-mask") {
-						values["updateMask"] = cmd.String("update-mask")
-					}
-					var params sdk.AIProviderKeyUpdateParams
-					if err := decodeParams(values, &params); err != nil {
-						return cli.Exit(err.Error(), 2)
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.AIProviderKeys().Update(ctx, pos0, &params)
+					out, err := client.AIProviderKeys().Update(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
