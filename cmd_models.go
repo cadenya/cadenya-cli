@@ -11,6 +11,8 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
+const bodySchemaModelsSwapOnVariations = "{\"$defs\":{\"SwapModelOnVariationsRequest_ModelSwap\":{\"properties\":{\"currentModelId\":{\"description\":\"The model variations are currently on. Accepts an id or \\\"external_id:\\\" slug.\",\"type\":\"string\"},\"disableCurrentAfterSwap\":{\"description\":\"Whether to disable the current model after the swap.\",\"type\":\"boolean\"},\"nextModelId\":{\"description\":\"The model to move variations to. Accepts an id or \\\"external_id:\\\" slug.\",\"type\":\"string\"}},\"type\":\"object\"}},\"properties\":{\"modelSwaps\":{\"items\":{\"$ref\":\"SwapModelOnVariationsRequest_ModelSwap\"},\"type\":\"array\"}},\"type\":\"object\"}"
+
 func modelsCommand() *cli.Command {
 	return &cli.Command{
 		Name:                      "models",
@@ -21,7 +23,7 @@ func modelsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List models",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
@@ -39,8 +41,8 @@ func modelsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}, {header: "PROVIDER", path: []string{"spec", "provider"}}, {header: "FAMILY", path: []string{"spec", "family"}}}
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_ENABLED", "STATE_DISABLED"}) {
@@ -101,7 +103,7 @@ func modelsCommand() *cli.Command {
 				Usage:                     "Get a model by ID",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -112,8 +114,8 @@ func modelsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -142,7 +144,7 @@ func modelsCommand() *cli.Command {
 				Usage:                     "Disable a model",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -153,8 +155,8 @@ func modelsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -183,7 +185,7 @@ func modelsCommand() *cli.Command {
 				Usage:                     "Enable a model",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -194,8 +196,8 @@ func modelsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -223,23 +225,26 @@ func modelsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Swap models on agent variations",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringSliceFlag{Name: "model-swaps", Usage: "The swaps to perform."},
+					&cli.StringSliceFlag{Name: "model-swap", Usage: "The swaps to perform. key=value,... over current-model-id, next-model-id, disable-current-after-swap (repeatable; or a document)."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
-					_stdinInputs := []string{}
-					_stdinInputs = append(_stdinInputs, cmd.StringSlice("model-swaps")...)
+					_stdinInputs := []string{cmd.String("file")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("model-swap")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -247,12 +252,32 @@ func modelsCommand() *cli.Command {
 					if cmd.IsSet("workspace-id") {
 						values["workspaceId"] = cmd.String("workspace-id")
 					}
-					if cmd.IsSet("model-swaps") {
-						items, err := jsonSliceArg("model-swaps", cmd.StringSlice("model-swaps"))
-						if err != nil {
+					_schema := parseBodySchema(bodySchemaModelsSwapOnVariations)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["modelSwaps"] = items
+					}
+					if cmd.IsSet("model-swap") {
+						if err := _body.applyShorthandItems("model-swap", []string{"modelSwaps"}, cmd.StringSlice("model-swap"), shorthandSpec{Fields: []shorthandField{{Wire: "currentModelId", Key: "current-model-id", Kind: scalarString, Enum: nil, Required: false}, {Wire: "nextModelId", Key: "next-model-id", Kind: scalarString, Enum: nil, Required: false}, {Wire: "disableCurrentAfterSwap", Key: "disable-current-after-swap", Kind: scalarBool, Enum: nil, Required: false}}}); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"modelSwaps": "--model-swap"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if cmd.Bool("dry-run") {
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
 					}
 					var params sdk.ModelSwapOnVariationsParams
 					if err := decodeParams(values, &params); err != nil {

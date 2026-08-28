@@ -11,6 +11,10 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
+const bodySchemaToolSetsCreate = "{\"$defs\":{\"CreateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"ParameterActionPinOnMissing\":{\"enum\":[\"ON_MISSING_FAIL\",\"ON_MISSING_SKIP\"],\"enumShort\":{\"fail\":\"ON_MISSING_FAIL\",\"skip\":\"ON_MISSING_SKIP\"},\"type\":\"string\"},\"ParameterAction_Pin\":{\"properties\":{\"onMissing\":{\"$ref\":\"ParameterActionPinOnMissing\",\"description\":\"Default: ON_MISSING_FAIL.\"},\"path\":{\"type\":\"string\"},\"pinnedParameter\":{\"description\":\"Key into the objective's pinned_parameters map. Need not equal the\\n last segment of `path` — this is how a pinned `orgId` reaches a\\n tool whose parameter is named `organizationId`.\",\"type\":\"string\"}},\"required\":[\"path\",\"pinnedParameter\",\"onMissing\"],\"type\":\"object\"},\"ParameterAction_Remove\":{\"properties\":{\"path\":{\"type\":\"string\"}},\"required\":[\"path\"],\"type\":\"object\"},\"ParameterAction_Set\":{\"properties\":{\"path\":{\"type\":\"string\"},\"valueTemplate\":{\"type\":\"string\"}},\"required\":[\"path\",\"valueTemplate\"],\"type\":\"object\"},\"ResultActionTransformOnError\":{\"enum\":[\"ON_ERROR_RAW_CONTENT\",\"ON_ERROR_FAIL\"],\"enumShort\":{\"fail\":\"ON_ERROR_FAIL\",\"raw-content\":\"ON_ERROR_RAW_CONTENT\"},\"type\":\"string\"},\"ResultAction_Transform\":{\"properties\":{\"contentTemplate\":{\"type\":\"string\"},\"expectJson\":{\"description\":\"Require the tool result to have text content that parses as JSON\\n before rendering. A non-JSON (or text-less) result is then an error\\n subject to `on_error` even if the template never reads\\n `result.json`. Off by default: `result.json` is simply absent for\\n non-JSON results, and text-less results skip the transform.\",\"type\":\"boolean\"},\"onError\":{\"$ref\":\"ResultActionTransformOnError\",\"description\":\"Default: ON_ERROR_RAW_CONTENT.\"}},\"required\":[\"contentTemplate\",\"onError\",\"expectJson\"],\"type\":\"object\"},\"Selector_Condition\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"Selector_Condition_Attribute\"},{\"$ref\":\"Selector_Condition_HasParameter\"},{\"$ref\":\"Selector_Condition_Tools\"}]},\"Selector_Condition_Attribute\":{\"properties\":{\"attribute\":{\"$ref\":\"ToolSetAdapter_AttributeFilter\",\"description\":\"Match on a tool attribute (name, title, description,\\n llm_tool_name) with a string matcher — the same filter used by\\n the adapter's include/exclude lists.\"},\"type\":{\"const\":\"attribute\"}},\"required\":[\"type\",\"attribute\"],\"type\":\"object\"},\"Selector_Condition_HasParameter\":{\"properties\":{\"hasParameter\":{\"$ref\":\"ToolOverlay_ParameterPath\",\"description\":\"Match tools whose parameter schema contains the given path. This\\n is the usual way to target \\\"every tool that takes a workspaceId\\\"\\n without enumerating tools by name.\"},\"type\":{\"const\":\"hasParameter\"}},\"required\":[\"type\",\"hasParameter\"],\"type\":\"object\"},\"Selector_Condition_Tools\":{\"properties\":{\"tools\":{\"$ref\":\"Selector_ToolNames\",\"description\":\"Match specific tools by LLM tool name. The direct way to assign an\\n overlay to one tool (or a handful) without writing a matcher.\"},\"type\":{\"const\":\"tools\"}},\"required\":[\"type\",\"tools\"],\"type\":\"object\"},\"Selector_ToolNames\":{\"properties\":{\"names\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"}},\"type\":\"object\"},\"ToolOverlay\":{\"properties\":{\"disabled\":{\"description\":\"When true the overlay is retained in the spec but not evaluated. Lets an\\n operator switch a policy off to diagnose a misbehaving tool without\\n deleting it and losing the configuration.\",\"type\":\"boolean\"},\"key\":{\"description\":\"Identifies the overlay within its tool set. Unique across the tool\\n set's overlays (enforced by the server), stable across reorders, and\\n surfaced in tool call messages (\\\"parameter removed by overlay\\n strip-list-knobs\\\") so an operator can trace a rewritten call back to\\n the policy that rewrote it. Referenced by ToolInfo.overlays and the\\n ListToolsRequest.overlays filter.\",\"type\":\"string\"},\"parameterActions\":{\"description\":\"Pre-call actions, applied in order. See ParameterAction.\",\"items\":{\"$ref\":\"ToolOverlay_ParameterAction\"},\"type\":\"array\"},\"resultActions\":{\"description\":\"Post-call actions, applied in order. See ResultAction.\",\"items\":{\"$ref\":\"ToolOverlay_ResultAction\"},\"type\":\"array\"},\"selector\":{\"$ref\":\"ToolOverlay_Selector\",\"description\":\"Which tools this overlay applies to. Required; an empty selector\\n (no conditions) matches every tool in the set.\"},\"widgetArgumentExposure\":{\"$ref\":\"ToolOverlay_WidgetArgumentExposure\",\"description\":\"Arguments may carry sensitive customer data, including values injected by\\n parameter actions, so they stay private unless an overlay enables them.\\n\\n Unset means this overlay has no opinion. When several enabled overlays\\n match a tool, they are evaluated in list order and the last overlay that\\n supplies this policy wins. If none supplies it, arguments stay private.\\n Disabled overlays never participate.\"}},\"required\":[\"key\",\"selector\",\"disabled\"],\"type\":\"object\"},\"ToolOverlaySelectorOperator\":{\"enum\":[\"OPERATOR_AND\",\"OPERATOR_OR\"],\"enumShort\":{\"and\":\"OPERATOR_AND\",\"or\":\"OPERATOR_OR\"},\"type\":\"string\"},\"ToolOverlay_ParameterAction\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolOverlay_ParameterAction_Remove\"},{\"$ref\":\"ToolOverlay_ParameterAction_Set\"},{\"$ref\":\"ToolOverlay_ParameterAction_Pin\"}]},\"ToolOverlay_ParameterAction_Pin\":{\"properties\":{\"pin\":{\"$ref\":\"ParameterAction_Pin\"},\"type\":{\"const\":\"pin\"}},\"required\":[\"type\",\"pin\"],\"type\":\"object\"},\"ToolOverlay_ParameterAction_Remove\":{\"properties\":{\"remove\":{\"$ref\":\"ParameterAction_Remove\"},\"type\":{\"const\":\"remove\"}},\"required\":[\"type\",\"remove\"],\"type\":\"object\"},\"ToolOverlay_ParameterAction_Set\":{\"properties\":{\"set\":{\"$ref\":\"ParameterAction_Set\"},\"type\":{\"const\":\"set\"}},\"required\":[\"type\",\"set\"],\"type\":\"object\"},\"ToolOverlay_ParameterPath\":{\"properties\":{\"path\":{\"type\":\"string\"}},\"required\":[\"path\"],\"type\":\"object\"},\"ToolOverlay_ResultAction\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolOverlay_ResultAction_Transform\"}]},\"ToolOverlay_ResultAction_Transform\":{\"properties\":{\"transform\":{\"$ref\":\"ResultAction_Transform\"},\"type\":{\"const\":\"transform\"}},\"required\":[\"type\",\"transform\"],\"type\":\"object\"},\"ToolOverlay_Selector\":{\"properties\":{\"conditions\":{\"items\":{\"$ref\":\"Selector_Condition\"},\"type\":\"array\"},\"operator\":{\"$ref\":\"ToolOverlaySelectorOperator\",\"description\":\"Default: OPERATOR_AND.\"}},\"required\":[\"operator\"],\"type\":\"object\"},\"ToolOverlay_WidgetArgumentExposure\":{\"properties\":{\"enabled\":{\"type\":\"boolean\"}},\"required\":[\"enabled\"],\"type\":\"object\"},\"ToolSetAdapter\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSetAdapter_McpVariant\"},{\"$ref\":\"ToolSetAdapter_HttpVariant\"},{\"$ref\":\"ToolSetAdapter_OpenapiVariant\"},{\"$ref\":\"ToolSetAdapter_BareVariant\"}]},\"ToolSetAdapterAttributeFilterAttribute\":{\"enum\":[\"ATTRIBUTE_NAME\",\"ATTRIBUTE_TITLE\",\"ATTRIBUTE_DESCRIPTION\",\"ATTRIBUTE_LLM_TOOL_NAME\"],\"enumShort\":{\"description\":\"ATTRIBUTE_DESCRIPTION\",\"llm-tool-name\":\"ATTRIBUTE_LLM_TOOL_NAME\",\"name\":\"ATTRIBUTE_NAME\",\"title\":\"ATTRIBUTE_TITLE\"},\"type\":\"string\"},\"ToolSetAdapterToolFilterOperator\":{\"enum\":[\"OPERATOR_AND\",\"OPERATOR_OR\"],\"enumShort\":{\"and\":\"OPERATOR_AND\",\"or\":\"OPERATOR_OR\"},\"type\":\"string\"},\"ToolSetAdapter_ApprovalRequirementFilter\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter_Always\"},{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter_Only\"}]},\"ToolSetAdapter_ApprovalRequirementFilter_Always\":{\"properties\":{\"always\":{\"type\":\"boolean\"},\"type\":{\"const\":\"always\"}},\"required\":[\"type\",\"always\"],\"type\":\"object\"},\"ToolSetAdapter_ApprovalRequirementFilter_Only\":{\"properties\":{\"only\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"type\":{\"const\":\"only\"}},\"required\":[\"type\",\"only\"],\"type\":\"object\"},\"ToolSetAdapter_AttributeFilter\":{\"properties\":{\"attribute\":{\"$ref\":\"ToolSetAdapterAttributeFilterAttribute\"},\"matcher\":{\"$ref\":\"ToolSetAdapter_StringMatcher\"}},\"required\":[\"attribute\"],\"type\":\"object\"},\"ToolSetAdapter_Bare\":{\"properties\":{\"contentTimeout\":{\"description\":\"How long to wait for content to be set before the tool call errors.\\n If unset, the call waits indefinitely.\",\"type\":\"integer\"}},\"type\":\"object\"},\"ToolSetAdapter_BareVariant\":{\"properties\":{\"bare\":{\"$ref\":\"ToolSetAdapter_Bare\"},\"type\":{\"const\":\"bare\"}},\"required\":[\"type\",\"bare\"],\"type\":\"object\"},\"ToolSetAdapter_HTTP\":{\"properties\":{\"baseUrl\":{\"description\":\"Base URL for dispatching tool calls.\\n\\n May be templated. Two reference forms are supported, and they resolve\\n in a single pass each so neither can inject into the other:\\n\\n   ${SECRET_NAME}                 a workspace or tool set secret\\n   {{ pinned_parameters.<key> }}  the objective's pinned parameters\\n     (see CreateObjectiveRequest.pinned_parameters)\\n\\n Pinned parameters are what make a per-tenant host possible: one tool\\n set can serve every customer of a product that assigns each of them\\n their own subdomain, e.g.\\n\\n   https://{{ pinned_parameters.tenant }}.example.com\\n\\n Because the value may be a template rather than a literal URL, this\\n field is not constrained to a URI shape. It is validated as an\\n absolute http(s) URL after references are resolved, both on write\\n (with references stubbed) and again before each tool call.\",\"type\":\"string\"},\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"}},\"type\":\"object\"},\"ToolSetAdapter_HttpVariant\":{\"properties\":{\"http\":{\"$ref\":\"ToolSetAdapter_HTTP\"},\"type\":{\"const\":\"http\"}},\"required\":[\"type\",\"http\"],\"type\":\"object\"},\"ToolSetAdapter_JustInTime\":{\"properties\":{\"enabled\":{\"type\":\"boolean\"},\"failObjectiveOnToolListError\":{\"description\":\"If set, an objective will automatically be failed if tools cannot be loaded\\n in the initial stages of an objective being created. Tools are loaded asynchronously,\\n so this setting is useful for ensuring that an objective continued any further if tools are not available.\",\"type\":\"boolean\"}},\"type\":\"object\"},\"ToolSetAdapter_MCP\":{\"properties\":{\"excludeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"},\"includeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\",\"description\":\"Include/exclude with flat filters\"},\"justInTime\":{\"$ref\":\"ToolSetAdapter_JustInTime\",\"description\":\"When enabled, tools are loaded from the MCP server just-in-time at\\n objective creation using the objective's resolved secrets, instead of\\n being synced ahead of time. Just-in-time tool sets are excluded from\\n the background sync system.\"},\"toolApprovals\":{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter\",\"description\":\"Setting for how to assign tool approval requirements when they are synced from an MCP server\"},\"url\":{\"type\":\"string\"}},\"type\":\"object\"},\"ToolSetAdapter_McpVariant\":{\"properties\":{\"mcp\":{\"$ref\":\"ToolSetAdapter_MCP\"},\"type\":{\"const\":\"mcp\"}},\"required\":[\"type\",\"mcp\"],\"type\":\"object\"},\"ToolSetAdapter_OpenAPI\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSetAdapter_OpenAPI_Url\"},{\"$ref\":\"ToolSetAdapter_OpenAPI_UploadId\"}]},\"ToolSetAdapter_OpenAPI_UploadId\":{\"properties\":{\"baseUrl\":{\"description\":\"Base URL for dispatching tool calls. If set, overrides the server\\n resolved from the spec's servers array.\\n\\n May be templated with the same two reference forms the HTTP adapter's\\n base_url accepts:\\n\\n   ${SECRET_NAME}                 a workspace or tool set secret\\n   {{ pinned_parameters.<key> }}  the objective's pinned parameters\\n\\n A spec written against a single host can therefore be dispatched to a\\n per-tenant one, e.g. https://{{ pinned_parameters.tenant }}.example.com,\\n without cloning the tool set per customer. Validated as an absolute\\n http(s) URL after references are resolved rather than as a literal URI.\",\"type\":\"string\"},\"excludeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Headers sent when fetching the spec from a URL and when dispatching tool calls.\",\"type\":\"object\"},\"includeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"serverName\":{\"description\":\"Name of the server entry in the spec's servers array (OpenAPI 3.2\\n server.name field). Used to select which server URL to dispatch to\\n when base_url is not set. If unset, the first server is used.\\n Ignored when base_url is set.\",\"type\":\"string\"},\"toolApprovals\":{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter\"},\"type\":{\"const\":\"uploadId\"},\"uploadId\":{\"description\":\"ID of a COMPLETE Upload containing the OpenAPI spec document.\",\"type\":\"string\"}},\"required\":[\"type\",\"uploadId\"],\"type\":\"object\"},\"ToolSetAdapter_OpenAPI_Url\":{\"properties\":{\"baseUrl\":{\"description\":\"Base URL for dispatching tool calls. If set, overrides the server\\n resolved from the spec's servers array.\\n\\n May be templated with the same two reference forms the HTTP adapter's\\n base_url accepts:\\n\\n   ${SECRET_NAME}                 a workspace or tool set secret\\n   {{ pinned_parameters.<key> }}  the objective's pinned parameters\\n\\n A spec written against a single host can therefore be dispatched to a\\n per-tenant one, e.g. https://{{ pinned_parameters.tenant }}.example.com,\\n without cloning the tool set per customer. Validated as an absolute\\n http(s) URL after references are resolved rather than as a literal URI.\",\"type\":\"string\"},\"excludeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Headers sent when fetching the spec from a URL and when dispatching tool calls.\",\"type\":\"object\"},\"includeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"serverName\":{\"description\":\"Name of the server entry in the spec's servers array (OpenAPI 3.2\\n server.name field). Used to select which server URL to dispatch to\\n when base_url is not set. If unset, the first server is used.\\n Ignored when base_url is set.\",\"type\":\"string\"},\"toolApprovals\":{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter\"},\"type\":{\"const\":\"url\"},\"url\":{\"description\":\"URL to fetch the OpenAPI spec from. Synced automatically every hour.\",\"type\":\"string\"}},\"required\":[\"type\",\"url\"],\"type\":\"object\"},\"ToolSetAdapter_OpenapiVariant\":{\"properties\":{\"openapi\":{\"$ref\":\"ToolSetAdapter_OpenAPI\"},\"type\":{\"const\":\"openapi\"}},\"required\":[\"type\",\"openapi\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSetAdapter_StringMatcher_Exact\"},{\"$ref\":\"ToolSetAdapter_StringMatcher_StartsWith\"},{\"$ref\":\"ToolSetAdapter_StringMatcher_EndsWith\"},{\"$ref\":\"ToolSetAdapter_StringMatcher_Contains\"},{\"$ref\":\"ToolSetAdapter_StringMatcher_Regex\"}]},\"ToolSetAdapter_StringMatcher_Contains\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"contains\":{\"type\":\"string\"},\"type\":{\"const\":\"contains\"}},\"required\":[\"type\",\"contains\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher_EndsWith\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"endsWith\":{\"type\":\"string\"},\"type\":{\"const\":\"endsWith\"}},\"required\":[\"type\",\"endsWith\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher_Exact\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"exact\":{\"type\":\"string\"},\"type\":{\"const\":\"exact\"}},\"required\":[\"type\",\"exact\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher_Regex\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"regex\":{\"type\":\"string\"},\"type\":{\"const\":\"regex\"}},\"required\":[\"type\",\"regex\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher_StartsWith\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"startsWith\":{\"type\":\"string\"},\"type\":{\"const\":\"startsWith\"}},\"required\":[\"type\",\"startsWith\"],\"type\":\"object\"},\"ToolSetAdapter_ToolFilter\":{\"properties\":{\"filters\":{\"items\":{\"$ref\":\"ToolSetAdapter_AttributeFilter\"},\"type\":\"array\"},\"operator\":{\"$ref\":\"ToolSetAdapterToolFilterOperator\"}},\"required\":[\"operator\"],\"type\":\"object\"},\"ToolSetSpec\":{\"properties\":{\"adapter\":{\"$ref\":\"ToolSetAdapter\"},\"description\":{\"type\":\"string\"},\"overlays\":{\"description\":\"Overlays applied to this tool set's tools, evaluated in order. See\\n ToolOverlay. Overlay keys must be unique within the list.\\n\\n As a repeated field this is replaced wholesale on update: an\\n update_mask of `spec.overlays` swaps the entire list for the one in the\\n request. Read-modify-write to add or remove a single overlay.\",\"items\":{\"$ref\":\"ToolOverlay\"},\"type\":\"array\"}},\"required\":[\"adapter\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateResourceMetadata\"},\"spec\":{\"$ref\":\"ToolSetSpec\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"}"
+
+const bodySchemaToolSetsUpdate = "{\"$defs\":{\"ParameterActionPinOnMissing\":{\"enum\":[\"ON_MISSING_FAIL\",\"ON_MISSING_SKIP\"],\"enumShort\":{\"fail\":\"ON_MISSING_FAIL\",\"skip\":\"ON_MISSING_SKIP\"},\"type\":\"string\"},\"ParameterAction_Pin\":{\"properties\":{\"onMissing\":{\"$ref\":\"ParameterActionPinOnMissing\",\"description\":\"Default: ON_MISSING_FAIL.\"},\"path\":{\"type\":\"string\"},\"pinnedParameter\":{\"description\":\"Key into the objective's pinned_parameters map. Need not equal the\\n last segment of `path` — this is how a pinned `orgId` reaches a\\n tool whose parameter is named `organizationId`.\",\"type\":\"string\"}},\"required\":[\"path\",\"pinnedParameter\",\"onMissing\"],\"type\":\"object\"},\"ParameterAction_Remove\":{\"properties\":{\"path\":{\"type\":\"string\"}},\"required\":[\"path\"],\"type\":\"object\"},\"ParameterAction_Set\":{\"properties\":{\"path\":{\"type\":\"string\"},\"valueTemplate\":{\"type\":\"string\"}},\"required\":[\"path\",\"valueTemplate\"],\"type\":\"object\"},\"ResultActionTransformOnError\":{\"enum\":[\"ON_ERROR_RAW_CONTENT\",\"ON_ERROR_FAIL\"],\"enumShort\":{\"fail\":\"ON_ERROR_FAIL\",\"raw-content\":\"ON_ERROR_RAW_CONTENT\"},\"type\":\"string\"},\"ResultAction_Transform\":{\"properties\":{\"contentTemplate\":{\"type\":\"string\"},\"expectJson\":{\"description\":\"Require the tool result to have text content that parses as JSON\\n before rendering. A non-JSON (or text-less) result is then an error\\n subject to `on_error` even if the template never reads\\n `result.json`. Off by default: `result.json` is simply absent for\\n non-JSON results, and text-less results skip the transform.\",\"type\":\"boolean\"},\"onError\":{\"$ref\":\"ResultActionTransformOnError\",\"description\":\"Default: ON_ERROR_RAW_CONTENT.\"}},\"required\":[\"contentTemplate\",\"onError\",\"expectJson\"],\"type\":\"object\"},\"Selector_Condition\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"Selector_Condition_Attribute\"},{\"$ref\":\"Selector_Condition_HasParameter\"},{\"$ref\":\"Selector_Condition_Tools\"}]},\"Selector_Condition_Attribute\":{\"properties\":{\"attribute\":{\"$ref\":\"ToolSetAdapter_AttributeFilter\",\"description\":\"Match on a tool attribute (name, title, description,\\n llm_tool_name) with a string matcher — the same filter used by\\n the adapter's include/exclude lists.\"},\"type\":{\"const\":\"attribute\"}},\"required\":[\"type\",\"attribute\"],\"type\":\"object\"},\"Selector_Condition_HasParameter\":{\"properties\":{\"hasParameter\":{\"$ref\":\"ToolOverlay_ParameterPath\",\"description\":\"Match tools whose parameter schema contains the given path. This\\n is the usual way to target \\\"every tool that takes a workspaceId\\\"\\n without enumerating tools by name.\"},\"type\":{\"const\":\"hasParameter\"}},\"required\":[\"type\",\"hasParameter\"],\"type\":\"object\"},\"Selector_Condition_Tools\":{\"properties\":{\"tools\":{\"$ref\":\"Selector_ToolNames\",\"description\":\"Match specific tools by LLM tool name. The direct way to assign an\\n overlay to one tool (or a handful) without writing a matcher.\"},\"type\":{\"const\":\"tools\"}},\"required\":[\"type\",\"tools\"],\"type\":\"object\"},\"Selector_ToolNames\":{\"properties\":{\"names\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"}},\"type\":\"object\"},\"ToolOverlay\":{\"properties\":{\"disabled\":{\"description\":\"When true the overlay is retained in the spec but not evaluated. Lets an\\n operator switch a policy off to diagnose a misbehaving tool without\\n deleting it and losing the configuration.\",\"type\":\"boolean\"},\"key\":{\"description\":\"Identifies the overlay within its tool set. Unique across the tool\\n set's overlays (enforced by the server), stable across reorders, and\\n surfaced in tool call messages (\\\"parameter removed by overlay\\n strip-list-knobs\\\") so an operator can trace a rewritten call back to\\n the policy that rewrote it. Referenced by ToolInfo.overlays and the\\n ListToolsRequest.overlays filter.\",\"type\":\"string\"},\"parameterActions\":{\"description\":\"Pre-call actions, applied in order. See ParameterAction.\",\"items\":{\"$ref\":\"ToolOverlay_ParameterAction\"},\"type\":\"array\"},\"resultActions\":{\"description\":\"Post-call actions, applied in order. See ResultAction.\",\"items\":{\"$ref\":\"ToolOverlay_ResultAction\"},\"type\":\"array\"},\"selector\":{\"$ref\":\"ToolOverlay_Selector\",\"description\":\"Which tools this overlay applies to. Required; an empty selector\\n (no conditions) matches every tool in the set.\"},\"widgetArgumentExposure\":{\"$ref\":\"ToolOverlay_WidgetArgumentExposure\",\"description\":\"Arguments may carry sensitive customer data, including values injected by\\n parameter actions, so they stay private unless an overlay enables them.\\n\\n Unset means this overlay has no opinion. When several enabled overlays\\n match a tool, they are evaluated in list order and the last overlay that\\n supplies this policy wins. If none supplies it, arguments stay private.\\n Disabled overlays never participate.\"}},\"required\":[\"key\",\"selector\",\"disabled\"],\"type\":\"object\"},\"ToolOverlaySelectorOperator\":{\"enum\":[\"OPERATOR_AND\",\"OPERATOR_OR\"],\"enumShort\":{\"and\":\"OPERATOR_AND\",\"or\":\"OPERATOR_OR\"},\"type\":\"string\"},\"ToolOverlay_ParameterAction\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolOverlay_ParameterAction_Remove\"},{\"$ref\":\"ToolOverlay_ParameterAction_Set\"},{\"$ref\":\"ToolOverlay_ParameterAction_Pin\"}]},\"ToolOverlay_ParameterAction_Pin\":{\"properties\":{\"pin\":{\"$ref\":\"ParameterAction_Pin\"},\"type\":{\"const\":\"pin\"}},\"required\":[\"type\",\"pin\"],\"type\":\"object\"},\"ToolOverlay_ParameterAction_Remove\":{\"properties\":{\"remove\":{\"$ref\":\"ParameterAction_Remove\"},\"type\":{\"const\":\"remove\"}},\"required\":[\"type\",\"remove\"],\"type\":\"object\"},\"ToolOverlay_ParameterAction_Set\":{\"properties\":{\"set\":{\"$ref\":\"ParameterAction_Set\"},\"type\":{\"const\":\"set\"}},\"required\":[\"type\",\"set\"],\"type\":\"object\"},\"ToolOverlay_ParameterPath\":{\"properties\":{\"path\":{\"type\":\"string\"}},\"required\":[\"path\"],\"type\":\"object\"},\"ToolOverlay_ResultAction\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolOverlay_ResultAction_Transform\"}]},\"ToolOverlay_ResultAction_Transform\":{\"properties\":{\"transform\":{\"$ref\":\"ResultAction_Transform\"},\"type\":{\"const\":\"transform\"}},\"required\":[\"type\",\"transform\"],\"type\":\"object\"},\"ToolOverlay_Selector\":{\"properties\":{\"conditions\":{\"items\":{\"$ref\":\"Selector_Condition\"},\"type\":\"array\"},\"operator\":{\"$ref\":\"ToolOverlaySelectorOperator\",\"description\":\"Default: OPERATOR_AND.\"}},\"required\":[\"operator\"],\"type\":\"object\"},\"ToolOverlay_WidgetArgumentExposure\":{\"properties\":{\"enabled\":{\"type\":\"boolean\"}},\"required\":[\"enabled\"],\"type\":\"object\"},\"ToolSetAdapter\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSetAdapter_McpVariant\"},{\"$ref\":\"ToolSetAdapter_HttpVariant\"},{\"$ref\":\"ToolSetAdapter_OpenapiVariant\"},{\"$ref\":\"ToolSetAdapter_BareVariant\"}]},\"ToolSetAdapterAttributeFilterAttribute\":{\"enum\":[\"ATTRIBUTE_NAME\",\"ATTRIBUTE_TITLE\",\"ATTRIBUTE_DESCRIPTION\",\"ATTRIBUTE_LLM_TOOL_NAME\"],\"enumShort\":{\"description\":\"ATTRIBUTE_DESCRIPTION\",\"llm-tool-name\":\"ATTRIBUTE_LLM_TOOL_NAME\",\"name\":\"ATTRIBUTE_NAME\",\"title\":\"ATTRIBUTE_TITLE\"},\"type\":\"string\"},\"ToolSetAdapterToolFilterOperator\":{\"enum\":[\"OPERATOR_AND\",\"OPERATOR_OR\"],\"enumShort\":{\"and\":\"OPERATOR_AND\",\"or\":\"OPERATOR_OR\"},\"type\":\"string\"},\"ToolSetAdapter_ApprovalRequirementFilter\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter_Always\"},{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter_Only\"}]},\"ToolSetAdapter_ApprovalRequirementFilter_Always\":{\"properties\":{\"always\":{\"type\":\"boolean\"},\"type\":{\"const\":\"always\"}},\"required\":[\"type\",\"always\"],\"type\":\"object\"},\"ToolSetAdapter_ApprovalRequirementFilter_Only\":{\"properties\":{\"only\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"type\":{\"const\":\"only\"}},\"required\":[\"type\",\"only\"],\"type\":\"object\"},\"ToolSetAdapter_AttributeFilter\":{\"properties\":{\"attribute\":{\"$ref\":\"ToolSetAdapterAttributeFilterAttribute\"},\"matcher\":{\"$ref\":\"ToolSetAdapter_StringMatcher\"}},\"required\":[\"attribute\"],\"type\":\"object\"},\"ToolSetAdapter_Bare\":{\"properties\":{\"contentTimeout\":{\"description\":\"How long to wait for content to be set before the tool call errors.\\n If unset, the call waits indefinitely.\",\"type\":\"integer\"}},\"type\":\"object\"},\"ToolSetAdapter_BareVariant\":{\"properties\":{\"bare\":{\"$ref\":\"ToolSetAdapter_Bare\"},\"type\":{\"const\":\"bare\"}},\"required\":[\"type\",\"bare\"],\"type\":\"object\"},\"ToolSetAdapter_HTTP\":{\"properties\":{\"baseUrl\":{\"description\":\"Base URL for dispatching tool calls.\\n\\n May be templated. Two reference forms are supported, and they resolve\\n in a single pass each so neither can inject into the other:\\n\\n   ${SECRET_NAME}                 a workspace or tool set secret\\n   {{ pinned_parameters.<key> }}  the objective's pinned parameters\\n     (see CreateObjectiveRequest.pinned_parameters)\\n\\n Pinned parameters are what make a per-tenant host possible: one tool\\n set can serve every customer of a product that assigns each of them\\n their own subdomain, e.g.\\n\\n   https://{{ pinned_parameters.tenant }}.example.com\\n\\n Because the value may be a template rather than a literal URL, this\\n field is not constrained to a URI shape. It is validated as an\\n absolute http(s) URL after references are resolved, both on write\\n (with references stubbed) and again before each tool call.\",\"type\":\"string\"},\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"}},\"type\":\"object\"},\"ToolSetAdapter_HttpVariant\":{\"properties\":{\"http\":{\"$ref\":\"ToolSetAdapter_HTTP\"},\"type\":{\"const\":\"http\"}},\"required\":[\"type\",\"http\"],\"type\":\"object\"},\"ToolSetAdapter_JustInTime\":{\"properties\":{\"enabled\":{\"type\":\"boolean\"},\"failObjectiveOnToolListError\":{\"description\":\"If set, an objective will automatically be failed if tools cannot be loaded\\n in the initial stages of an objective being created. Tools are loaded asynchronously,\\n so this setting is useful for ensuring that an objective continued any further if tools are not available.\",\"type\":\"boolean\"}},\"type\":\"object\"},\"ToolSetAdapter_MCP\":{\"properties\":{\"excludeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"},\"includeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\",\"description\":\"Include/exclude with flat filters\"},\"justInTime\":{\"$ref\":\"ToolSetAdapter_JustInTime\",\"description\":\"When enabled, tools are loaded from the MCP server just-in-time at\\n objective creation using the objective's resolved secrets, instead of\\n being synced ahead of time. Just-in-time tool sets are excluded from\\n the background sync system.\"},\"toolApprovals\":{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter\",\"description\":\"Setting for how to assign tool approval requirements when they are synced from an MCP server\"},\"url\":{\"type\":\"string\"}},\"type\":\"object\"},\"ToolSetAdapter_McpVariant\":{\"properties\":{\"mcp\":{\"$ref\":\"ToolSetAdapter_MCP\"},\"type\":{\"const\":\"mcp\"}},\"required\":[\"type\",\"mcp\"],\"type\":\"object\"},\"ToolSetAdapter_OpenAPI\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSetAdapter_OpenAPI_Url\"},{\"$ref\":\"ToolSetAdapter_OpenAPI_UploadId\"}]},\"ToolSetAdapter_OpenAPI_UploadId\":{\"properties\":{\"baseUrl\":{\"description\":\"Base URL for dispatching tool calls. If set, overrides the server\\n resolved from the spec's servers array.\\n\\n May be templated with the same two reference forms the HTTP adapter's\\n base_url accepts:\\n\\n   ${SECRET_NAME}                 a workspace or tool set secret\\n   {{ pinned_parameters.<key> }}  the objective's pinned parameters\\n\\n A spec written against a single host can therefore be dispatched to a\\n per-tenant one, e.g. https://{{ pinned_parameters.tenant }}.example.com,\\n without cloning the tool set per customer. Validated as an absolute\\n http(s) URL after references are resolved rather than as a literal URI.\",\"type\":\"string\"},\"excludeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Headers sent when fetching the spec from a URL and when dispatching tool calls.\",\"type\":\"object\"},\"includeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"serverName\":{\"description\":\"Name of the server entry in the spec's servers array (OpenAPI 3.2\\n server.name field). Used to select which server URL to dispatch to\\n when base_url is not set. If unset, the first server is used.\\n Ignored when base_url is set.\",\"type\":\"string\"},\"toolApprovals\":{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter\"},\"type\":{\"const\":\"uploadId\"},\"uploadId\":{\"description\":\"ID of a COMPLETE Upload containing the OpenAPI spec document.\",\"type\":\"string\"}},\"required\":[\"type\",\"uploadId\"],\"type\":\"object\"},\"ToolSetAdapter_OpenAPI_Url\":{\"properties\":{\"baseUrl\":{\"description\":\"Base URL for dispatching tool calls. If set, overrides the server\\n resolved from the spec's servers array.\\n\\n May be templated with the same two reference forms the HTTP adapter's\\n base_url accepts:\\n\\n   ${SECRET_NAME}                 a workspace or tool set secret\\n   {{ pinned_parameters.<key> }}  the objective's pinned parameters\\n\\n A spec written against a single host can therefore be dispatched to a\\n per-tenant one, e.g. https://{{ pinned_parameters.tenant }}.example.com,\\n without cloning the tool set per customer. Validated as an absolute\\n http(s) URL after references are resolved rather than as a literal URI.\",\"type\":\"string\"},\"excludeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Headers sent when fetching the spec from a URL and when dispatching tool calls.\",\"type\":\"object\"},\"includeTools\":{\"$ref\":\"ToolSetAdapter_ToolFilter\"},\"serverName\":{\"description\":\"Name of the server entry in the spec's servers array (OpenAPI 3.2\\n server.name field). Used to select which server URL to dispatch to\\n when base_url is not set. If unset, the first server is used.\\n Ignored when base_url is set.\",\"type\":\"string\"},\"toolApprovals\":{\"$ref\":\"ToolSetAdapter_ApprovalRequirementFilter\"},\"type\":{\"const\":\"url\"},\"url\":{\"description\":\"URL to fetch the OpenAPI spec from. Synced automatically every hour.\",\"type\":\"string\"}},\"required\":[\"type\",\"url\"],\"type\":\"object\"},\"ToolSetAdapter_OpenapiVariant\":{\"properties\":{\"openapi\":{\"$ref\":\"ToolSetAdapter_OpenAPI\"},\"type\":{\"const\":\"openapi\"}},\"required\":[\"type\",\"openapi\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSetAdapter_StringMatcher_Exact\"},{\"$ref\":\"ToolSetAdapter_StringMatcher_StartsWith\"},{\"$ref\":\"ToolSetAdapter_StringMatcher_EndsWith\"},{\"$ref\":\"ToolSetAdapter_StringMatcher_Contains\"},{\"$ref\":\"ToolSetAdapter_StringMatcher_Regex\"}]},\"ToolSetAdapter_StringMatcher_Contains\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"contains\":{\"type\":\"string\"},\"type\":{\"const\":\"contains\"}},\"required\":[\"type\",\"contains\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher_EndsWith\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"endsWith\":{\"type\":\"string\"},\"type\":{\"const\":\"endsWith\"}},\"required\":[\"type\",\"endsWith\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher_Exact\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"exact\":{\"type\":\"string\"},\"type\":{\"const\":\"exact\"}},\"required\":[\"type\",\"exact\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher_Regex\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"regex\":{\"type\":\"string\"},\"type\":{\"const\":\"regex\"}},\"required\":[\"type\",\"regex\"],\"type\":\"object\"},\"ToolSetAdapter_StringMatcher_StartsWith\":{\"properties\":{\"caseSensitive\":{\"type\":\"boolean\"},\"startsWith\":{\"type\":\"string\"},\"type\":{\"const\":\"startsWith\"}},\"required\":[\"type\",\"startsWith\"],\"type\":\"object\"},\"ToolSetAdapter_ToolFilter\":{\"properties\":{\"filters\":{\"items\":{\"$ref\":\"ToolSetAdapter_AttributeFilter\"},\"type\":\"array\"},\"operator\":{\"$ref\":\"ToolSetAdapterToolFilterOperator\"}},\"required\":[\"operator\"],\"type\":\"object\"},\"ToolSetSpec\":{\"properties\":{\"adapter\":{\"$ref\":\"ToolSetAdapter\"},\"description\":{\"type\":\"string\"},\"overlays\":{\"description\":\"Overlays applied to this tool set's tools, evaluated in order. See\\n ToolOverlay. Overlay keys must be unique within the list.\\n\\n As a repeated field this is replaced wholesale on update: an\\n update_mask of `spec.overlays` swaps the entire list for the one in the\\n request. Read-modify-write to add or remove a single overlay.\",\"items\":{\"$ref\":\"ToolOverlay\"},\"type\":\"array\"}},\"required\":[\"adapter\"],\"type\":\"object\"},\"UpdateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"UpdateResourceMetadata\"},\"spec\":{\"$ref\":\"ToolSetSpec\"},\"updateMask\":{\"type\":\"string\"}},\"type\":\"object\"}"
+
 func toolSetsCommand() *cli.Command {
 	return &cli.Command{
 		Name:                      "tool-sets",
@@ -21,7 +25,7 @@ func toolSetsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List tool sets",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
@@ -37,8 +41,8 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_ACTIVE", "STATE_ARCHIVED"}) {
@@ -92,31 +96,80 @@ func toolSetsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Create a new tool set",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: ""},
+					&cli.StringFlag{Name: "adapter", Usage: "Required. One of: mcp, http, openapi, bare; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "mcp", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-url", Usage: "", Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-include-tools", Usage: "Include/exclude with flat filters. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-include-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-include-tools-operator", Usage: "One of: and, or.", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-exclude-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-exclude-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-exclude-tools-operator", Usage: "One of: and, or.", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-tool-approvals", Usage: "Setting for how to assign tool approval requirements when they are synced from an MCP server. One of: always, only; inferred from the arm's flags. Or a YAML/JSON document.", Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-tool-approvals-always", Usage: "", Category: "mcp-tool-approvals = always"},
+					&cli.StringFlag{Name: "mcp-tool-approvals-only", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "mcp-tool-approvals = only"},
+					&cli.StringSliceFlag{Name: "mcp-tool-approvals-only-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "mcp-tool-approvals = only"},
+					&cli.StringFlag{Name: "mcp-tool-approvals-only-operator", Usage: "One of: and, or.", Category: "mcp-tool-approvals = only"},
+					&cli.StringFlag{Name: "mcp-just-in-time", Usage: "When enabled, tools are loaded from the MCP server just-in-time at objective creation using the objective's resolved secrets, instead of being synced ahead of…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-just-in-time-enabled", Usage: "", Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-just-in-time-fail-objective-on-tool-list-error", Usage: "If set, an objective will automatically be failed if tools cannot be loaded in the initial stages of an objective being created. Tools are loaded….", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "http", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = http"},
+					&cli.StringFlag{Name: "http-base-url", Usage: "Base URL for dispatching tool calls. May be templated. Two reference forms are supported, and they resolve in a single pass each so neither can inject into the….", Category: "adapter = http"},
+					&cli.StringSliceFlag{Name: "http-header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "adapter = http"},
+					&cli.StringFlag{Name: "openapi", Usage: "Required. One of: url, upload-id; inferred from the arm's flags. Or a YAML/JSON document.", Category: "adapter = openapi"},
+					&cli.StringFlag{Name: "openapi-url", Usage: "Required. URL to fetch the OpenAPI spec from. Synced automatically every hour.", Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-header", Usage: "Headers sent when fetching the spec from a URL and when dispatching tool calls. KEY=VALUE (repeatable; or a document).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-include-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-include-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-include-tools-operator", Usage: "One of: and, or.", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-exclude-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-exclude-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-exclude-tools-operator", Usage: "One of: and, or.", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-tool-approvals", Usage: "One of: always, only; inferred from the arm's flags. Or a YAML/JSON document.", Category: "openapi = url"},
+					&cli.BoolFlag{Name: "openapi-tool-approvals-always", Usage: "", Category: "openapi-tool-approvals = always"},
+					&cli.StringFlag{Name: "openapi-tool-approvals-only", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi-tool-approvals = only"},
+					&cli.StringSliceFlag{Name: "openapi-tool-approvals-only-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi-tool-approvals = only"},
+					&cli.StringFlag{Name: "openapi-tool-approvals-only-operator", Usage: "One of: and, or.", Category: "openapi-tool-approvals = only"},
+					&cli.StringFlag{Name: "openapi-base-url", Usage: "Base URL for dispatching tool calls. If set, overrides the server resolved from the spec's servers array. May be templated with the same two reference forms….", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-server-name", Usage: "Name of the server entry in the spec's servers array (OpenAPI 3.2 server.name field). Used to select which server URL to dispatch to when base_url is not set.….", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-upload-id", Usage: "Required. ID of a COMPLETE Upload containing the OpenAPI spec document.", Category: "openapi = upload-id"},
+					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = bare"},
+					&cli.IntFlag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely.", Category: "adapter = bare"},
+					&cli.StringSliceFlag{Name: "overlay", Usage: "Overlays applied to this tool set's tools, evaluated in order. See ToolOverlay. Overlay keys must be unique within the list. As a repeated field this is…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_missing := []string{}
-					if !cmd.IsSet("metadata") {
-						_missing = append(_missing, "--metadata")
-					}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("adapter"), cmd.String("mcp"), cmd.String("mcp-url"), cmd.String("mcp-include-tools"), cmd.String("mcp-exclude-tools"), cmd.String("mcp-tool-approvals"), cmd.String("mcp-tool-approvals-only"), cmd.String("mcp-just-in-time"), cmd.String("http"), cmd.String("http-base-url"), cmd.String("openapi"), cmd.String("openapi-url"), cmd.String("openapi-include-tools"), cmd.String("openapi-exclude-tools"), cmd.String("openapi-tool-approvals"), cmd.String("openapi-tool-approvals-only"), cmd.String("openapi-base-url"), cmd.String("openapi-server-name"), cmd.String("openapi-upload-id"), cmd.String("bare")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-include-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-exclude-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-tool-approvals-only-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("http-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-include-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-exclude-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-tool-approvals-only-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("overlay")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -124,19 +177,337 @@ func toolSetsCommand() *cli.Command {
 					if cmd.IsSet("workspace-id") {
 						values["workspaceId"] = cmd.String("workspace-id")
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
+					_schema := parseBodySchema(bodySchemaToolSetsCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["metadata"] = doc
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
 					}
 					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("adapter") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "adapter", Path: []string{"spec", "adapter"}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "mcp", Keys: []string{"mcp"}, Init: []string{"mcp"}}, {Tag: "http", Keys: []string{"http"}, Init: []string{"http"}}, {Tag: "openapi", Keys: []string{"openapi"}, Init: []string{}}, {Tag: "bare", Keys: []string{"bare"}, Init: []string{"bare"}}}}, cmd.String("adapter"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp") {
+						if err := _body.applyDoc("mcp", []string{"spec", "adapter", "mcp"}, cmd.String("mcp"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-include-tools") {
+						if err := _body.applyDoc("mcp-include-tools", []string{"spec", "adapter", "mcp", "includeTools"}, cmd.String("mcp-include-tools"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-exclude-tools") {
+						if err := _body.applyDoc("mcp-exclude-tools", []string{"spec", "adapter", "mcp", "excludeTools"}, cmd.String("mcp-exclude-tools"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "mcp-tool-approvals", Path: []string{"spec", "adapter", "mcp", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter"}, Discriminator: "type", Tag: "mcp"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}, cmd.String("mcp-tool-approvals"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals-only") {
+						if err := _body.applyDoc("mcp-tool-approvals-only", []string{"spec", "adapter", "mcp", "toolApprovals", "only"}, cmd.String("mcp-tool-approvals-only"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-just-in-time") {
+						if err := _body.applyDoc("mcp-just-in-time", []string{"spec", "adapter", "mcp", "justInTime"}, cmd.String("mcp-just-in-time"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http") {
+						if err := _body.applyDoc("http", []string{"spec", "adapter", "http"}, cmd.String("http"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "openapi", Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Required: true, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter"}, Discriminator: "type", Tag: "openapi"}, Arms: []unionArm{{Tag: "url", Keys: []string{"url"}, Init: []string{}}, {Tag: "uploadId", Keys: []string{"uploadId"}, Init: []string{}}}}, cmd.String("openapi"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-include-tools") {
+						if err := _body.applyDoc("openapi-include-tools", []string{"spec", "adapter", "openapi", "includeTools"}, cmd.String("openapi-include-tools"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-exclude-tools") {
+						if err := _body.applyDoc("openapi-exclude-tools", []string{"spec", "adapter", "openapi", "excludeTools"}, cmd.String("openapi-exclude-tools"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "openapi-tool-approvals", Path: []string{"spec", "adapter", "openapi", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Tag: "url"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}, cmd.String("openapi-tool-approvals"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals-only") {
+						if err := _body.applyDoc("openapi-tool-approvals-only", []string{"spec", "adapter", "openapi", "toolApprovals", "only"}, cmd.String("openapi-tool-approvals-only"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("bare") {
+						if err := _body.applyDoc("bare", []string{"spec", "adapter", "bare"}, cmd.String("bare"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
 						if err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["spec"] = doc
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-url") {
+						_v, err := stringArg("mcp-url", cmd.String("mcp-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-url", []string{"spec", "adapter", "mcp", "url"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-header") {
+						if err := _body.applyEntries("mcp-header", []string{"spec", "adapter", "mcp", "headers"}, cmd.StringSlice("mcp-header"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-include-tools-filter") {
+						if err := _body.applyDocItems("mcp-include-tools-filter", []string{"spec", "adapter", "mcp", "includeTools", "filters"}, cmd.StringSlice("mcp-include-tools-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-include-tools-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("mcp-include-tools-operator", cmd.String("mcp-include-tools-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-include-tools-operator", []string{"spec", "adapter", "mcp", "includeTools", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-exclude-tools-filter") {
+						if err := _body.applyDocItems("mcp-exclude-tools-filter", []string{"spec", "adapter", "mcp", "excludeTools", "filters"}, cmd.StringSlice("mcp-exclude-tools-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-exclude-tools-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("mcp-exclude-tools-operator", cmd.String("mcp-exclude-tools-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-exclude-tools-operator", []string{"spec", "adapter", "mcp", "excludeTools", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals-always") {
+						if err := _body.set("mcp-tool-approvals-always", []string{"spec", "adapter", "mcp", "toolApprovals", "always"}, cmd.Bool("mcp-tool-approvals-always")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals-only-filter") {
+						if err := _body.applyDocItems("mcp-tool-approvals-only-filter", []string{"spec", "adapter", "mcp", "toolApprovals", "only", "filters"}, cmd.StringSlice("mcp-tool-approvals-only-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals-only-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("mcp-tool-approvals-only-operator", cmd.String("mcp-tool-approvals-only-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-tool-approvals-only-operator", []string{"spec", "adapter", "mcp", "toolApprovals", "only", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-just-in-time-enabled") {
+						if err := _body.set("mcp-just-in-time-enabled", []string{"spec", "adapter", "mcp", "justInTime", "enabled"}, cmd.Bool("mcp-just-in-time-enabled")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-just-in-time-fail-objective-on-tool-list-error") {
+						if err := _body.set("mcp-just-in-time-fail-objective-on-tool-list-error", []string{"spec", "adapter", "mcp", "justInTime", "failObjectiveOnToolListError"}, cmd.Bool("mcp-just-in-time-fail-objective-on-tool-list-error")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-base-url") {
+						_v, err := stringArg("http-base-url", cmd.String("http-base-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-base-url", []string{"spec", "adapter", "http", "baseUrl"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-header") {
+						if err := _body.applyEntries("http-header", []string{"spec", "adapter", "http", "headers"}, cmd.StringSlice("http-header"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-url") {
+						_v, err := stringArg("openapi-url", cmd.String("openapi-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-url", []string{"spec", "adapter", "openapi", "url"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-header") {
+						if err := _body.applyEntries("openapi-header", []string{"spec", "adapter", "openapi", "headers"}, cmd.StringSlice("openapi-header"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-include-tools-filter") {
+						if err := _body.applyDocItems("openapi-include-tools-filter", []string{"spec", "adapter", "openapi", "includeTools", "filters"}, cmd.StringSlice("openapi-include-tools-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-include-tools-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("openapi-include-tools-operator", cmd.String("openapi-include-tools-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-include-tools-operator", []string{"spec", "adapter", "openapi", "includeTools", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-exclude-tools-filter") {
+						if err := _body.applyDocItems("openapi-exclude-tools-filter", []string{"spec", "adapter", "openapi", "excludeTools", "filters"}, cmd.StringSlice("openapi-exclude-tools-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-exclude-tools-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("openapi-exclude-tools-operator", cmd.String("openapi-exclude-tools-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-exclude-tools-operator", []string{"spec", "adapter", "openapi", "excludeTools", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals-always") {
+						if err := _body.set("openapi-tool-approvals-always", []string{"spec", "adapter", "openapi", "toolApprovals", "always"}, cmd.Bool("openapi-tool-approvals-always")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals-only-filter") {
+						if err := _body.applyDocItems("openapi-tool-approvals-only-filter", []string{"spec", "adapter", "openapi", "toolApprovals", "only", "filters"}, cmd.StringSlice("openapi-tool-approvals-only-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals-only-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("openapi-tool-approvals-only-operator", cmd.String("openapi-tool-approvals-only-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-tool-approvals-only-operator", []string{"spec", "adapter", "openapi", "toolApprovals", "only", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-base-url") {
+						_v, err := stringArg("openapi-base-url", cmd.String("openapi-base-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-base-url", []string{"spec", "adapter", "openapi", "baseUrl"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-server-name") {
+						_v, err := stringArg("openapi-server-name", cmd.String("openapi-server-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-server-name", []string{"spec", "adapter", "openapi", "serverName"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-upload-id") {
+						_v, err := stringArg("openapi-upload-id", cmd.String("openapi-upload-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-upload-id", []string{"spec", "adapter", "openapi", "uploadId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("bare-content-timeout") {
+						if err := _body.set("bare-content-timeout", []string{"spec", "adapter", "bare", "contentTimeout"}, cmd.Int("bare-content-timeout")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("overlay") {
+						if err := _body.applyDocItems("overlay", []string{"spec", "overlays"}, cmd.StringSlice("overlay")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "adapter", Path: []string{"spec", "adapter"}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "mcp", Keys: []string{"mcp"}, Init: []string{"mcp"}}, {Tag: "http", Keys: []string{"http"}, Init: []string{"http"}}, {Tag: "openapi", Keys: []string{"openapi"}, Init: []string{}}, {Tag: "bare", Keys: []string{"bare"}, Init: []string{"bare"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "mcp-tool-approvals", Path: []string{"spec", "adapter", "mcp", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter"}, Discriminator: "type", Tag: "mcp"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "openapi", Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Required: true, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter"}, Discriminator: "type", Tag: "openapi"}, Arms: []unionArm{{Tag: "url", Keys: []string{"url"}, Init: []string{}}, {Tag: "uploadId", Keys: []string{"uploadId"}, Init: []string{}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "openapi-tool-approvals", Path: []string{"spec", "adapter", "openapi", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Tag: "url"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "openapi-tool-approvals", Path: []string{"spec", "adapter", "openapi", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Tag: "uploadId"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.description": "--description", "spec.adapter": "--adapter", "spec.adapter.mcp": "--mcp", "spec.adapter.mcp.url": "--mcp-url", "spec.adapter.mcp.headers": "--mcp-header", "spec.adapter.mcp.includeTools": "--mcp-include-tools", "spec.adapter.mcp.includeTools.filters": "--mcp-include-tools-filter", "spec.adapter.mcp.includeTools.operator": "--mcp-include-tools-operator", "spec.adapter.mcp.excludeTools": "--mcp-exclude-tools", "spec.adapter.mcp.excludeTools.filters": "--mcp-exclude-tools-filter", "spec.adapter.mcp.excludeTools.operator": "--mcp-exclude-tools-operator", "spec.adapter.mcp.toolApprovals": "--mcp-tool-approvals", "spec.adapter.mcp.toolApprovals.always": "--mcp-tool-approvals-always", "spec.adapter.mcp.toolApprovals.only": "--mcp-tool-approvals-only", "spec.adapter.mcp.toolApprovals.only.filters": "--mcp-tool-approvals-only-filter", "spec.adapter.mcp.toolApprovals.only.operator": "--mcp-tool-approvals-only-operator", "spec.adapter.mcp.justInTime": "--mcp-just-in-time", "spec.adapter.mcp.justInTime.enabled": "--mcp-just-in-time-enabled", "spec.adapter.mcp.justInTime.failObjectiveOnToolListError": "--mcp-just-in-time-fail-objective-on-tool-list-error", "spec.adapter.http": "--http", "spec.adapter.http.baseUrl": "--http-base-url", "spec.adapter.http.headers": "--http-header", "spec.adapter.openapi": "--openapi", "spec.adapter.openapi.url": "--openapi-url", "spec.adapter.openapi.headers": "--openapi-header", "spec.adapter.openapi.includeTools": "--openapi-include-tools", "spec.adapter.openapi.includeTools.filters": "--openapi-include-tools-filter", "spec.adapter.openapi.includeTools.operator": "--openapi-include-tools-operator", "spec.adapter.openapi.excludeTools": "--openapi-exclude-tools", "spec.adapter.openapi.excludeTools.filters": "--openapi-exclude-tools-filter", "spec.adapter.openapi.excludeTools.operator": "--openapi-exclude-tools-operator", "spec.adapter.openapi.toolApprovals": "--openapi-tool-approvals", "spec.adapter.openapi.toolApprovals.always": "--openapi-tool-approvals-always", "spec.adapter.openapi.toolApprovals.only": "--openapi-tool-approvals-only", "spec.adapter.openapi.toolApprovals.only.filters": "--openapi-tool-approvals-only-filter", "spec.adapter.openapi.toolApprovals.only.operator": "--openapi-tool-approvals-only-operator", "spec.adapter.openapi.baseUrl": "--openapi-base-url", "spec.adapter.openapi.serverName": "--openapi-server-name", "spec.adapter.openapi.uploadId": "--openapi-upload-id", "spec.adapter.bare": "--bare", "spec.adapter.bare.contentTimeout": "--bare-content-timeout", "spec.overlays": "--overlay"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if cmd.Bool("dry-run") {
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
 					}
 					var params sdk.ToolSetCreateParams
 					if err := decodeParams(values, &params); err != nil {
@@ -159,7 +530,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Get a tool set by ID",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -170,8 +541,8 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -200,7 +571,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Delete a tool set",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -211,10 +582,10 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
@@ -239,11 +610,59 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Update a tool set",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "update-mask"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: ""},
+					&cli.StringFlag{Name: "adapter", Usage: "One of: mcp, http, openapi, bare; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "mcp", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-url", Usage: "", Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-include-tools", Usage: "Include/exclude with flat filters. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-include-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-include-tools-operator", Usage: "One of: and, or.", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-exclude-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.StringSliceFlag{Name: "mcp-exclude-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-exclude-tools-operator", Usage: "One of: and, or.", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "mcp-tool-approvals", Usage: "Setting for how to assign tool approval requirements when they are synced from an MCP server. One of: always, only; inferred from the arm's flags. Or a YAML/JSON document.", Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-tool-approvals-always", Usage: "", Category: "mcp-tool-approvals = always"},
+					&cli.StringFlag{Name: "mcp-tool-approvals-only", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "mcp-tool-approvals = only"},
+					&cli.StringSliceFlag{Name: "mcp-tool-approvals-only-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "mcp-tool-approvals = only"},
+					&cli.StringFlag{Name: "mcp-tool-approvals-only-operator", Usage: "One of: and, or.", Category: "mcp-tool-approvals = only"},
+					&cli.StringFlag{Name: "mcp-just-in-time", Usage: "When enabled, tools are loaded from the MCP server just-in-time at objective creation using the objective's resolved secrets, instead of being synced ahead of…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-just-in-time-enabled", Usage: "", Category: "adapter = mcp"},
+					&cli.BoolFlag{Name: "mcp-just-in-time-fail-objective-on-tool-list-error", Usage: "If set, an objective will automatically be failed if tools cannot be loaded in the initial stages of an objective being created. Tools are loaded….", Category: "adapter = mcp"},
+					&cli.StringFlag{Name: "http", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = http"},
+					&cli.StringFlag{Name: "http-base-url", Usage: "Base URL for dispatching tool calls. May be templated. Two reference forms are supported, and they resolve in a single pass each so neither can inject into the….", Category: "adapter = http"},
+					&cli.StringSliceFlag{Name: "http-header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "adapter = http"},
+					&cli.StringFlag{Name: "openapi", Usage: "One of: url, upload-id; inferred from the arm's flags. Or a YAML/JSON document.", Category: "adapter = openapi"},
+					&cli.StringFlag{Name: "openapi-url", Usage: "URL to fetch the OpenAPI spec from. Synced automatically every hour.", Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-header", Usage: "Headers sent when fetching the spec from a URL and when dispatching tool calls. KEY=VALUE (repeatable; or a document).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-include-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-include-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-include-tools-operator", Usage: "One of: and, or.", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-exclude-tools", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi = url"},
+					&cli.StringSliceFlag{Name: "openapi-exclude-tools-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-exclude-tools-operator", Usage: "One of: and, or.", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-tool-approvals", Usage: "One of: always, only; inferred from the arm's flags. Or a YAML/JSON document.", Category: "openapi = url"},
+					&cli.BoolFlag{Name: "openapi-tool-approvals-always", Usage: "", Category: "openapi-tool-approvals = always"},
+					&cli.StringFlag{Name: "openapi-tool-approvals-only", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "openapi-tool-approvals = only"},
+					&cli.StringSliceFlag{Name: "openapi-tool-approvals-only-filter", Usage: "One YAML/JSON document per occurrence (literal, @path, or -).", Category: "openapi-tool-approvals = only"},
+					&cli.StringFlag{Name: "openapi-tool-approvals-only-operator", Usage: "One of: and, or.", Category: "openapi-tool-approvals = only"},
+					&cli.StringFlag{Name: "openapi-base-url", Usage: "Base URL for dispatching tool calls. If set, overrides the server resolved from the spec's servers array. May be templated with the same two reference forms….", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-server-name", Usage: "Name of the server entry in the spec's servers array (OpenAPI 3.2 server.name field). Used to select which server URL to dispatch to when base_url is not set.….", Category: "openapi = url"},
+					&cli.StringFlag{Name: "openapi-upload-id", Usage: "ID of a COMPLETE Upload containing the OpenAPI spec document.", Category: "openapi = upload-id"},
+					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = bare"},
+					&cli.IntFlag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely.", Category: "adapter = bare"},
+					&cli.StringSliceFlag{Name: "overlay", Usage: "Overlays applied to this tool set's tools, evaluated in order. See ToolOverlay. Overlay keys must be unique within the list. As a repeated field this is…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "update-mask", Usage: ""},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 1 {
@@ -253,11 +672,22 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("adapter"), cmd.String("mcp"), cmd.String("mcp-url"), cmd.String("mcp-include-tools"), cmd.String("mcp-exclude-tools"), cmd.String("mcp-tool-approvals"), cmd.String("mcp-tool-approvals-only"), cmd.String("mcp-just-in-time"), cmd.String("http"), cmd.String("http-base-url"), cmd.String("openapi"), cmd.String("openapi-url"), cmd.String("openapi-include-tools"), cmd.String("openapi-exclude-tools"), cmd.String("openapi-tool-approvals"), cmd.String("openapi-tool-approvals-only"), cmd.String("openapi-base-url"), cmd.String("openapi-server-name"), cmd.String("openapi-upload-id"), cmd.String("bare"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-include-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-exclude-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-tool-approvals-only-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("http-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-include-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-exclude-tools-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-tool-approvals-only-filter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("overlay")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -266,22 +696,353 @@ func toolSetsCommand() *cli.Command {
 					if cmd.IsSet("workspace-id") {
 						values["workspaceId"] = cmd.String("workspace-id")
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
+					_schema := parseBodySchema(bodySchemaToolSetsUpdate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["metadata"] = doc
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
 					}
 					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("adapter") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "adapter", Path: []string{"spec", "adapter"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "mcp", Keys: []string{"mcp"}, Init: []string{"mcp"}}, {Tag: "http", Keys: []string{"http"}, Init: []string{"http"}}, {Tag: "openapi", Keys: []string{"openapi"}, Init: []string{}}, {Tag: "bare", Keys: []string{"bare"}, Init: []string{"bare"}}}}, cmd.String("adapter"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp") {
+						if err := _body.applyDoc("mcp", []string{"spec", "adapter", "mcp"}, cmd.String("mcp"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-include-tools") {
+						if err := _body.applyDoc("mcp-include-tools", []string{"spec", "adapter", "mcp", "includeTools"}, cmd.String("mcp-include-tools"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-exclude-tools") {
+						if err := _body.applyDoc("mcp-exclude-tools", []string{"spec", "adapter", "mcp", "excludeTools"}, cmd.String("mcp-exclude-tools"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "mcp-tool-approvals", Path: []string{"spec", "adapter", "mcp", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter"}, Discriminator: "type", Tag: "mcp"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}, cmd.String("mcp-tool-approvals"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals-only") {
+						if err := _body.applyDoc("mcp-tool-approvals-only", []string{"spec", "adapter", "mcp", "toolApprovals", "only"}, cmd.String("mcp-tool-approvals-only"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-just-in-time") {
+						if err := _body.applyDoc("mcp-just-in-time", []string{"spec", "adapter", "mcp", "justInTime"}, cmd.String("mcp-just-in-time"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http") {
+						if err := _body.applyDoc("http", []string{"spec", "adapter", "http"}, cmd.String("http"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "openapi", Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter"}, Discriminator: "type", Tag: "openapi"}, Arms: []unionArm{{Tag: "url", Keys: []string{"url"}, Init: []string{}}, {Tag: "uploadId", Keys: []string{"uploadId"}, Init: []string{}}}}, cmd.String("openapi"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-include-tools") {
+						if err := _body.applyDoc("openapi-include-tools", []string{"spec", "adapter", "openapi", "includeTools"}, cmd.String("openapi-include-tools"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-exclude-tools") {
+						if err := _body.applyDoc("openapi-exclude-tools", []string{"spec", "adapter", "openapi", "excludeTools"}, cmd.String("openapi-exclude-tools"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "openapi-tool-approvals", Path: []string{"spec", "adapter", "openapi", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Tag: "url"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}, cmd.String("openapi-tool-approvals"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals-only") {
+						if err := _body.applyDoc("openapi-tool-approvals-only", []string{"spec", "adapter", "openapi", "toolApprovals", "only"}, cmd.String("openapi-tool-approvals-only"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("bare") {
+						if err := _body.applyDoc("bare", []string{"spec", "adapter", "bare"}, cmd.String("bare"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
 						if err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["spec"] = doc
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-url") {
+						_v, err := stringArg("mcp-url", cmd.String("mcp-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-url", []string{"spec", "adapter", "mcp", "url"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-header") {
+						if err := _body.applyEntries("mcp-header", []string{"spec", "adapter", "mcp", "headers"}, cmd.StringSlice("mcp-header"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-include-tools-filter") {
+						if err := _body.applyDocItems("mcp-include-tools-filter", []string{"spec", "adapter", "mcp", "includeTools", "filters"}, cmd.StringSlice("mcp-include-tools-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-include-tools-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("mcp-include-tools-operator", cmd.String("mcp-include-tools-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-include-tools-operator", []string{"spec", "adapter", "mcp", "includeTools", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-exclude-tools-filter") {
+						if err := _body.applyDocItems("mcp-exclude-tools-filter", []string{"spec", "adapter", "mcp", "excludeTools", "filters"}, cmd.StringSlice("mcp-exclude-tools-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-exclude-tools-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("mcp-exclude-tools-operator", cmd.String("mcp-exclude-tools-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-exclude-tools-operator", []string{"spec", "adapter", "mcp", "excludeTools", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals-always") {
+						if err := _body.set("mcp-tool-approvals-always", []string{"spec", "adapter", "mcp", "toolApprovals", "always"}, cmd.Bool("mcp-tool-approvals-always")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals-only-filter") {
+						if err := _body.applyDocItems("mcp-tool-approvals-only-filter", []string{"spec", "adapter", "mcp", "toolApprovals", "only", "filters"}, cmd.StringSlice("mcp-tool-approvals-only-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-tool-approvals-only-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("mcp-tool-approvals-only-operator", cmd.String("mcp-tool-approvals-only-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-tool-approvals-only-operator", []string{"spec", "adapter", "mcp", "toolApprovals", "only", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-just-in-time-enabled") {
+						if err := _body.set("mcp-just-in-time-enabled", []string{"spec", "adapter", "mcp", "justInTime", "enabled"}, cmd.Bool("mcp-just-in-time-enabled")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-just-in-time-fail-objective-on-tool-list-error") {
+						if err := _body.set("mcp-just-in-time-fail-objective-on-tool-list-error", []string{"spec", "adapter", "mcp", "justInTime", "failObjectiveOnToolListError"}, cmd.Bool("mcp-just-in-time-fail-objective-on-tool-list-error")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-base-url") {
+						_v, err := stringArg("http-base-url", cmd.String("http-base-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-base-url", []string{"spec", "adapter", "http", "baseUrl"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-header") {
+						if err := _body.applyEntries("http-header", []string{"spec", "adapter", "http", "headers"}, cmd.StringSlice("http-header"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-url") {
+						_v, err := stringArg("openapi-url", cmd.String("openapi-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-url", []string{"spec", "adapter", "openapi", "url"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-header") {
+						if err := _body.applyEntries("openapi-header", []string{"spec", "adapter", "openapi", "headers"}, cmd.StringSlice("openapi-header"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-include-tools-filter") {
+						if err := _body.applyDocItems("openapi-include-tools-filter", []string{"spec", "adapter", "openapi", "includeTools", "filters"}, cmd.StringSlice("openapi-include-tools-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-include-tools-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("openapi-include-tools-operator", cmd.String("openapi-include-tools-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-include-tools-operator", []string{"spec", "adapter", "openapi", "includeTools", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-exclude-tools-filter") {
+						if err := _body.applyDocItems("openapi-exclude-tools-filter", []string{"spec", "adapter", "openapi", "excludeTools", "filters"}, cmd.StringSlice("openapi-exclude-tools-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-exclude-tools-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("openapi-exclude-tools-operator", cmd.String("openapi-exclude-tools-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-exclude-tools-operator", []string{"spec", "adapter", "openapi", "excludeTools", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals-always") {
+						if err := _body.set("openapi-tool-approvals-always", []string{"spec", "adapter", "openapi", "toolApprovals", "always"}, cmd.Bool("openapi-tool-approvals-always")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals-only-filter") {
+						if err := _body.applyDocItems("openapi-tool-approvals-only-filter", []string{"spec", "adapter", "openapi", "toolApprovals", "only", "filters"}, cmd.StringSlice("openapi-tool-approvals-only-filter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-tool-approvals-only-operator") {
+						_v, err := enumSpec{Values: []string{"OPERATOR_AND", "OPERATOR_OR"}, Short: []string{"and", "or"}}.parse("openapi-tool-approvals-only-operator", cmd.String("openapi-tool-approvals-only-operator"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-tool-approvals-only-operator", []string{"spec", "adapter", "openapi", "toolApprovals", "only", "operator"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-base-url") {
+						_v, err := stringArg("openapi-base-url", cmd.String("openapi-base-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-base-url", []string{"spec", "adapter", "openapi", "baseUrl"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-server-name") {
+						_v, err := stringArg("openapi-server-name", cmd.String("openapi-server-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-server-name", []string{"spec", "adapter", "openapi", "serverName"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-upload-id") {
+						_v, err := stringArg("openapi-upload-id", cmd.String("openapi-upload-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-upload-id", []string{"spec", "adapter", "openapi", "uploadId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("bare-content-timeout") {
+						if err := _body.set("bare-content-timeout", []string{"spec", "adapter", "bare", "contentTimeout"}, cmd.Int("bare-content-timeout")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("overlay") {
+						if err := _body.applyDocItems("overlay", []string{"spec", "overlays"}, cmd.StringSlice("overlay")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
 					}
 					if cmd.IsSet("update-mask") {
-						values["updateMask"] = cmd.String("update-mask")
+						_v, err := stringArg("update-mask", cmd.String("update-mask"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("update-mask", []string{"updateMask"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "adapter", Path: []string{"spec", "adapter"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "mcp", Keys: []string{"mcp"}, Init: []string{"mcp"}}, {Tag: "http", Keys: []string{"http"}, Init: []string{"http"}}, {Tag: "openapi", Keys: []string{"openapi"}, Init: []string{}}, {Tag: "bare", Keys: []string{"bare"}, Init: []string{"bare"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "mcp-tool-approvals", Path: []string{"spec", "adapter", "mcp", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter"}, Discriminator: "type", Tag: "mcp"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "openapi", Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter"}, Discriminator: "type", Tag: "openapi"}, Arms: []unionArm{{Tag: "url", Keys: []string{"url"}, Init: []string{}}, {Tag: "uploadId", Keys: []string{"uploadId"}, Init: []string{}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "openapi-tool-approvals", Path: []string{"spec", "adapter", "openapi", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Tag: "url"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "openapi-tool-approvals", Path: []string{"spec", "adapter", "openapi", "toolApprovals"}, Discriminator: "type", Required: false, Inferable: true, Parent: &unionParent{Path: []string{"spec", "adapter", "openapi"}, Discriminator: "type", Tag: "uploadId"}, Arms: []unionArm{{Tag: "always", Keys: []string{"always"}, Init: []string{}}, {Tag: "only", Keys: []string{"only"}, Init: []string{"only"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.description": "--description", "spec.adapter": "--adapter", "spec.adapter.mcp": "--mcp", "spec.adapter.mcp.url": "--mcp-url", "spec.adapter.mcp.headers": "--mcp-header", "spec.adapter.mcp.includeTools": "--mcp-include-tools", "spec.adapter.mcp.includeTools.filters": "--mcp-include-tools-filter", "spec.adapter.mcp.includeTools.operator": "--mcp-include-tools-operator", "spec.adapter.mcp.excludeTools": "--mcp-exclude-tools", "spec.adapter.mcp.excludeTools.filters": "--mcp-exclude-tools-filter", "spec.adapter.mcp.excludeTools.operator": "--mcp-exclude-tools-operator", "spec.adapter.mcp.toolApprovals": "--mcp-tool-approvals", "spec.adapter.mcp.toolApprovals.always": "--mcp-tool-approvals-always", "spec.adapter.mcp.toolApprovals.only": "--mcp-tool-approvals-only", "spec.adapter.mcp.toolApprovals.only.filters": "--mcp-tool-approvals-only-filter", "spec.adapter.mcp.toolApprovals.only.operator": "--mcp-tool-approvals-only-operator", "spec.adapter.mcp.justInTime": "--mcp-just-in-time", "spec.adapter.mcp.justInTime.enabled": "--mcp-just-in-time-enabled", "spec.adapter.mcp.justInTime.failObjectiveOnToolListError": "--mcp-just-in-time-fail-objective-on-tool-list-error", "spec.adapter.http": "--http", "spec.adapter.http.baseUrl": "--http-base-url", "spec.adapter.http.headers": "--http-header", "spec.adapter.openapi": "--openapi", "spec.adapter.openapi.url": "--openapi-url", "spec.adapter.openapi.headers": "--openapi-header", "spec.adapter.openapi.includeTools": "--openapi-include-tools", "spec.adapter.openapi.includeTools.filters": "--openapi-include-tools-filter", "spec.adapter.openapi.includeTools.operator": "--openapi-include-tools-operator", "spec.adapter.openapi.excludeTools": "--openapi-exclude-tools", "spec.adapter.openapi.excludeTools.filters": "--openapi-exclude-tools-filter", "spec.adapter.openapi.excludeTools.operator": "--openapi-exclude-tools-operator", "spec.adapter.openapi.toolApprovals": "--openapi-tool-approvals", "spec.adapter.openapi.toolApprovals.always": "--openapi-tool-approvals-always", "spec.adapter.openapi.toolApprovals.only": "--openapi-tool-approvals-only", "spec.adapter.openapi.toolApprovals.only.filters": "--openapi-tool-approvals-only-filter", "spec.adapter.openapi.toolApprovals.only.operator": "--openapi-tool-approvals-only-operator", "spec.adapter.openapi.baseUrl": "--openapi-base-url", "spec.adapter.openapi.serverName": "--openapi-server-name", "spec.adapter.openapi.uploadId": "--openapi-upload-id", "spec.adapter.bare": "--bare", "spec.adapter.bare.contentTimeout": "--bare-content-timeout", "spec.overlays": "--overlay", "updateMask": "--update-mask"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					// A partial update names the paths it changes; a mask supplied
+					// by flag or document wins.
+					if _, _given := _body.lookup([]string{"updateMask"}); !_given {
+						if _mask := _body.updateMask("updateMask"); _mask != "" {
+							_ = _body.set("update-mask", []string{"updateMask"}, _mask)
+						}
+					}
+					if cmd.Bool("dry-run") {
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
 					}
 					var params sdk.ToolSetUpdateParams
 					if err := decodeParams(values, &params); err != nil {
@@ -304,7 +1065,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Archive a tool set",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -315,8 +1076,8 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -345,7 +1106,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Unarchive a tool set",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -356,8 +1117,8 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -386,7 +1147,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "List tool set events",
 				ArgsUsage:                 "<tool-set-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
@@ -402,8 +1163,8 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<tool-set-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
@@ -447,7 +1208,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "Get consumed OpenAPI spec",
 				ArgsUsage:                 "<tool-set-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -458,11 +1219,11 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<tool-set-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
 					pos0 := cmd.Args().Get(0) // tool-set-id
@@ -491,7 +1252,7 @@ func toolSetsCommand() *cli.Command {
 				Usage:                     "List tool set usage",
 				ArgsUsage:                 "<tool-set-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.StringFlag{Name: "tool-id", Usage: "When set, lists only variations with a direct assignment of this individual tool. When unset, lists variations assigned the whole tool set. The tool must…"},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
@@ -506,8 +1267,8 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit("<tool-set-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ASSIGNED", path: []string{"assignedAt"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id

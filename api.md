@@ -1,6 +1,6 @@
 # cadenya CLI reference
 
-JSON-valued flags accept a literal document, `@file`, or `-` (stdin; at most ONE flag per invocation may use it). See README.md for usage patterns.
+Request bodies are built from typed flags; any subtree also takes a YAML/JSON document (`@file`, `-` for stdin, or a literal; at most ONE input per invocation may read stdin) and `-f <doc>` supplies the whole body. Document flags are listed under `schema <command>`. See README.md for usage patterns.
 
 ## cadenya accounts
 
@@ -50,7 +50,7 @@ cadenya api-keys list [--workspace-id <value>] [--limit <value>] [--cursor <valu
 Create a new API key
 
 ```sh
-cadenya api-keys create [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya api-keys create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--permission <value>]... [-f <doc>] [--dry-run]
 ```
 Get an API key by ID
 
@@ -65,7 +65,7 @@ cadenya api-keys delete <id> [--workspace-id <value>]
 Update an API key
 
 ```sh
-cadenya api-keys update <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya api-keys update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--permission <value>]... [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Disable an API key
 
@@ -98,7 +98,7 @@ cadenya workspace-admin list-account [--limit <value>] [--cursor <value>] [--inc
 Create a workspace
 
 ```sh
-cadenya workspace-admin create --metadata <JSON> --spec <JSON>
+cadenya workspace-admin create --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [-f <doc>] [--dry-run]
 ```
 Get a workspace by ID
 
@@ -113,7 +113,7 @@ cadenya workspace-admin archive [--workspace-id <value>]
 Update a workspace
 
 ```sh
-cadenya workspace-admin update [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya workspace-admin update [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 List workspace members
 
@@ -123,7 +123,7 @@ cadenya workspace-admin list-members [--workspace-id <value>] [--limit <value>] 
 Add a member to a workspace
 
 ```sh
-cadenya workspace-admin add-member [--workspace-id <value>] [--profile-id <value>] [--email <value>]
+cadenya workspace-admin add-member [--workspace-id <value>] [--profile-id <value>] [--email <value>] [-f <doc>] [--dry-run]
 ```
 Remove a member from a workspace
 
@@ -157,7 +157,7 @@ cadenya agents list [--workspace-id <value>] [--limit <value>] [--cursor <value>
 Create a new agent
 
 ```sh
-cadenya agents create [--workspace-id <value>] --metadata <JSON> --spec <JSON> [--default-variation <JSON>]
+cadenya agents create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] --variation-selection-mode <random|weighted> [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--default-variation-name <value>] [--default-variation-external-id <value>] [--default-variation-label KEY=VALUE]... [--default-variation-system-prompt-template <value>] [--default-variation-discovery-max-tools <value>] [--default-variation-discovery-hint <value>]... [--default-variation-constraints-max-tool-calls <value>] [--default-variation-constraints-max-sub-objectives <value>] [--default-variation-constraints-inactivity-timeout <value>] [--default-variation-description <value>] [--default-variation-model-id <value>] [--default-variation-model-temperature <value>] [--default-variation-model-top-p <value>] [--default-variation-model-top-k <value>] [--default-variation-model-stop-sequence <value>]... [--default-variation-model-max-output-tokens <value>] [--default-variation-model-reasoning-effort <none|low|medium|high>] [--default-variation-model-caching-enabled[=true|false]] [--default-variation-compaction-trigger-threshold <value>] [--default-variation-compaction-summarization-instructions <value>] [--default-variation-compaction-tool-result-clearing-preserve-recent-results <value>] [--default-variation-first-user-message-template <value>] [-f <doc>] [--dry-run]
 ```
 List feedback for an agent
 
@@ -182,7 +182,7 @@ cadenya agents delete <id> [--workspace-id <value>]
 Update an agent
 
 ```sh
-cadenya agents update <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya agents update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] [--variation-selection-mode <random|weighted>] [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Archive an agent
 
@@ -215,7 +215,7 @@ cadenya agents schedules list <agent-id> [--workspace-id <value>] [--limit <valu
 Create a new schedule
 
 ```sh
-cadenya agents schedules create <agent-id> [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya agents schedules create <agent-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--schedule-calendar <doc>]... [--schedule-interval k=v,...|<doc>]... [--schedule-timezone <value>] [--overlap-policy <allow|skip>] [--first-user-message <value>] [--variation-id <value>] [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [-f <doc>] [--dry-run]
 ```
 Get a schedule by ID
 
@@ -230,7 +230,7 @@ cadenya agents schedules delete <agent-id> <id> [--workspace-id <value>]
 Update a schedule
 
 ```sh
-cadenya agents schedules update <agent-id> <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya agents schedules update <agent-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--schedule-calendar <doc>]... [--schedule-interval k=v,...|<doc>]... [--schedule-timezone <value>] [--overlap-policy <allow|skip>] [--first-user-message <value>] [--variation-id <value>] [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Archive a schedule
 
@@ -258,7 +258,7 @@ cadenya agents variations list <agent-id> [--workspace-id <value>] [--limit <val
 Create a new variation
 
 ```sh
-cadenya agents variations create <agent-id> [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya agents variations create <agent-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [-f <doc>] [--dry-run]
 ```
 Get a variation by ID
 
@@ -273,12 +273,12 @@ cadenya agents variations delete <agent-id> <id> [--workspace-id <value>]
 Update a variation
 
 ```sh
-cadenya agents variations update <agent-id> <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya agents variations update <agent-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Add an assignment to a variation
 
 ```sh
-cadenya agents variations add-assignment <agent-id> <variation-id> [--workspace-id <value>] (--tool-id <value> | --tool-set-id <value> | --sub-agent-id <value>)
+cadenya agents variations add-assignment <agent-id> <variation-id> [--workspace-id <value>] --type <tool-id|tool-set-id|sub-agent-id> [--tool-id <value>] [--tool-set-id <value>] [--sub-agent-id <value>] [-f <doc>] [--dry-run]
 ```
 Remove an assignment from a variation
 
@@ -288,7 +288,7 @@ cadenya agents variations remove-assignment <agent-id> <variation-id> <id> [--wo
 Attach a memory layer to a variation
 
 ```sh
-cadenya agents variations add-memory-layer <agent-id> <variation-id> [--workspace-id <value>] --memory-layer-id <value> [--position <value>]
+cadenya agents variations add-memory-layer <agent-id> <variation-id> [--workspace-id <value>] --memory-layer-id <value> [--position <value>] [-f <doc>] [--dry-run]
 ```
 Remove a memory layer assignment from a variation
 
@@ -298,7 +298,7 @@ cadenya agents variations remove-memory-layer <agent-id> <variation-id> <id> [--
 Update a variation's memory layer assignment
 
 ```sh
-cadenya agents variations update-memory-layer <agent-id> <variation-id> <id> [--workspace-id <value>] [--position <value>]
+cadenya agents variations update-memory-layer <agent-id> <variation-id> <id> [--workspace-id <value>] [--position <value>] [-f <doc>] [--dry-run]
 ```
 
 ## cadenya ai-provider-keys
@@ -311,7 +311,7 @@ cadenya ai-provider-keys list [--workspace-id <value>] [--limit <value>] [--curs
 Create a new AI provider key
 
 ```sh
-cadenya ai-provider-keys create [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya ai-provider-keys create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--provider <openrouter|openai|anthropic|gemini|openai-compatible>] [--credentials <api-key|headers>] [--api-key <value>] [--header KEY=VALUE]... [--config <openrouter|openai|openai-compatible>] [--openrouter-region <value>] [--openai-organization-id <value>] [--openai-project-id <value>] [--openai-compatible-base-url <value>] [-f <doc>] [--dry-run]
 ```
 Get an AI provider key by ID
 
@@ -326,7 +326,7 @@ cadenya ai-provider-keys delete <id> [--workspace-id <value>]
 Update an AI provider key
 
 ```sh
-cadenya ai-provider-keys update <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya ai-provider-keys update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--provider <openrouter|openai|anthropic|gemini|openai-compatible>] [--credentials <api-key|headers>] [--api-key <value>] [--header KEY=VALUE]... [--config <openrouter|openai|openai-compatible>] [--openrouter-region <value>] [--openai-organization-id <value>] [--openai-project-id <value>] [--openai-compatible-base-url <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 
 ## cadenya memory-layers
@@ -339,7 +339,7 @@ cadenya memory-layers list [--workspace-id <value>] [--limit <value>] [--cursor 
 Create a new memory layer
 
 ```sh
-cadenya memory-layers create [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya memory-layers create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --type <episodic|skills> [--description <value>] [-f <doc>] [--dry-run]
 ```
 Get a memory layer by ID
 
@@ -354,7 +354,7 @@ cadenya memory-layers delete <id> [--workspace-id <value>]
 Update a memory layer
 
 ```sh
-cadenya memory-layers update <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya memory-layers update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--type <episodic|skills>] [--description <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 
 ## cadenya memory-layers entries
@@ -367,7 +367,7 @@ cadenya memory-layers entries list <memory-layer-id> [--workspace-id <value>] [-
 Create a new memory entry
 
 ```sh
-cadenya memory-layers entries create <memory-layer-id> [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya memory-layers entries create <memory-layer-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --type <content|upload-id> [--content <value>] [--key <value>] [--description <value>] [--upload-id <value>] [-f <doc>] [--dry-run]
 ```
 Get a memory entry by ID
 
@@ -382,7 +382,7 @@ cadenya memory-layers entries delete <memory-layer-id> <id> [--workspace-id <val
 Update a memory entry
 
 ```sh
-cadenya memory-layers entries update <memory-layer-id> <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya memory-layers entries update <memory-layer-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--key <value>] [--description <value>] [--content <value>] [--upload-id <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 
 ## cadenya models
@@ -410,7 +410,7 @@ cadenya models enable <id> [--workspace-id <value>]
 Swap models on agent variations
 
 ```sh
-cadenya models swap-on-variations [--workspace-id <value>] [--model-swaps <JSON>]...
+cadenya models swap-on-variations [--workspace-id <value>] [--model-swap k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 
 ## cadenya objectives
@@ -423,7 +423,7 @@ cadenya objectives list [--workspace-id <value>] [--limit <value>] [--cursor <va
 Create a new objective
 
 ```sh
-cadenya objectives create [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--metadata <JSON>] --system-prompt-data <JSON> [--first-user-message <value>] [--secrets <JSON>]... [--memory-cascade <JSON>]... [--first-user-message-data <JSON>] [--episodic-memory <JSON>] [--tenant <JSON>] [--subject <JSON>] [--pinned-parameters <JSON>]
+cadenya objectives create [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... [--external-id <value>] --system-prompt-data KEY=VALUE|<doc>... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [-f <doc>] [--dry-run]
 ```
 Get an objective by ID
 
@@ -458,7 +458,7 @@ cadenya objectives list-feedback <objective-id> [--workspace-id <value>] [--limi
 Submit feedback for an objective
 
 ```sh
-cadenya objectives create-feedback <objective-id> [--workspace-id <value>] --metadata <JSON> --data <JSON>
+cadenya objectives create-feedback <objective-id> [--workspace-id <value>] [--label KEY=VALUE]... [--external-id <value>] [--data-score <value>] [--data-comment <value>] [-f <doc>] [--dry-run]
 ```
 List objective tasks
 
@@ -488,12 +488,12 @@ cadenya objectives approve-tool-call <objective-id> <tool-call-id> [--workspace-
 Deny a tool call
 
 ```sh
-cadenya objectives deny-tool-call <objective-id> <tool-call-id> [--workspace-id <value>] [--memo <value>]
+cadenya objectives deny-tool-call <objective-id> <tool-call-id> [--workspace-id <value>] [--memo <value>] [-f <doc>] [--dry-run]
 ```
 Set a bare tool call's content
 
 ```sh
-cadenya objectives set-tool-call-content <objective-id> <tool-call-id> [--workspace-id <value>] --content <JSON>...
+cadenya objectives set-tool-call-content <objective-id> <tool-call-id> [--workspace-id <value>] --content <doc>... [-f <doc>] [--dry-run]
 ```
 List objective tools
 
@@ -503,17 +503,17 @@ cadenya objectives list-tools <objective-id> [--workspace-id <value>] [--limit <
 Cancel an objective
 
 ```sh
-cadenya objectives cancel <objective-id> [--workspace-id <value>] [--reason <value>]
+cadenya objectives cancel <objective-id> [--workspace-id <value>] [--reason <value>] [-f <doc>] [--dry-run]
 ```
 Compact an objective
 
 ```sh
-cadenya objectives compact <objective-id> [--workspace-id <value>] [--compaction-config <JSON>]
+cadenya objectives compact <objective-id> [--workspace-id <value>] [--compaction-config-trigger-threshold <value>] [--compaction-config-summarization-instructions <value>] [--compaction-config-tool-result-clearing-preserve-recent-results <value>] [-f <doc>] [--dry-run]
 ```
 Continue an objective
 
 ```sh
-cadenya objectives continue <objective-id> [--workspace-id <value>] --message <value> [--enqueue[=true|false]]
+cadenya objectives continue <objective-id> [--workspace-id <value>] --message <value> [--enqueue[=true|false]] [-f <doc>] [--dry-run]
 ```
 
 ## cadenya tool-search
@@ -557,7 +557,7 @@ cadenya tool-sets list [--workspace-id <value>] [--limit <value>] [--cursor <val
 Create a new tool set
 
 ```sh
-cadenya tool-sets create [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya tool-sets create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] --adapter <mcp|http|openapi|bare> [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--overlay <doc>]... [-f <doc>] [--dry-run]
 ```
 Get a tool set by ID
 
@@ -572,7 +572,7 @@ cadenya tool-sets delete <id> [--workspace-id <value>]
 Update a tool set
 
 ```sh
-cadenya tool-sets update <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya tool-sets update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--adapter <mcp|http|openapi|bare>] [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--overlay <doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Archive a tool set
 
@@ -610,7 +610,7 @@ cadenya tool-sets secrets list <tool-set-id> [--workspace-id <value>] [--limit <
 Create a new tool set secret
 
 ```sh
-cadenya tool-sets secrets create <tool-set-id> [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya tool-sets secrets create <tool-set-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--value <value>] [-f <doc>] [--dry-run]
 ```
 Get a tool set secret by ID
 
@@ -625,7 +625,7 @@ cadenya tool-sets secrets delete <tool-set-id> <id> [--workspace-id <value>]
 Update a tool set secret
 
 ```sh
-cadenya tool-sets secrets update <tool-set-id> <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya tool-sets secrets update <tool-set-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--value <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 
 ## cadenya tool-sets tools
@@ -638,7 +638,7 @@ cadenya tool-sets tools list <tool-set-id> [--workspace-id <value>] [--limit <va
 Create a new tool
 
 ```sh
-cadenya tool-sets tools create <tool-set-id> [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya tool-sets tools create <tool-set-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --description <value> --requires-approval[=true|false] --parameter KEY=VALUE|<doc>... --config <http|mcp|openapi|bare> [--http-request-method <get|post|put|patch|delete>] [--http-path <value>] [--http-query <value>] [--http-header KEY=VALUE]... [--http-request-body-template <value>] [--http-request-body-content-type <value>] [--mcp-annotations-title <value>] [--mcp-annotations-read-only-hint[=true|false]] [--mcp-annotations-destructive-hint[=true|false]] [--mcp-annotations-idempotent-hint[=true|false]] [--mcp-annotations-open-world-hint[=true|false]] [--openapi-path <value>] [--openapi-method <value>] [--bare-always-set-result <value>] [--llm-tool-name <value>] [-f <doc>] [--dry-run]
 ```
 Get a tool by ID
 
@@ -653,7 +653,7 @@ cadenya tool-sets tools delete <tool-set-id> <id> [--workspace-id <value>]
 Update a tool
 
 ```sh
-cadenya tool-sets tools update <tool-set-id> <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya tool-sets tools update <tool-set-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--requires-approval[=true|false]] [--parameter KEY=VALUE|<doc>]... [--config <http|mcp|openapi|bare>] [--http-request-method <get|post|put|patch|delete>] [--http-path <value>] [--http-query <value>] [--http-header KEY=VALUE]... [--http-request-body-template <value>] [--http-request-body-content-type <value>] [--mcp-annotations-title <value>] [--mcp-annotations-read-only-hint[=true|false]] [--mcp-annotations-destructive-hint[=true|false]] [--mcp-annotations-idempotent-hint[=true|false]] [--mcp-annotations-open-world-hint[=true|false]] [--openapi-path <value>] [--openapi-method <value>] [--bare-always-set-result <value>] [--llm-tool-name <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Omit a tool
 
@@ -671,7 +671,7 @@ cadenya tool-sets tools restore <tool-set-id> <id> [--workspace-id <value>]
 Create an upload
 
 ```sh
-cadenya uploads create [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya uploads create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --filename <value> --content-type <value> --size-bytes <value> [-f <doc>] [--dry-run]
 ```
 Get an upload by ID
 
@@ -689,7 +689,7 @@ cadenya widget-sessions list [--workspace-id <value>] [--limit <value>] [--curso
 Create a widget session
 
 ```sh
-cadenya widget-sessions create [--workspace-id <value>] [--metadata <JSON>] --spec <JSON> [--secrets <JSON>]...
+cadenya widget-sessions create [--workspace-id <value>] [--label KEY=VALUE]... [--external-id <value>] --widget-id <value> [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--expires-at <value>] [--pinned-parameter KEY=VALUE]... [--secret k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 Delete all of a tenant's widget sessions
 
@@ -722,7 +722,7 @@ cadenya widgets list [--workspace-id <value>] [--limit <value>] [--cursor <value
 Create a new widget
 
 ```sh
-cadenya widgets create [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya widgets create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --agent-id <value> [--variation-id <value>] [--origin-allowlist <value>]... [-f <doc>] [--dry-run]
 ```
 Get a widget by ID
 
@@ -737,7 +737,7 @@ cadenya widgets delete <id> [--workspace-id <value>]
 Update a widget
 
 ```sh
-cadenya widgets update <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya widgets update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--agent-id <value>] [--variation-id <value>] [--origin-allowlist <value>]... [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Archive a widget
 
@@ -760,7 +760,7 @@ cadenya workspace-secrets list [--workspace-id <value>] [--limit <value>] [--cur
 Create a new workspace secret
 
 ```sh
-cadenya workspace-secrets create [--workspace-id <value>] --metadata <JSON> --spec <JSON>
+cadenya workspace-secrets create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--value <value>] [-f <doc>] [--dry-run]
 ```
 Get a workspace secret by ID
 
@@ -775,5 +775,5 @@ cadenya workspace-secrets delete <id> [--workspace-id <value>]
 Update a workspace secret
 
 ```sh
-cadenya workspace-secrets update <id> [--workspace-id <value>] [--metadata <JSON>] [--spec <JSON>] [--update-mask <value>]
+cadenya workspace-secrets update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--value <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```

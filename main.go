@@ -19,7 +19,7 @@ import (
 // -ldflags "-X main.version=<semver>" (goreleaser); this default is the
 // generator's configured version and is what `go install` builds report.
 // The trailing marker lets release-please bump it in the published repo.
-var version = "1.1.1" // x-release-please-version
+var version = "1.2.0" // x-release-please-version
 
 func main() {
 	// SIGINT/SIGTERM cancel the command context so long-lived streams close
@@ -39,7 +39,7 @@ func main() {
 		// Slice flags carry JSON documents; never split values on commas.
 		DisableSliceFlagSeparator: true,
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "display", Usage: "Output mode for ordinary commands (one of: json, table, extended); command-local --display overrides"},
+			&cli.StringFlag{Name: "display", Usage: "Output mode for ordinary commands (one of: json, yaml, table, extended); command-local --display overrides"},
 			&cli.StringFlag{Name: "api-key", Usage: "API key (default: $CADENYA_API_KEY, then the stored login)"},
 			&cli.StringFlag{Name: "profile", Value: "default", Usage: "Stored-credentials profile"},
 			&cli.StringFlag{Name: "base-url", Usage: "API base URL"},

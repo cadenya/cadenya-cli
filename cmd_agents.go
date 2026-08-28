@@ -11,6 +11,10 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
+const bodySchemaAgentsCreate = "{\"$defs\":{\"AgentSpec\":{\"properties\":{\"description\":{\"description\":\"Description of the agent's purpose\",\"type\":\"string\"},\"enableEpisodicMemory\":{\"description\":\"Enable episodic memory for objectives created for this agent.\\n When true, objective creation requires an episodic_memory key and the\\n system finds or creates a memory layer for that (agent, key) pair, letting\\n the agent store and retrieve memories across objectives that share the key.\\n Memory is agent-level so all variations of the agent share the same layers.\",\"type\":\"boolean\"},\"episodicMemoryTtl\":{\"description\":\"How long episodic memories should be retained.\\n Each new objective slides the layer's expiry forward by this duration, and\\n stored entries expire this long after they are written.\\n If not set, episodic memories are retained indefinitely.\",\"type\":\"integer\"},\"outputDefinition\":{\"additionalProperties\":{},\"description\":\"Optional output definition for objectives created for this agent.\\n When provided, Cadenya will append a tool to that will be called by the LLM in use by the variant to extract information in the format provided here.\\n Use this option when you want structured data to be created by your objectives.\",\"type\":\"object\"},\"systemPromptDataSchema\":{\"additionalProperties\":{},\"description\":\"SystemPromptDataSchema enforces the shape of system_prompt_data when objectives are created. This is valuable when using liquid formatting in agent\\n variation system prompt templates. The schema is also used when the agent is attached as a sub-agent, as it becomes the tool's input parameter schema.\\n If omitted, the sub-agent schema will be loaded with a simple \\\"prompt\\\" free text string as its schema.\",\"type\":\"object\"},\"variationSelectionMode\":{\"$ref\":\"AgentSpecVariationSelectionMode\",\"description\":\"Controls how variations are automatically selected when creating objectives\\n Defaults to RANDOM when unspecified\"},\"webhookEventsUrl\":{\"description\":\"The URL that Cadenya will send events for any objective assigned to the agent.\",\"type\":\"string\"}},\"required\":[\"variationSelectionMode\"],\"type\":\"object\"},\"AgentSpecVariationSelectionMode\":{\"enum\":[\"VARIATION_SELECTION_MODE_RANDOM\",\"VARIATION_SELECTION_MODE_WEIGHTED\"],\"enumShort\":{\"random\":\"VARIATION_SELECTION_MODE_RANDOM\",\"weighted\":\"VARIATION_SELECTION_MODE_WEIGHTED\"},\"type\":\"string\"},\"AgentVariationSpec\":{\"properties\":{\"compactionConfig\":{\"$ref\":\"AgentVariationSpec_CompactionConfig\",\"description\":\"Compaction configuration for managing context window limits during long-running objectives.\\n When not set, the system uses a default summarization strategy at 75% context window usage.\"},\"constraints\":{\"$ref\":\"AgentVariationSpec_Constraints\",\"description\":\"Execution constraints\"},\"description\":{\"description\":\"Human-readable description of what this variation does or when it should be used\",\"type\":\"string\"},\"firstUserMessageTemplate\":{\"description\":\"Liquid template for the first user message of objectives using this variation.\\n Rendered with CreateObjectiveRequest.first_user_message_data into\\n Objective.first_user_message, the first user message in the LLM chat history.\\n CreateObjectiveRequest.first_user_message, when set, overrides the rendered\\n result. If neither this template nor first_user_message is present, objective\\n creation is rejected with InvalidArgument.\",\"type\":\"string\"},\"modelConfig\":{\"$ref\":\"AgentVariationSpec_ModelConfig\",\"description\":\"Model configuration for this variation\"},\"progressiveDiscovery\":{\"$ref\":\"AgentVariationSpec_ProgressiveDiscovery\",\"description\":\"ProgressiveDiscovery is an optional config that, when set, will load a Cadenya provided tool that\\n can search for tools in the assigned tool sets or tools.\\n\\n Note: Sub-agents are always loaded as a tool regardless of this value.\"},\"systemPromptTemplate\":{\"description\":\"Liquid template for the system prompt of objectives using this variation.\\n Rendered with CreateObjectiveRequest.system_prompt_data into Objective.system_prompt.\",\"type\":\"string\"}},\"type\":\"object\"},\"AgentVariationSpecModelConfigReasoningEffort\":{\"enum\":[\"REASONING_EFFORT_NONE\",\"REASONING_EFFORT_LOW\",\"REASONING_EFFORT_MEDIUM\",\"REASONING_EFFORT_HIGH\"],\"enumShort\":{\"high\":\"REASONING_EFFORT_HIGH\",\"low\":\"REASONING_EFFORT_LOW\",\"medium\":\"REASONING_EFFORT_MEDIUM\",\"none\":\"REASONING_EFFORT_NONE\"},\"type\":\"string\"},\"AgentVariationSpec_CompactionConfig\":{\"properties\":{\"summarization\":{\"$ref\":\"CompactionConfig_SummarizationStrategy\",\"description\":\"Strategies — set one or more. When multiple are set, they execute in order:\\n tool_result_clearing → summarization.\\n When none are set, defaults to summarization with the system default prompt.\"},\"toolResultClearing\":{\"$ref\":\"CompactionConfig_ToolResultClearingStrategy\"},\"triggerThreshold\":{\"description\":\"Trigger threshold as a percentage of the model's context window (0.0 to 1.0).\\n When input tokens reach this percentage of the model's limit, compaction triggers.\\n Default: 0.75 (75%)\",\"type\":\"number\"}},\"type\":\"object\"},\"AgentVariationSpec_Constraints\":{\"properties\":{\"inactivityTimeout\":{\"description\":\"How long an objective may sit with no activity (no user messages, no\\n LLM calls) before it is finalized as timed out. Between 1 minute and\\n 24 hours, expressed as a duration string in seconds (e.g. \\\"7200s\\\").\\n When not set, objectives are still swept at the system-wide 24 hour\\n maximum — every objective eventually reaches a terminal state.\\n\\n SDKs represent this as a duration string, like AgentScheduleSpec.every,\\n rather than an integer.\",\"type\":\"string\"},\"maxSubObjectives\":{\"description\":\"The maximum number of sub-objectives that can be created. 0 means no limit.\",\"type\":\"integer\"},\"maxToolCalls\":{\"description\":\"The maximum number of tool calls that can be made. 0 means no limit.\",\"type\":\"integer\"}},\"type\":\"object\"},\"AgentVariationSpec_ModelConfig\":{\"properties\":{\"cachingEnabled\":{\"description\":\"Prompt/token caching. Requires the model's \\\"caching\\\" capability.\\n Presence-tracked tri-state: unset means the default — caching is ON\\n whenever the model has the capability; false opts this variation\\n out; true is an explicit opt-in (equivalent to unset).\",\"type\":\"boolean\"},\"maxOutputTokens\":{\"description\":\"Cap on output tokens per LLM call. Must not exceed the model's\\n spec.max_output_tokens. Requires the model's \\\"maxOutputTokens\\\"\\n capability.\",\"type\":\"integer\"},\"modelId\":{\"description\":\"The model identifier for the agent variation to use. Should be either the reference key (ai-provider.model-name) or the canonical model ID (e.g.: \\\"model_ABC123\\\")\",\"type\":\"string\"},\"reasoningEffort\":{\"$ref\":\"AgentVariationSpecModelConfigReasoningEffort\",\"description\":\"Reasoning effort. Requires the model's \\\"reasoning\\\" capability.\"},\"stopSequences\":{\"description\":\"Sequences that stop generation when produced. Empty means none.\\n No count cap here — providers impose their own limits (surfaced as\\n the \\\"stopSequences\\\" capability's `limit` on the model spec), and it\\n is the caller's responsibility to stay within the selected model's\\n limit. Requires the model's \\\"stopSequences\\\" capability.\",\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"temperature\":{\"description\":\"Sampling temperature for model inference (0.0 to 1.0)\\n Lower values produce more deterministic outputs, higher values increase randomness.\\n Presence-tracked so a deliberate 0.0 (fully deterministic) is\\n distinguishable from unset.\",\"type\":\"number\"},\"topK\":{\"description\":\"Only sample from the top_k most likely tokens.\\n Requires the model's \\\"topK\\\" capability.\",\"type\":\"integer\"},\"topP\":{\"description\":\"Nucleus sampling: only tokens comprising the top_p probability mass\\n are considered. Requires the model's \\\"topP\\\" capability.\",\"type\":\"number\"}},\"required\":[\"modelId\"],\"type\":\"object\"},\"AgentVariationSpec_ProgressiveDiscovery\":{\"properties\":{\"hints\":{\"description\":\"Free-text guidance appended to the discoverable-tools appendix in the\\n system prompt. Hints steer the model's choice of tool names; they do not\\n filter or rank anything, because tool_search matches names exactly rather\\n than searching.\",\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"maxTools\":{\"description\":\"The most tool names tool_search will load in a single call. Requesting more\\n than this returns an error telling the model to retry in smaller batches --\\n it is a per-call batch limit, not a ceiling on how many tools an objective\\n may end up with.\",\"type\":\"integer\"}},\"type\":\"object\"},\"CompactionConfig_SummarizationStrategy\":{\"properties\":{\"instructions\":{\"description\":\"Custom instructions that guide what the summarizer preserves.\\n Replaces the default summarization prompt entirely.\\n Example: \\\"Preserve all code snippets, variable names, and technical decisions.\\\"\",\"type\":\"string\"}},\"type\":\"object\"},\"CompactionConfig_ToolResultClearingStrategy\":{\"properties\":{\"preserveRecentResults\":{\"description\":\"Number of most recent tool call results to keep intact.\\n Older tool results have their content replaced with \\\"[result cleared]\\\"\\n while preserving the assistant tool call message (function name, arguments).\\n Default: 2\",\"type\":\"integer\"}},\"type\":\"object\"},\"CreateAgentVariationRequest\":{\"properties\":{\"metadata\":{\"$ref\":\"CreateResourceMetadata\"},\"spec\":{\"$ref\":\"AgentVariationSpec\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"},\"CreateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"}},\"properties\":{\"defaultVariation\":{\"$ref\":\"CreateAgentVariationRequest\"},\"metadata\":{\"$ref\":\"CreateResourceMetadata\"},\"spec\":{\"$ref\":\"AgentSpec\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"}"
+
+const bodySchemaAgentsUpdate = "{\"$defs\":{\"AgentSpec\":{\"properties\":{\"description\":{\"description\":\"Description of the agent's purpose\",\"type\":\"string\"},\"enableEpisodicMemory\":{\"description\":\"Enable episodic memory for objectives created for this agent.\\n When true, objective creation requires an episodic_memory key and the\\n system finds or creates a memory layer for that (agent, key) pair, letting\\n the agent store and retrieve memories across objectives that share the key.\\n Memory is agent-level so all variations of the agent share the same layers.\",\"type\":\"boolean\"},\"episodicMemoryTtl\":{\"description\":\"How long episodic memories should be retained.\\n Each new objective slides the layer's expiry forward by this duration, and\\n stored entries expire this long after they are written.\\n If not set, episodic memories are retained indefinitely.\",\"type\":\"integer\"},\"outputDefinition\":{\"additionalProperties\":{},\"description\":\"Optional output definition for objectives created for this agent.\\n When provided, Cadenya will append a tool to that will be called by the LLM in use by the variant to extract information in the format provided here.\\n Use this option when you want structured data to be created by your objectives.\",\"type\":\"object\"},\"systemPromptDataSchema\":{\"additionalProperties\":{},\"description\":\"SystemPromptDataSchema enforces the shape of system_prompt_data when objectives are created. This is valuable when using liquid formatting in agent\\n variation system prompt templates. The schema is also used when the agent is attached as a sub-agent, as it becomes the tool's input parameter schema.\\n If omitted, the sub-agent schema will be loaded with a simple \\\"prompt\\\" free text string as its schema.\",\"type\":\"object\"},\"variationSelectionMode\":{\"$ref\":\"AgentSpecVariationSelectionMode\",\"description\":\"Controls how variations are automatically selected when creating objectives\\n Defaults to RANDOM when unspecified\"},\"webhookEventsUrl\":{\"description\":\"The URL that Cadenya will send events for any objective assigned to the agent.\",\"type\":\"string\"}},\"required\":[\"variationSelectionMode\"],\"type\":\"object\"},\"AgentSpecVariationSelectionMode\":{\"enum\":[\"VARIATION_SELECTION_MODE_RANDOM\",\"VARIATION_SELECTION_MODE_WEIGHTED\"],\"enumShort\":{\"random\":\"VARIATION_SELECTION_MODE_RANDOM\",\"weighted\":\"VARIATION_SELECTION_MODE_WEIGHTED\"},\"type\":\"string\"},\"UpdateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"UpdateResourceMetadata\"},\"spec\":{\"$ref\":\"AgentSpec\"},\"updateMask\":{\"type\":\"string\"}},\"type\":\"object\"}"
+
 func agentsCommand() *cli.Command {
 	return &cli.Command{
 		Name:                      "agents",
@@ -21,7 +25,7 @@ func agentsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List agents",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
@@ -38,8 +42,8 @@ func agentsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}, {header: "VARIATION MODE", path: []string{"spec", "variationSelectionMode"}}}
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_DRAFT", "STATE_PUBLISHED", "STATE_ARCHIVED"}) {
@@ -99,32 +103,67 @@ func agentsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Create a new agent",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "default-variation", Usage: "JSON document (literal, @file, or - for stdin)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: "Description of the agent's purpose."},
+					&cli.StringFlag{Name: "webhook-events-url", Usage: "The URL that Cadenya will send events for any objective assigned to the agent."},
+					&cli.StringFlag{Name: "variation-selection-mode", Usage: "Required. Controls how variations are automatically selected when creating objectives Defaults to RANDOM when unspecified. One of: random, weighted."},
+					&cli.StringSliceFlag{Name: "system-prompt-data-schema", Usage: "SystemPromptDataSchema enforces the shape of system_prompt_data when objectives are created. This is valuable when using liquid formatting in agent variation…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.StringSliceFlag{Name: "output-definition", Usage: "Optional output definition for objectives created for this agent. When provided, Cadenya will append a tool to that will be called by the LLM in use by the…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.BoolFlag{Name: "enable-episodic-memory", Usage: "Enable episodic memory for objectives created for this agent. When true, objective creation requires an episodic_memory key and the system finds or creates a…."},
+					&cli.IntFlag{Name: "episodic-memory-ttl", Usage: "How long episodic memories should be retained. Each new objective slides the layer's expiry forward by this duration, and stored entries expire this long after…."},
+					&cli.StringFlag{Name: "default-variation", Usage: "Optional default variation to add to the agent on create. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "default-variation-name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "default-variation-external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "default-variation-label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "default-variation-system-prompt-template", Usage: "Liquid template for the system prompt of objectives using this variation. Rendered with CreateObjectiveRequest.system_prompt_data into Objective.system_prompt."},
+					&cli.StringFlag{Name: "default-variation-discovery", Usage: "ProgressiveDiscovery is an optional config that, when set, will load a Cadenya provided tool that can search for tools in the assigned tool sets or tools.…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.IntFlag{Name: "default-variation-discovery-max-tools", Usage: "The most tool names tool_search will load in a single call. Requesting more than this returns an error telling the model to retry in smaller batches -- it is a…."},
+					&cli.StringSliceFlag{Name: "default-variation-discovery-hint", Usage: "Free-text guidance appended to the discoverable-tools appendix in the system prompt. Hints steer the model's choice of tool names; they do not filter or rank…. Repeatable."},
+					&cli.StringFlag{Name: "default-variation-constraints", Usage: "Execution constraints. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.IntFlag{Name: "default-variation-constraints-max-tool-calls", Usage: "The maximum number of tool calls that can be made. 0 means no limit."},
+					&cli.IntFlag{Name: "default-variation-constraints-max-sub-objectives", Usage: "The maximum number of sub-objectives that can be created. 0 means no limit."},
+					&cli.StringFlag{Name: "default-variation-constraints-inactivity-timeout", Usage: "How long an objective may sit with no activity (no user messages, no LLM calls) before it is finalized as timed out. Between 1 minute and 24 hours, expressed…."},
+					&cli.StringFlag{Name: "default-variation-description", Usage: "Human-readable description of what this variation does or when it should be used."},
+					&cli.StringFlag{Name: "default-variation-model", Usage: "Model configuration for this variation. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "default-variation-model-id", Usage: "The model identifier for the agent variation to use. Should be either the reference key (ai-provider.model-name) or the canonical model ID (e.g.:…."},
+					&cli.FloatFlag{Name: "default-variation-model-temperature", Usage: "Sampling temperature for model inference (0.0 to 1.0) Lower values produce more deterministic outputs, higher values increase randomness. Presence-tracked so a…."},
+					&cli.FloatFlag{Name: "default-variation-model-top-p", Usage: "Nucleus sampling: only tokens comprising the top_p probability mass are considered. Requires the model's \"topP\" capability."},
+					&cli.IntFlag{Name: "default-variation-model-top-k", Usage: "Only sample from the top_k most likely tokens. Requires the model's \"topK\" capability."},
+					&cli.StringSliceFlag{Name: "default-variation-model-stop-sequence", Usage: "Sequences that stop generation when produced. Empty means none. No count cap here — providers impose their own limits (surfaced as the \"stopSequences\"…. Repeatable."},
+					&cli.IntFlag{Name: "default-variation-model-max-output-tokens", Usage: "Cap on output tokens per LLM call. Must not exceed the model's spec.max_output_tokens. Requires the model's \"maxOutputTokens\" capability."},
+					&cli.StringFlag{Name: "default-variation-model-reasoning-effort", Usage: "Reasoning effort. Requires the model's \"reasoning\" capability. One of: none, low, medium, high."},
+					&cli.BoolFlag{Name: "default-variation-model-caching-enabled", Usage: "Prompt/token caching. Requires the model's \"caching\" capability. Presence-tracked tri-state: unset means the default — caching is ON whenever the model has…."},
+					&cli.StringFlag{Name: "default-variation-compaction", Usage: "Compaction configuration for managing context window limits during long-running objectives. When not set, the system uses a default summarization strategy at…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.FloatFlag{Name: "default-variation-compaction-trigger-threshold", Usage: "Trigger threshold as a percentage of the model's context window (0.0 to 1.0). When input tokens reach this percentage of the model's limit, compaction…."},
+					&cli.StringFlag{Name: "default-variation-compaction-summarization", Usage: "Strategies — set one or more. When multiple are set, they execute in order: tool_result_clearing → summarization. When none are set, defaults to…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "default-variation-compaction-summarization-instructions", Usage: "Custom instructions that guide what the summarizer preserves. Replaces the default summarization prompt entirely. Example: \"Preserve all code snippets,…."},
+					&cli.StringFlag{Name: "default-variation-compaction-tool-result-clearing", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.IntFlag{Name: "default-variation-compaction-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
+					&cli.StringFlag{Name: "default-variation-first-user-message-template", Usage: "Liquid template for the first user message of objectives using this variation. Rendered with CreateObjectiveRequest.first_user_message_data into…."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_missing := []string{}
-					if !cmd.IsSet("metadata") {
-						_missing = append(_missing, "--metadata")
-					}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec"), cmd.String("default-variation")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("webhook-events-url"), cmd.String("default-variation"), cmd.String("default-variation-name"), cmd.String("default-variation-external-id"), cmd.String("default-variation-system-prompt-template"), cmd.String("default-variation-discovery"), cmd.String("default-variation-constraints"), cmd.String("default-variation-constraints-inactivity-timeout"), cmd.String("default-variation-description"), cmd.String("default-variation-model"), cmd.String("default-variation-model-id"), cmd.String("default-variation-compaction"), cmd.String("default-variation-compaction-summarization"), cmd.String("default-variation-compaction-summarization-instructions"), cmd.String("default-variation-compaction-tool-result-clearing"), cmd.String("default-variation-first-user-message-template")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("system-prompt-data-schema")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("output-definition")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("default-variation-label")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -132,26 +171,288 @@ func agentsCommand() *cli.Command {
 					if cmd.IsSet("workspace-id") {
 						values["workspaceId"] = cmd.String("workspace-id")
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
+					_schema := parseBodySchema(bodySchemaAgentsCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["metadata"] = doc
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
 					}
 					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["spec"] = doc
 					}
 					if cmd.IsSet("default-variation") {
-						doc, err := jsonArg("default-variation", cmd.String("default-variation"))
+						if err := _body.applyDoc("default-variation", []string{"defaultVariation"}, cmd.String("default-variation"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-discovery") {
+						if err := _body.applyDoc("default-variation-discovery", []string{"defaultVariation", "spec", "progressiveDiscovery"}, cmd.String("default-variation-discovery"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-constraints") {
+						if err := _body.applyDoc("default-variation-constraints", []string{"defaultVariation", "spec", "constraints"}, cmd.String("default-variation-constraints"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-model") {
+						if err := _body.applyDoc("default-variation-model", []string{"defaultVariation", "spec", "modelConfig"}, cmd.String("default-variation-model"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-compaction") {
+						if err := _body.applyDoc("default-variation-compaction", []string{"defaultVariation", "spec", "compactionConfig"}, cmd.String("default-variation-compaction"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-compaction-summarization") {
+						if err := _body.applyDoc("default-variation-compaction-summarization", []string{"defaultVariation", "spec", "compactionConfig", "summarization"}, cmd.String("default-variation-compaction-summarization"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-compaction-tool-result-clearing") {
+						if err := _body.applyDoc("default-variation-compaction-tool-result-clearing", []string{"defaultVariation", "spec", "compactionConfig", "toolResultClearing"}, cmd.String("default-variation-compaction-tool-result-clearing"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
 						if err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["defaultVariation"] = doc
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("webhook-events-url") {
+						_v, err := stringArg("webhook-events-url", cmd.String("webhook-events-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("webhook-events-url", []string{"spec", "webhookEventsUrl"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("variation-selection-mode") {
+						_v, err := enumSpec{Values: []string{"VARIATION_SELECTION_MODE_RANDOM", "VARIATION_SELECTION_MODE_WEIGHTED"}, Short: []string{"random", "weighted"}}.parse("variation-selection-mode", cmd.String("variation-selection-mode"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("variation-selection-mode", []string{"spec", "variationSelectionMode"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("system-prompt-data-schema") {
+						if err := _body.applyEntryDocs("system-prompt-data-schema", []string{"spec", "systemPromptDataSchema"}, cmd.StringSlice("system-prompt-data-schema")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("output-definition") {
+						if err := _body.applyEntryDocs("output-definition", []string{"spec", "outputDefinition"}, cmd.StringSlice("output-definition")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("enable-episodic-memory") {
+						if err := _body.set("enable-episodic-memory", []string{"spec", "enableEpisodicMemory"}, cmd.Bool("enable-episodic-memory")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("episodic-memory-ttl") {
+						if err := _body.set("episodic-memory-ttl", []string{"spec", "episodicMemoryTtl"}, cmd.Int("episodic-memory-ttl")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-name") {
+						_v, err := stringArg("default-variation-name", cmd.String("default-variation-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("default-variation-name", []string{"defaultVariation", "metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-external-id") {
+						_v, err := stringArg("default-variation-external-id", cmd.String("default-variation-external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("default-variation-external-id", []string{"defaultVariation", "metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-label") {
+						if err := _body.applyEntries("default-variation-label", []string{"defaultVariation", "metadata", "labels"}, cmd.StringSlice("default-variation-label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-system-prompt-template") {
+						_v, err := stringArg("default-variation-system-prompt-template", cmd.String("default-variation-system-prompt-template"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("default-variation-system-prompt-template", []string{"defaultVariation", "spec", "systemPromptTemplate"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-discovery-max-tools") {
+						if err := _body.set("default-variation-discovery-max-tools", []string{"defaultVariation", "spec", "progressiveDiscovery", "maxTools"}, cmd.Int("default-variation-discovery-max-tools")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-discovery-hint") {
+						if err := _body.applyScalarItems("default-variation-discovery-hint", []string{"defaultVariation", "spec", "progressiveDiscovery", "hints"}, cmd.StringSlice("default-variation-discovery-hint"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-constraints-max-tool-calls") {
+						if err := _body.set("default-variation-constraints-max-tool-calls", []string{"defaultVariation", "spec", "constraints", "maxToolCalls"}, cmd.Int("default-variation-constraints-max-tool-calls")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-constraints-max-sub-objectives") {
+						if err := _body.set("default-variation-constraints-max-sub-objectives", []string{"defaultVariation", "spec", "constraints", "maxSubObjectives"}, cmd.Int("default-variation-constraints-max-sub-objectives")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-constraints-inactivity-timeout") {
+						_v, err := stringArg("default-variation-constraints-inactivity-timeout", cmd.String("default-variation-constraints-inactivity-timeout"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("default-variation-constraints-inactivity-timeout", []string{"defaultVariation", "spec", "constraints", "inactivityTimeout"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-description") {
+						_v, err := stringArg("default-variation-description", cmd.String("default-variation-description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("default-variation-description", []string{"defaultVariation", "spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-model-id") {
+						_v, err := stringArg("default-variation-model-id", cmd.String("default-variation-model-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("default-variation-model-id", []string{"defaultVariation", "spec", "modelConfig", "modelId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-model-temperature") {
+						if err := _body.set("default-variation-model-temperature", []string{"defaultVariation", "spec", "modelConfig", "temperature"}, cmd.Float("default-variation-model-temperature")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-model-top-p") {
+						if err := _body.set("default-variation-model-top-p", []string{"defaultVariation", "spec", "modelConfig", "topP"}, cmd.Float("default-variation-model-top-p")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-model-top-k") {
+						if err := _body.set("default-variation-model-top-k", []string{"defaultVariation", "spec", "modelConfig", "topK"}, cmd.Int("default-variation-model-top-k")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-model-stop-sequence") {
+						if err := _body.applyScalarItems("default-variation-model-stop-sequence", []string{"defaultVariation", "spec", "modelConfig", "stopSequences"}, cmd.StringSlice("default-variation-model-stop-sequence"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-model-max-output-tokens") {
+						if err := _body.set("default-variation-model-max-output-tokens", []string{"defaultVariation", "spec", "modelConfig", "maxOutputTokens"}, cmd.Int("default-variation-model-max-output-tokens")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-model-reasoning-effort") {
+						_v, err := enumSpec{Values: []string{"REASONING_EFFORT_NONE", "REASONING_EFFORT_LOW", "REASONING_EFFORT_MEDIUM", "REASONING_EFFORT_HIGH"}, Short: []string{"none", "low", "medium", "high"}}.parse("default-variation-model-reasoning-effort", cmd.String("default-variation-model-reasoning-effort"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("default-variation-model-reasoning-effort", []string{"defaultVariation", "spec", "modelConfig", "reasoningEffort"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-model-caching-enabled") {
+						if err := _body.set("default-variation-model-caching-enabled", []string{"defaultVariation", "spec", "modelConfig", "cachingEnabled"}, cmd.Bool("default-variation-model-caching-enabled")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-compaction-trigger-threshold") {
+						if err := _body.set("default-variation-compaction-trigger-threshold", []string{"defaultVariation", "spec", "compactionConfig", "triggerThreshold"}, cmd.Float("default-variation-compaction-trigger-threshold")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-compaction-summarization-instructions") {
+						_v, err := stringArg("default-variation-compaction-summarization-instructions", cmd.String("default-variation-compaction-summarization-instructions"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("default-variation-compaction-summarization-instructions", []string{"defaultVariation", "spec", "compactionConfig", "summarization", "instructions"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-compaction-tool-result-clearing-preserve-recent-results") {
+						if err := _body.set("default-variation-compaction-tool-result-clearing-preserve-recent-results", []string{"defaultVariation", "spec", "compactionConfig", "toolResultClearing", "preserveRecentResults"}, cmd.Int("default-variation-compaction-tool-result-clearing-preserve-recent-results")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("default-variation-first-user-message-template") {
+						_v, err := stringArg("default-variation-first-user-message-template", cmd.String("default-variation-first-user-message-template"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("default-variation-first-user-message-template", []string{"defaultVariation", "spec", "firstUserMessageTemplate"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.description": "--description", "spec.webhookEventsUrl": "--webhook-events-url", "spec.variationSelectionMode": "--variation-selection-mode", "spec.systemPromptDataSchema": "--system-prompt-data-schema", "spec.outputDefinition": "--output-definition", "spec.enableEpisodicMemory": "--enable-episodic-memory", "spec.episodicMemoryTtl": "--episodic-memory-ttl", "defaultVariation": "--default-variation", "defaultVariation.metadata.name": "--default-variation-name", "defaultVariation.metadata.externalId": "--default-variation-external-id", "defaultVariation.metadata.labels": "--default-variation-label", "defaultVariation.spec.systemPromptTemplate": "--default-variation-system-prompt-template", "defaultVariation.spec.progressiveDiscovery": "--default-variation-discovery", "defaultVariation.spec.progressiveDiscovery.maxTools": "--default-variation-discovery-max-tools", "defaultVariation.spec.progressiveDiscovery.hints": "--default-variation-discovery-hint", "defaultVariation.spec.constraints": "--default-variation-constraints", "defaultVariation.spec.constraints.maxToolCalls": "--default-variation-constraints-max-tool-calls", "defaultVariation.spec.constraints.maxSubObjectives": "--default-variation-constraints-max-sub-objectives", "defaultVariation.spec.constraints.inactivityTimeout": "--default-variation-constraints-inactivity-timeout", "defaultVariation.spec.description": "--default-variation-description", "defaultVariation.spec.modelConfig": "--default-variation-model", "defaultVariation.spec.modelConfig.modelId": "--default-variation-model-id", "defaultVariation.spec.modelConfig.temperature": "--default-variation-model-temperature", "defaultVariation.spec.modelConfig.topP": "--default-variation-model-top-p", "defaultVariation.spec.modelConfig.topK": "--default-variation-model-top-k", "defaultVariation.spec.modelConfig.stopSequences": "--default-variation-model-stop-sequence", "defaultVariation.spec.modelConfig.maxOutputTokens": "--default-variation-model-max-output-tokens", "defaultVariation.spec.modelConfig.reasoningEffort": "--default-variation-model-reasoning-effort", "defaultVariation.spec.modelConfig.cachingEnabled": "--default-variation-model-caching-enabled", "defaultVariation.spec.compactionConfig": "--default-variation-compaction", "defaultVariation.spec.compactionConfig.triggerThreshold": "--default-variation-compaction-trigger-threshold", "defaultVariation.spec.compactionConfig.summarization": "--default-variation-compaction-summarization", "defaultVariation.spec.compactionConfig.summarization.instructions": "--default-variation-compaction-summarization-instructions", "defaultVariation.spec.compactionConfig.toolResultClearing": "--default-variation-compaction-tool-result-clearing", "defaultVariation.spec.compactionConfig.toolResultClearing.preserveRecentResults": "--default-variation-compaction-tool-result-clearing-preserve-recent-results", "defaultVariation.spec.firstUserMessageTemplate": "--default-variation-first-user-message-template"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if cmd.Bool("dry-run") {
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
 					}
 					var params sdk.AgentCreateParams
 					if err := decodeParams(values, &params); err != nil {
@@ -174,7 +475,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "List feedback for an agent",
 				ArgsUsage:                 "<agent-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response."},
@@ -194,8 +495,8 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					if cmd.IsSet("sentiment") && !isOneOf(cmd.String("sentiment"), []string{"FEEDBACK_SENTIMENT_UNSPECIFIED", "FEEDBACK_SENTIMENT_POSITIVE", "FEEDBACK_SENTIMENT_NEGATIVE"}) {
@@ -254,7 +555,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "List webhook deliveries",
 				ArgsUsage:                 "<agent-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
@@ -270,8 +571,8 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<agent-id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					if cmd.IsSet("event-type") && !isOneOf(cmd.String("event-type"), []string{"OBJECTIVE_EVENT_TYPE_UNSPECIFIED", "OBJECTIVE_EVENT_TYPE_USER_MESSAGE", "OBJECTIVE_EVENT_TYPE_TOOL_APPROVAL_REQUESTED", "OBJECTIVE_EVENT_TYPE_TOOL_APPROVED", "OBJECTIVE_EVENT_TYPE_TOOL_DENIED", "OBJECTIVE_EVENT_TYPE_TOOL_CALLED", "OBJECTIVE_EVENT_TYPE_ERROR", "OBJECTIVE_EVENT_TYPE_ASSISTANT_MESSAGE", "OBJECTIVE_EVENT_TYPE_TOOL_RESULT", "OBJECTIVE_EVENT_TYPE_TOOL_ERROR", "OBJECTIVE_EVENT_TYPE_CONTEXT_WINDOW_COMPACTED", "OBJECTIVE_EVENT_TYPE_MEMORY_READ", "OBJECTIVE_EVENT_TYPE_CANCELLED", "OBJECTIVE_EVENT_TYPE_SUB_AGENT_SPAWNED", "OBJECTIVE_EVENT_TYPE_SUB_AGENT_UPDATED", "OBJECTIVE_EVENT_TYPE_FINALIZED", "OBJECTIVE_EVENT_TYPE_NOTICE", "OBJECTIVE_EVENT_TYPE_TIMED_OUT", "OBJECTIVE_EVENT_TYPE_REASONING"}) {
@@ -318,7 +619,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Get an agent by ID",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -329,8 +630,8 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -359,7 +660,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Delete an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -370,10 +671,10 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
@@ -398,11 +699,24 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Update an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "description", Usage: "Description of the agent's purpose."},
+					&cli.StringFlag{Name: "webhook-events-url", Usage: "The URL that Cadenya will send events for any objective assigned to the agent."},
+					&cli.StringFlag{Name: "variation-selection-mode", Usage: "Controls how variations are automatically selected when creating objectives Defaults to RANDOM when unspecified. One of: random, weighted."},
+					&cli.StringSliceFlag{Name: "system-prompt-data-schema", Usage: "SystemPromptDataSchema enforces the shape of system_prompt_data when objectives are created. This is valuable when using liquid formatting in agent variation…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.StringSliceFlag{Name: "output-definition", Usage: "Optional output definition for objectives created for this agent. When provided, Cadenya will append a tool to that will be called by the LLM in use by the…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.BoolFlag{Name: "enable-episodic-memory", Usage: "Enable episodic memory for objectives created for this agent. When true, objective creation requires an episodic_memory key and the system finds or creates a…."},
+					&cli.IntFlag{Name: "episodic-memory-ttl", Usage: "How long episodic memories should be retained. Each new objective slides the layer's expiry forward by this duration, and stored entries expire this long after…."},
+					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 1 {
@@ -412,11 +726,14 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("webhook-events-url"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("system-prompt-data-schema")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("output-definition")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -425,22 +742,123 @@ func agentsCommand() *cli.Command {
 					if cmd.IsSet("workspace-id") {
 						values["workspaceId"] = cmd.String("workspace-id")
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
+					_schema := parseBodySchema(bodySchemaAgentsUpdate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["metadata"] = doc
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
 					}
 					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
 						if err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["spec"] = doc
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("webhook-events-url") {
+						_v, err := stringArg("webhook-events-url", cmd.String("webhook-events-url"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("webhook-events-url", []string{"spec", "webhookEventsUrl"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("variation-selection-mode") {
+						_v, err := enumSpec{Values: []string{"VARIATION_SELECTION_MODE_RANDOM", "VARIATION_SELECTION_MODE_WEIGHTED"}, Short: []string{"random", "weighted"}}.parse("variation-selection-mode", cmd.String("variation-selection-mode"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("variation-selection-mode", []string{"spec", "variationSelectionMode"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("system-prompt-data-schema") {
+						if err := _body.applyEntryDocs("system-prompt-data-schema", []string{"spec", "systemPromptDataSchema"}, cmd.StringSlice("system-prompt-data-schema")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("output-definition") {
+						if err := _body.applyEntryDocs("output-definition", []string{"spec", "outputDefinition"}, cmd.StringSlice("output-definition")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("enable-episodic-memory") {
+						if err := _body.set("enable-episodic-memory", []string{"spec", "enableEpisodicMemory"}, cmd.Bool("enable-episodic-memory")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("episodic-memory-ttl") {
+						if err := _body.set("episodic-memory-ttl", []string{"spec", "episodicMemoryTtl"}, cmd.Int("episodic-memory-ttl")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
 					}
 					if cmd.IsSet("update-mask") {
-						values["updateMask"] = cmd.String("update-mask")
+						_v, err := stringArg("update-mask", cmd.String("update-mask"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("update-mask", []string{"updateMask"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.description": "--description", "spec.webhookEventsUrl": "--webhook-events-url", "spec.variationSelectionMode": "--variation-selection-mode", "spec.systemPromptDataSchema": "--system-prompt-data-schema", "spec.outputDefinition": "--output-definition", "spec.enableEpisodicMemory": "--enable-episodic-memory", "spec.episodicMemoryTtl": "--episodic-memory-ttl", "updateMask": "--update-mask"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					// A partial update names the paths it changes; a mask supplied
+					// by flag or document wins.
+					if _, _given := _body.lookup([]string{"updateMask"}); !_given {
+						if _mask := _body.updateMask("updateMask"); _mask != "" {
+							_ = _body.set("update-mask", []string{"updateMask"}, _mask)
+						}
+					}
+					if cmd.Bool("dry-run") {
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
 					}
 					var params sdk.AgentUpdateParams
 					if err := decodeParams(values, &params); err != nil {
@@ -463,7 +881,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Archive an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -474,8 +892,8 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -504,7 +922,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Publish an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -515,8 +933,8 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -545,7 +963,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Unarchive an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -556,8 +974,8 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -586,7 +1004,7 @@ func agentsCommand() *cli.Command {
 				Usage:                     "Unpublish an agent",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -597,8 +1015,8 @@ func agentsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id

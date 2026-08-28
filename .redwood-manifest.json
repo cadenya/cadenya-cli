@@ -2,6 +2,8 @@
   "README.md",
   "api.md",
   "auth.go",
+  "body.go",
+  "body_test.go",
   "cmd_accounts.go",
   "cmd_agent_schedules.go",
   "cmd_agent_variations.go",

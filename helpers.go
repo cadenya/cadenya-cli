@@ -142,6 +142,9 @@ func renderDisplay(mode string, columns []displayColumn, isPage bool, v any) err
 	if mode == "json" || mode == "" {
 		return printJSON(v)
 	}
+	if mode == "yaml" {
+		return printYAML(v)
+	}
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -205,8 +208,8 @@ func isOneOf(value string, choices []string) bool {
 }
 
 // stdinBudget enforces the '-' contract BEFORE any read: stdin can supply
-// at most one JSON document per invocation (a second '-' would otherwise
-// see drained input), and a doomed command must not block on stdin.
+// at most one input per invocation (a second '-' would otherwise see
+// drained input), and a doomed command must not block on stdin.
 func stdinBudget(raws []string) error {
 	count := 0
 	for _, raw := range raws {
@@ -215,7 +218,7 @@ func stdinBudget(raws []string) error {
 		}
 	}
 	if count > 1 {
-		return fmt.Errorf("'-' (stdin) may supply at most one JSON argument per command; use @file or literal JSON for the others")
+		return fmt.Errorf("'-' (stdin) may supply at most one input per command; use @file or literal values for the others")
 	}
 	return nil
 }

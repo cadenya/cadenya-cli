@@ -11,6 +11,8 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
+const bodySchemaWidgetSessionsCreate = "{\"$defs\":{\"CreateOperationMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the operation (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"priority\\\": \\\"high\\\", \\\"source\\\": \\\"api\\\", \\\"workflow\\\": \\\"onboarding\\\"}\",\"type\":\"object\"}},\"type\":\"object\"},\"CreateWidgetSessionRequest_Secret\":{\"properties\":{\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"type\":\"object\"},\"SubjectAssertion\":{\"properties\":{\"id\":{\"description\":\"The subject identifier in the customer's namespace (e.g. their user id).\\n Stored as the subject record's external_id; unique within the tenant.\",\"type\":\"string\"},\"name\":{\"description\":\"Optional human-readable name for the subject. Updates the subject\\n record's name on every assertion that provides it.\",\"type\":\"string\"}},\"required\":[\"id\"],\"type\":\"object\"},\"TenantAssertion\":{\"properties\":{\"id\":{\"description\":\"The tenant identifier in the customer's namespace (e.g. \\\"acme-corp\\\").\\n Stored as the tenant record's external_id; stable across requests.\",\"type\":\"string\"},\"name\":{\"description\":\"Optional human-readable name for the tenant. Updates the tenant record's\\n name on every assertion that provides it.\",\"type\":\"string\"}},\"required\":[\"id\"],\"type\":\"object\"},\"WidgetSessionSpec\":{\"properties\":{\"expiresAt\":{\"description\":\"Hard session expiry. Tokens never outlive it; after it passes the session\\n transitions to STATE_EXPIRED. Defaults to a server-chosen horizon when\\n unset.\",\"format\":\"date-time\",\"type\":\"string\"},\"pinnedParameters\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Parameters forced onto tool calls made by this session's conversations.\\n A pinned parameter is removed from the tool schema the LLM sees, and its\\n value is always overwritten server-side with the pinned value — so the\\n model cannot be tricked into calling a tool with a different id than the\\n one the session was minted for (e.g. pin \\\"workspaceId\\\" for an OpenAPI\\n tool with a /workspaces/{workspaceId} path). Flows to every objective\\n the session creates. See ToolSetSpec.overlays for binding pinned keys to\\n nested or differently named parameters.\",\"type\":\"object\"},\"subject\":{\"$ref\":\"SubjectAssertion\",\"description\":\"Optional subject assertion — the visitor within the tenant (e.g. their\\n user id in the customer's namespace). Requires `tenant`; a subject\\n asserted without a tenant is rejected with InvalidArgument.\"},\"tenant\":{\"$ref\":\"TenantAssertion\",\"description\":\"Optional tenant assertion — the customer's org/company identifier for the\\n visitor. Upserts the tenant record in the workspace and tags the session\\n and every conversation it creates. Conversation listing at the widget\\n host is scoped to this tenant.\"},\"widgetId\":{\"description\":\"Widget this session is minted against. Accepts the canonical `wgt_…` form\\n or the `external_id:<value>` form.\",\"type\":\"string\"}},\"required\":[\"widgetId\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateOperationMetadata\"},\"secrets\":{\"items\":{\"$ref\":\"CreateWidgetSessionRequest_Secret\"},\"type\":\"array\"},\"spec\":{\"$ref\":\"WidgetSessionSpec\"}},\"required\":[\"spec\"],\"type\":\"object\"}"
+
 func widgetSessionsCommand() *cli.Command {
 	return &cli.Command{
 		Name:                      "widget-sessions",
@@ -21,7 +23,7 @@ func widgetSessionsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List widget sessions",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response."},
@@ -38,8 +40,8 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}, {header: "WIDGET", path: []string{"spec", "widgetId"}}}
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_ACTIVE", "STATE_EXPIRED", "STATE_REVOKED", "STATE_EXHAUSTED"}) {
@@ -96,30 +98,39 @@ func widgetSessionsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Create a widget session",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "metadata", Usage: "JSON document (literal, @file, or - for stdin)"},
-					&cli.StringFlag{Name: "spec", Usage: "Required. JSON document (literal, @file, or - for stdin)"},
-					&cli.StringSliceFlag{Name: "secrets", Usage: "Secrets to attach to the session."},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the operation (e.g., a workflow ID from an external system)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "widget-id", Usage: "Required. Widget this session is minted against. Accepts the canonical `wgt_…` form or the `external_id:<value>` form."},
+					&cli.StringFlag{Name: "tenant", Usage: "Optional tenant assertion — the customer's org/company identifier for the visitor. Upserts the tenant record in the workspace and tags the session and every…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "tenant-id", Usage: "The tenant identifier in the customer's namespace (e.g. \"acme-corp\"). Stored as the tenant record's external_id; stable across requests."},
+					&cli.StringFlag{Name: "tenant-name", Usage: "Optional human-readable name for the tenant. Updates the tenant record's name on every assertion that provides it."},
+					&cli.StringFlag{Name: "subject", Usage: "Optional subject assertion — the visitor within the tenant (e.g. their user id in the customer's namespace). Requires `tenant`; a subject asserted without a…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "subject-id", Usage: "The subject identifier in the customer's namespace (e.g. their user id). Stored as the subject record's external_id; unique within the tenant."},
+					&cli.StringFlag{Name: "subject-name", Usage: "Optional human-readable name for the subject. Updates the subject record's name on every assertion that provides it."},
+					&cli.StringFlag{Name: "expires-at", Usage: "Hard session expiry. Tokens never outlive it; after it passes the session transitions to STATE_EXPIRED. Defaults to a server-chosen horizon when unset. RFC 3339 timestamp."},
+					&cli.StringSliceFlag{Name: "pinned-parameter", Usage: "Parameters forced onto tool calls made by this session's conversations. A pinned parameter is removed from the tool schema the LLM sees, and its value is…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringSliceFlag{Name: "secret", Usage: "Secrets to attach to the session. key=value,... over name, value (repeatable; or a document). NAME=VALUE is also accepted."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 0 {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_missing := []string{}
-					if !cmd.IsSet("spec") {
-						_missing = append(_missing, "--spec")
-					}
-					if len(_missing) > 0 {
-						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
-					}
-					_stdinInputs := []string{cmd.String("metadata"), cmd.String("spec")}
-					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secrets")...)
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("spec"), cmd.String("widget-id"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("pinned-parameter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -127,26 +138,121 @@ func widgetSessionsCommand() *cli.Command {
 					if cmd.IsSet("workspace-id") {
 						values["workspaceId"] = cmd.String("workspace-id")
 					}
-					if cmd.IsSet("metadata") {
-						doc, err := jsonArg("metadata", cmd.String("metadata"))
-						if err != nil {
+					_schema := parseBodySchema(bodySchemaWidgetSessionsCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["metadata"] = doc
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
 					}
 					if cmd.IsSet("spec") {
-						doc, err := jsonArg("spec", cmd.String("spec"))
-						if err != nil {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["spec"] = doc
 					}
-					if cmd.IsSet("secrets") {
-						items, err := jsonSliceArg("secrets", cmd.StringSlice("secrets"))
+					if cmd.IsSet("tenant") {
+						if err := _body.applyDoc("tenant", []string{"spec", "tenant"}, cmd.String("tenant"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("subject") {
+						if err := _body.applyDoc("subject", []string{"spec", "subject"}, cmd.String("subject"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
 						if err != nil {
 							return cli.Exit(err.Error(), 2)
 						}
-						values["secrets"] = items
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("widget-id") {
+						_v, err := stringArg("widget-id", cmd.String("widget-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("widget-id", []string{"spec", "widgetId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("tenant-id") {
+						_v, err := stringArg("tenant-id", cmd.String("tenant-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("tenant-id", []string{"spec", "tenant", "id"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("tenant-name") {
+						_v, err := stringArg("tenant-name", cmd.String("tenant-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("tenant-name", []string{"spec", "tenant", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("subject-id") {
+						_v, err := stringArg("subject-id", cmd.String("subject-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("subject-id", []string{"spec", "subject", "id"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("subject-name") {
+						_v, err := stringArg("subject-name", cmd.String("subject-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("subject-name", []string{"spec", "subject", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("expires-at") {
+						if err := _body.set("expires-at", []string{"spec", "expiresAt"}, cmd.String("expires-at")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("pinned-parameter") {
+						if err := _body.applyEntries("pinned-parameter", []string{"spec", "pinnedParameters"}, cmd.StringSlice("pinned-parameter"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("secret") {
+						if err := _body.applyShorthandItems("secret", []string{"secrets"}, cmd.StringSlice("secret"), shorthandSpec{Fields: []shorthandField{{Wire: "name", Key: "name", Kind: scalarString, Enum: nil, Required: false}, {Wire: "value", Key: "value", Kind: scalarString, Enum: nil, Required: false}}, PairKey: "name", PairValue: "value"}); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.labels": "--label", "metadata.externalId": "--external-id", "spec": "--spec", "spec.widgetId": "--widget-id", "spec.tenant": "--tenant", "spec.tenant.id": "--tenant-id", "spec.tenant.name": "--tenant-name", "spec.subject": "--subject", "spec.subject.id": "--subject-id", "spec.subject.name": "--subject-name", "spec.expiresAt": "--expires-at", "spec.pinnedParameters": "--pinned-parameter", "secrets": "--secret"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if cmd.Bool("dry-run") {
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
 					}
 					var params sdk.WidgetSessionCreateParams
 					if err := decodeParams(values, &params); err != nil {
@@ -168,7 +274,7 @@ func widgetSessionsCommand() *cli.Command {
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Delete all of a tenant's widget sessions",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 					&cli.StringFlag{Name: "tenant-id", Usage: "Tenant whose sessions to delete. Required — an empty value is rejected rather than matching everything. Accepts the canonical `tenant_…` form or the…"},
 				},
@@ -177,11 +283,11 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
-						return cli.Exit("no display columns apply to this command; use --display json", 2)
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
 					values := map[string]any{}
@@ -212,7 +318,7 @@ func widgetSessionsCommand() *cli.Command {
 				Usage:                     "Get a widget session by ID",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -223,8 +329,8 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
@@ -253,7 +359,7 @@ func widgetSessionsCommand() *cli.Command {
 				Usage:                     "Delete a widget session",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -264,10 +370,10 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" {
+					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
@@ -292,7 +398,7 @@ func widgetSessionsCommand() *cli.Command {
 				Usage:                     "Revoke a widget session",
 				ArgsUsage:                 "<id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, table, extended)"},
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -303,8 +409,8 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit("<id> must not be empty", 2)
 					}
 					_display := displayMode(cmd, "table")
-					if !isOneOf(_display, []string{"json", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, table, extended)", _display), 2)
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
