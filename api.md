@@ -460,16 +460,6 @@ Submit feedback for an objective
 ```sh
 cadenya objectives create-feedback <objective-id> [--workspace-id <value>] [--label KEY=VALUE]... [--external-id <value>] [--data-score <value>] [--data-comment <value>] [-f <doc>] [--dry-run]
 ```
-List objective tasks
-
-```sh
-cadenya objectives list-tasks <objective-id> [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--sort-order <value>]
-```
-Get an objective task by ID
-
-```sh
-cadenya objectives retrieve-task <objective-id> <id> [--workspace-id <value>]
-```
 List objective tool calls
 
 ```sh
