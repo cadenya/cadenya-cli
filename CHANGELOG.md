@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/cadenya/cadenya-cli/compare/v1.2.0...v1.2.1) (2026-08-30)
+
+
+### Chores
+
+* assorted updates ([#47](https://github.com/cadenya/cadenya-cli/issues/47)) ([a60ff15](https://github.com/cadenya/cadenya-cli/commit/a60ff15cbccb510ec7d97dcc0e867e4dbf4e92f9))
+
 ## [1.2.0](https://github.com/cadenya/cadenya-cli/compare/v1.1.1...v1.2.0) (2026-08-28)
 
 
