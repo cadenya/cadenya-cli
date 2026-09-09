@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/cadenya/cadenya-cli/compare/v1.2.0...v1.3.0) (2026-09-09)
+
+
+### Features
+
+* add provider credentials and model management commands ([bb99b13](https://github.com/cadenya/cadenya-cli/commit/bb99b1397c8ac1de959ad414bb8c53c787c3360f))
+
+
+### Chores
+
+* assorted updates ([#47](https://github.com/cadenya/cadenya-cli/issues/47)) ([a60ff15](https://github.com/cadenya/cadenya-cli/commit/a60ff15cbccb510ec7d97dcc0e867e4dbf4e92f9))
+
 ## [1.2.0](https://github.com/cadenya/cadenya-cli/compare/v1.1.1...v1.2.0) (2026-08-28)
 
 
