@@ -157,7 +157,7 @@ cadenya agents list [--workspace-id <value>] [--limit <value>] [--cursor <value>
 Create a new agent
 
 ```sh
-cadenya agents create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] --variation-selection-mode <random|weighted> [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--default-variation-name <value>] [--default-variation-external-id <value>] [--default-variation-label KEY=VALUE]... [--default-variation-system-prompt-template <value>] [--default-variation-discovery-max-tools <value>] [--default-variation-discovery-hint <value>]... [--default-variation-constraints-max-tool-calls <value>] [--default-variation-constraints-max-sub-objectives <value>] [--default-variation-constraints-inactivity-timeout <value>] [--default-variation-description <value>] [--default-variation-model-id <value>] [--default-variation-model-temperature <value>] [--default-variation-model-top-p <value>] [--default-variation-model-top-k <value>] [--default-variation-model-stop-sequence <value>]... [--default-variation-model-max-output-tokens <value>] [--default-variation-model-reasoning-effort <none|low|medium|high>] [--default-variation-model-caching-enabled[=true|false]] [--default-variation-compaction-trigger-threshold <value>] [--default-variation-compaction-summarization-instructions <value>] [--default-variation-compaction-tool-result-clearing-preserve-recent-results <value>] [--default-variation-first-user-message-template <value>] [-f <doc>] [--dry-run]
+cadenya agents create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] [--variation-selection-mode <random|weighted>] [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--default-variation-name <value>] [--default-variation-external-id <value>] [--default-variation-label KEY=VALUE]... [--default-variation-system-prompt-template <value>] [--default-variation-discovery-max-tools <value>] [--default-variation-discovery-hint <value>]... [--default-variation-constraints-max-tool-calls <value>] [--default-variation-constraints-max-sub-objectives <value>] [--default-variation-constraints-inactivity-timeout <value>] [--default-variation-description <value>] [--default-variation-model-id <value>] [--default-variation-model-temperature <value>] [--default-variation-model-top-p <value>] [--default-variation-model-top-k <value>] [--default-variation-model-stop-sequence <value>]... [--default-variation-model-max-output-tokens <value>] [--default-variation-model-reasoning-effort <none|low|medium|high>] [--default-variation-model-caching-enabled[=true|false]] [--default-variation-compaction-trigger-threshold <value>] [--default-variation-compaction-summarization-instructions <value>] [--default-variation-compaction-tool-result-clearing-preserve-recent-results <value>] [--default-variation-first-user-message-template <value>] [-f <doc>] [--dry-run]
 ```
 List feedback for an agent
 
@@ -311,12 +311,12 @@ cadenya ai-provider-keys list [--workspace-id <value>] [--limit <value>] [--curs
 Create a new AI provider key
 
 ```sh
-cadenya ai-provider-keys create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--provider <openrouter|openai|anthropic|gemini|openai-compatible>] [--credentials <api-key|headers>] [--api-key <value>] [--header KEY=VALUE]... [--config <openrouter|openai|openai-compatible>] [--openrouter-region <value>] [--openai-organization-id <value>] [--openai-project-id <value>] [--openai-compatible-base-url <value>] [-f <doc>] [--dry-run]
+cadenya ai-provider-keys create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--provider <value>] [--credentials <api-key|headers|google-service-account|aws-access-key>] [--api-key <value>] [--header KEY=VALUE]... [--google-service-account-json <value>] [--aws-access-key-access-key-id <value>] [--aws-access-key-secret-access-key <value>] [--aws-access-key-session-token <value>] [--config <openrouter|openai|openai-compatible|vertex|bedrock>] [--openrouter-region <value>] [--openai-organization-id <value>] [--openai-project-id <value>] [--openai-compatible-base-url <value>] [--vertex-project-id <value>] [--vertex-location <value>] [--bedrock-region <value>] [-f <doc>] [--dry-run]
 ```
 Get an AI provider key by ID
 
 ```sh
-cadenya ai-provider-keys retrieve <id> [--workspace-id <value>]
+cadenya ai-provider-keys retrieve <id> [--workspace-id <value>] [--include-info[=true|false]]
 ```
 Delete an AI provider key
 
@@ -326,7 +326,45 @@ cadenya ai-provider-keys delete <id> [--workspace-id <value>]
 Update an AI provider key
 
 ```sh
-cadenya ai-provider-keys update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--provider <openrouter|openai|anthropic|gemini|openai-compatible>] [--credentials <api-key|headers>] [--api-key <value>] [--header KEY=VALUE]... [--config <openrouter|openai|openai-compatible>] [--openrouter-region <value>] [--openai-organization-id <value>] [--openai-project-id <value>] [--openai-compatible-base-url <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
+cadenya ai-provider-keys update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--provider <value>] [--credentials <api-key|headers|google-service-account|aws-access-key>] [--api-key <value>] [--header KEY=VALUE]... [--google-service-account-json <value>] [--aws-access-key-access-key-id <value>] [--aws-access-key-secret-access-key <value>] [--aws-access-key-session-token <value>] [--config <openrouter|openai|openai-compatible|vertex|bedrock>] [--openrouter-region <value>] [--openai-organization-id <value>] [--openai-project-id <value>] [--openai-compatible-base-url <value>] [--vertex-project-id <value>] [--vertex-location <value>] [--bedrock-region <value>] [--update-mask <value>] [--credential-patch-credentials <api-key|headers|google-service-account|aws-access-key>] [--credential-patch-api-key <value>] [--credential-patch-header KEY=VALUE]... [--credential-patch-google-service-account-json <value>] [--credential-patch-aws-access-key-access-key-id <value>] [--credential-patch-aws-access-key-secret-access-key <value>] [--credential-patch-aws-access-key-session-token <value>] [--credential-patch-clear-field <value>]... [-f <doc>] [--dry-run]
+```
+
+## cadenya models
+
+Create a model
+
+```sh
+cadenya models create <ai-provider-key-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --provider <value> --family <value> --max-input-tokens <value> --max-output-tokens <value> --input-price-per-million-tokens <value> --output-price-per-million-tokens <value> --capability <doc>... --provider-model-id <value> [-f <doc>] [--dry-run]
+```
+List models
+
+```sh
+cadenya models list [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--prefix <value>] [--query <value>] [--state <value>] [--ai-provider-key-id <value>] [--is-assigned[=true|false]] [--labels <value>] [--sort-order <value>] [--include-info[=true|false]]
+```
+Get a model by ID
+
+```sh
+cadenya models retrieve <id> [--workspace-id <value>]
+```
+Update a model
+
+```sh
+cadenya models update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--provider <value>] [--family <value>] [--max-input-tokens <value>] [--max-output-tokens <value>] [--input-price-per-million-tokens <value>] [--output-price-per-million-tokens <value>] [--capability <doc>]... [--provider-model-id <value>] [--pricing-override-input-price-per-million-tokens <value>] [--pricing-override-output-price-per-million-tokens <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
+```
+Disable a model
+
+```sh
+cadenya models disable <id> [--workspace-id <value>]
+```
+Enable a model
+
+```sh
+cadenya models enable <id> [--workspace-id <value>]
+```
+Swap models on agent variations
+
+```sh
+cadenya models swap-on-variations [--workspace-id <value>] [--model-swap k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 
 ## cadenya memory-layers
@@ -383,34 +421,6 @@ Update a memory entry
 
 ```sh
 cadenya memory-layers entries update <memory-layer-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--key <value>] [--description <value>] [--content <value>] [--upload-id <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
-```
-
-## cadenya models
-
-List models
-
-```sh
-cadenya models list [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--prefix <value>] [--query <value>] [--state <value>] [--ai-provider-key-id <value>] [--is-assigned[=true|false]] [--labels <value>] [--sort-order <value>] [--include-info[=true|false]]
-```
-Get a model by ID
-
-```sh
-cadenya models retrieve <id> [--workspace-id <value>]
-```
-Disable a model
-
-```sh
-cadenya models disable <id> [--workspace-id <value>]
-```
-Enable a model
-
-```sh
-cadenya models enable <id> [--workspace-id <value>]
-```
-Swap models on agent variations
-
-```sh
-cadenya models swap-on-variations [--workspace-id <value>] [--model-swap k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 
 ## cadenya objectives

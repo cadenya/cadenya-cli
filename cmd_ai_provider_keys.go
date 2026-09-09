@@ -68,11 +68,17 @@ func aIProviderKeysCommand() *cli.Command {
 					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
 					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
 					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
-					&cli.StringFlag{Name: "provider", Usage: "The AI provider this key authenticates against. One of: openrouter, openai, anthropic, gemini, openai-compatible."},
-					&cli.StringFlag{Name: "credentials", Usage: "The provider credential. Accepted on create/update; never populated in responses (the server returns an empty value to avoid leaking the secret). One of: api-key, headers; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "provider", Usage: "The AI provider this key authenticates against. One of: openrouter, openai, anthropic, gemini, openai-compatible, vertex, bedrock."},
+					&cli.StringFlag{Name: "credentials", Usage: "The provider credential. Accepted on create/update; never populated in responses (the server returns an empty value to avoid leaking the secret). One of: api-key, headers, google-service-account, aws-access-key; inferred from the arm's flags. Or a YAML/JSON document."},
 					&cli.StringFlag{Name: "api-key", Usage: "", Category: "credentials = api-key"},
 					&cli.StringSliceFlag{Name: "header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "credentials = headers"},
-					&cli.StringFlag{Name: "config", Usage: "Non-secret, provider-specific settings (OpenAI org/project, OpenRouter region, OpenAI-compatible base URL). The set case must correspond to `provider`.…. One of: openrouter, openai, openai-compatible; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "google-service-account", Usage: "Google service-account JSON for Vertex AI. The server accepts only the service_account credential type and never writes the JSON to plaintext storage. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "credentials = google-service-account"},
+					&cli.StringFlag{Name: "google-service-account-json", Usage: "", Category: "credentials = google-service-account"},
+					&cli.StringFlag{Name: "aws-access-key", Usage: "AWS access credentials for Bedrock SigV4 authentication. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "credentials = aws-access-key"},
+					&cli.StringFlag{Name: "aws-access-key-access-key-id", Usage: "", Category: "credentials = aws-access-key"},
+					&cli.StringFlag{Name: "aws-access-key-secret-access-key", Usage: "", Category: "credentials = aws-access-key"},
+					&cli.StringFlag{Name: "aws-access-key-session-token", Usage: "", Category: "credentials = aws-access-key"},
+					&cli.StringFlag{Name: "config", Usage: "Non-secret, provider-specific settings (OpenAI org/project, OpenRouter region, OpenAI-compatible base URL, Vertex project/location, or Bedrock Region). The set…. One of: openrouter, openai, openai-compatible, vertex, bedrock; inferred from the arm's flags. Or a YAML/JSON document."},
 					&cli.StringFlag{Name: "openrouter", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openrouter"},
 					&cli.StringFlag{Name: "openrouter-region", Usage: "Data-residency region (e.g. \"us\", \"eu\"). Empty uses the provider default.", Category: "config = openrouter"},
 					&cli.StringFlag{Name: "openai", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openai"},
@@ -80,6 +86,11 @@ func aIProviderKeysCommand() *cli.Command {
 					&cli.StringFlag{Name: "openai-project-id", Usage: "Sent as the OpenAI-Project header when set.", Category: "config = openai"},
 					&cli.StringFlag{Name: "openai-compatible", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openai-compatible"},
 					&cli.StringFlag{Name: "openai-compatible-base-url", Usage: "", Category: "config = openai-compatible"},
+					&cli.StringFlag{Name: "vertex", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = vertex"},
+					&cli.StringFlag{Name: "vertex-project-id", Usage: "", Category: "config = vertex"},
+					&cli.StringFlag{Name: "vertex-location", Usage: "", Category: "config = vertex"},
+					&cli.StringFlag{Name: "bedrock", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = bedrock"},
+					&cli.StringFlag{Name: "bedrock-region", Usage: "", Category: "config = bedrock"},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -93,7 +104,7 @@ func aIProviderKeysCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("credentials"), cmd.String("api-key"), cmd.String("config"), cmd.String("openrouter"), cmd.String("openrouter-region"), cmd.String("openai"), cmd.String("openai-organization-id"), cmd.String("openai-project-id"), cmd.String("openai-compatible"), cmd.String("openai-compatible-base-url")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("credentials"), cmd.String("api-key"), cmd.String("google-service-account"), cmd.String("google-service-account-json"), cmd.String("aws-access-key"), cmd.String("aws-access-key-access-key-id"), cmd.String("aws-access-key-secret-access-key"), cmd.String("aws-access-key-session-token"), cmd.String("config"), cmd.String("openrouter"), cmd.String("openrouter-region"), cmd.String("openai"), cmd.String("openai-organization-id"), cmd.String("openai-project-id"), cmd.String("openai-compatible"), cmd.String("openai-compatible-base-url"), cmd.String("vertex"), cmd.String("vertex-project-id"), cmd.String("vertex-location"), cmd.String("bedrock"), cmd.String("bedrock-region")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("header")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
@@ -125,6 +136,7 @@ func aIProviderKeysCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace the key belongs to."},
+					&cli.BoolFlag{Name: "include-info", Usage: "When true, populate info (model counts, promotional status, model management), at the cost of extra lookups."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() != 1 {
@@ -202,11 +214,17 @@ func aIProviderKeysCommand() *cli.Command {
 					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
 					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
 					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
-					&cli.StringFlag{Name: "provider", Usage: "The AI provider this key authenticates against. One of: openrouter, openai, anthropic, gemini, openai-compatible."},
-					&cli.StringFlag{Name: "credentials", Usage: "The provider credential. Accepted on create/update; never populated in responses (the server returns an empty value to avoid leaking the secret). One of: api-key, headers; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "provider", Usage: "The AI provider this key authenticates against. One of: openrouter, openai, anthropic, gemini, openai-compatible, vertex, bedrock."},
+					&cli.StringFlag{Name: "credentials", Usage: "The provider credential. Accepted on create/update; never populated in responses (the server returns an empty value to avoid leaking the secret). One of: api-key, headers, google-service-account, aws-access-key; inferred from the arm's flags. Or a YAML/JSON document."},
 					&cli.StringFlag{Name: "api-key", Usage: "", Category: "credentials = api-key"},
 					&cli.StringSliceFlag{Name: "header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "credentials = headers"},
-					&cli.StringFlag{Name: "config", Usage: "Non-secret, provider-specific settings (OpenAI org/project, OpenRouter region, OpenAI-compatible base URL). The set case must correspond to `provider`.…. One of: openrouter, openai, openai-compatible; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "google-service-account", Usage: "Google service-account JSON for Vertex AI. The server accepts only the service_account credential type and never writes the JSON to plaintext storage. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "credentials = google-service-account"},
+					&cli.StringFlag{Name: "google-service-account-json", Usage: "", Category: "credentials = google-service-account"},
+					&cli.StringFlag{Name: "aws-access-key", Usage: "AWS access credentials for Bedrock SigV4 authentication. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "credentials = aws-access-key"},
+					&cli.StringFlag{Name: "aws-access-key-access-key-id", Usage: "", Category: "credentials = aws-access-key"},
+					&cli.StringFlag{Name: "aws-access-key-secret-access-key", Usage: "", Category: "credentials = aws-access-key"},
+					&cli.StringFlag{Name: "aws-access-key-session-token", Usage: "", Category: "credentials = aws-access-key"},
+					&cli.StringFlag{Name: "config", Usage: "Non-secret, provider-specific settings (OpenAI org/project, OpenRouter region, OpenAI-compatible base URL, Vertex project/location, or Bedrock Region). The set…. One of: openrouter, openai, openai-compatible, vertex, bedrock; inferred from the arm's flags. Or a YAML/JSON document."},
 					&cli.StringFlag{Name: "openrouter", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openrouter"},
 					&cli.StringFlag{Name: "openrouter-region", Usage: "Data-residency region (e.g. \"us\", \"eu\"). Empty uses the provider default.", Category: "config = openrouter"},
 					&cli.StringFlag{Name: "openai", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openai"},
@@ -214,7 +232,23 @@ func aIProviderKeysCommand() *cli.Command {
 					&cli.StringFlag{Name: "openai-project-id", Usage: "Sent as the OpenAI-Project header when set.", Category: "config = openai"},
 					&cli.StringFlag{Name: "openai-compatible", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = openai-compatible"},
 					&cli.StringFlag{Name: "openai-compatible-base-url", Usage: "", Category: "config = openai-compatible"},
+					&cli.StringFlag{Name: "vertex", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = vertex"},
+					&cli.StringFlag{Name: "vertex-project-id", Usage: "", Category: "config = vertex"},
+					&cli.StringFlag{Name: "vertex-location", Usage: "", Category: "config = vertex"},
+					&cli.StringFlag{Name: "bedrock", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = bedrock"},
+					&cli.StringFlag{Name: "bedrock-region", Usage: "", Category: "config = bedrock"},
 					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update."},
+					&cli.StringFlag{Name: "credential-patch", Usage: "Field-level credential changes. This is independent of update_mask; legacy clients may continue replacing spec.credentials atomically. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "credential-patch-credentials", Usage: "One of: api-key, headers, google-service-account, aws-access-key; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "credential-patch-api-key", Usage: "", Category: "credential-patch-credentials = api-key"},
+					&cli.StringSliceFlag{Name: "credential-patch-header", Usage: "KEY=VALUE (repeatable; or a document).", Category: "credential-patch-credentials = headers"},
+					&cli.StringFlag{Name: "credential-patch-google-service-account", Usage: "Google service-account JSON for Vertex AI. The server accepts only the service_account credential type and never writes the JSON to plaintext storage. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "credential-patch-credentials = google-service-account"},
+					&cli.StringFlag{Name: "credential-patch-google-service-account-json", Usage: "", Category: "credential-patch-credentials = google-service-account"},
+					&cli.StringFlag{Name: "credential-patch-aws-access-key", Usage: "AWS access credentials for Bedrock SigV4 authentication. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "credential-patch-credentials = aws-access-key"},
+					&cli.StringFlag{Name: "credential-patch-aws-access-key-access-key-id", Usage: "", Category: "credential-patch-credentials = aws-access-key"},
+					&cli.StringFlag{Name: "credential-patch-aws-access-key-secret-access-key", Usage: "", Category: "credential-patch-credentials = aws-access-key"},
+					&cli.StringFlag{Name: "credential-patch-aws-access-key-session-token", Usage: "", Category: "credential-patch-credentials = aws-access-key"},
+					&cli.StringSliceFlag{Name: "credential-patch-clear-field", Usage: "Repeatable."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -231,9 +265,10 @@ func aIProviderKeysCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("credentials"), cmd.String("api-key"), cmd.String("config"), cmd.String("openrouter"), cmd.String("openrouter-region"), cmd.String("openai"), cmd.String("openai-organization-id"), cmd.String("openai-project-id"), cmd.String("openai-compatible"), cmd.String("openai-compatible-base-url"), cmd.String("update-mask")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("credentials"), cmd.String("api-key"), cmd.String("google-service-account"), cmd.String("google-service-account-json"), cmd.String("aws-access-key"), cmd.String("aws-access-key-access-key-id"), cmd.String("aws-access-key-secret-access-key"), cmd.String("aws-access-key-session-token"), cmd.String("config"), cmd.String("openrouter"), cmd.String("openrouter-region"), cmd.String("openai"), cmd.String("openai-organization-id"), cmd.String("openai-project-id"), cmd.String("openai-compatible"), cmd.String("openai-compatible-base-url"), cmd.String("vertex"), cmd.String("vertex-project-id"), cmd.String("vertex-location"), cmd.String("bedrock"), cmd.String("bedrock-region"), cmd.String("update-mask"), cmd.String("credential-patch"), cmd.String("credential-patch-credentials"), cmd.String("credential-patch-api-key"), cmd.String("credential-patch-google-service-account"), cmd.String("credential-patch-google-service-account-json"), cmd.String("credential-patch-aws-access-key"), cmd.String("credential-patch-aws-access-key-access-key-id"), cmd.String("credential-patch-aws-access-key-secret-access-key"), cmd.String("credential-patch-aws-access-key-session-token")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("credential-patch-header")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}

@@ -7,7 +7,7 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
-const bodySchemaAIProviderKeysUpdate = "{\"$defs\":{\"AIProviderConfig\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"AIProviderConfig_Openrouter\"},{\"$ref\":\"AIProviderConfig_Openai\"},{\"$ref\":\"AIProviderConfig_OpenaiCompatible\"}]},\"AIProviderConfig_Openai\":{\"properties\":{\"openai\":{\"$ref\":\"OpenAIConfig\"},\"type\":{\"const\":\"openai\"}},\"required\":[\"type\",\"openai\"],\"type\":\"object\"},\"AIProviderConfig_OpenaiCompatible\":{\"properties\":{\"openaiCompatible\":{\"$ref\":\"OpenAICompatibleConfig\"},\"type\":{\"const\":\"openaiCompatible\"}},\"required\":[\"type\",\"openaiCompatible\"],\"type\":\"object\"},\"AIProviderConfig_Openrouter\":{\"properties\":{\"openrouter\":{\"$ref\":\"OpenRouterConfig\"},\"type\":{\"const\":\"openrouter\"}},\"required\":[\"type\",\"openrouter\"],\"type\":\"object\"},\"AIProviderCredential\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"AIProviderCredential_ApiKey\"},{\"$ref\":\"AIProviderCredential_Headers\"}]},\"AIProviderCredential_ApiKey\":{\"properties\":{\"apiKey\":{\"$ref\":\"CredentialAPIKey\",\"description\":\"Single API key (OpenRouter, OpenAI, Anthropic, Gemini, and most others).\"},\"type\":{\"const\":\"apiKey\"}},\"required\":[\"type\",\"apiKey\"],\"type\":\"object\"},\"AIProviderCredential_Headers\":{\"properties\":{\"headers\":{\"$ref\":\"CredentialHeaders\",\"description\":\"Arbitrary auth headers, for generic endpoints that authenticate with a\\n custom header rather than a bearer key (pairs with the OpenAI-compatible\\n provider).\"},\"type\":{\"const\":\"headers\"}},\"required\":[\"type\",\"headers\"],\"type\":\"object\"},\"AIProviderKeySpec\":{\"properties\":{\"config\":{\"$ref\":\"AIProviderConfig\",\"description\":\"Non-secret, provider-specific settings (OpenAI org/project, OpenRouter\\n region, OpenAI-compatible base URL). The set case must correspond to\\n `provider`. Returned on reads. Optional: omit to accept provider defaults.\"},\"credentials\":{\"$ref\":\"AIProviderCredential\",\"description\":\"The provider credential. Accepted on create/update; never populated in\\n responses (the server returns an empty value to avoid leaking the secret).\"},\"provider\":{\"$ref\":\"AiProviderKeySpecProvider\",\"description\":\"The AI provider this key authenticates against.\"}},\"type\":\"object\"},\"AiProviderKeySpecProvider\":{\"enum\":[\"AI_PROVIDER_OPENROUTER\",\"AI_PROVIDER_OPENAI\",\"AI_PROVIDER_ANTHROPIC\",\"AI_PROVIDER_GEMINI\",\"AI_PROVIDER_OPENAI_COMPATIBLE\"],\"enumShort\":{\"anthropic\":\"AI_PROVIDER_ANTHROPIC\",\"gemini\":\"AI_PROVIDER_GEMINI\",\"openai\":\"AI_PROVIDER_OPENAI\",\"openai-compatible\":\"AI_PROVIDER_OPENAI_COMPATIBLE\",\"openrouter\":\"AI_PROVIDER_OPENROUTER\"},\"type\":\"string\"},\"CredentialAPIKey\":{\"properties\":{\"apiKey\":{\"type\":\"string\"}},\"type\":\"object\"},\"CredentialHeaders\":{\"properties\":{\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"}},\"type\":\"object\"},\"OpenAICompatibleConfig\":{\"properties\":{\"baseUrl\":{\"type\":\"string\"}},\"required\":[\"baseUrl\"],\"type\":\"object\"},\"OpenAIConfig\":{\"properties\":{\"organizationId\":{\"description\":\"Sent as the OpenAI-Organization header when set.\",\"type\":\"string\"},\"projectId\":{\"description\":\"Sent as the OpenAI-Project header when set.\",\"type\":\"string\"}},\"type\":\"object\"},\"OpenRouterConfig\":{\"properties\":{\"region\":{\"description\":\"Data-residency region (e.g. \\\"us\\\", \\\"eu\\\"). Empty uses the provider default.\",\"type\":\"string\"}},\"type\":\"object\"},\"UpdateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"UpdateResourceMetadata\"},\"spec\":{\"$ref\":\"AIProviderKeySpec\"},\"updateMask\":{\"type\":\"string\"}},\"type\":\"object\"}"
+const bodySchemaAIProviderKeysUpdate = "{\"$defs\":{\"AIProviderConfig\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"AIProviderConfig_Openrouter\"},{\"$ref\":\"AIProviderConfig_Openai\"},{\"$ref\":\"AIProviderConfig_OpenaiCompatible\"},{\"$ref\":\"AIProviderConfig_Vertex\"},{\"$ref\":\"AIProviderConfig_Bedrock\"}]},\"AIProviderConfig_Bedrock\":{\"properties\":{\"bedrock\":{\"$ref\":\"BedrockConfig\"},\"type\":{\"const\":\"bedrock\"}},\"required\":[\"type\",\"bedrock\"],\"type\":\"object\"},\"AIProviderConfig_Openai\":{\"properties\":{\"openai\":{\"$ref\":\"OpenAIConfig\"},\"type\":{\"const\":\"openai\"}},\"required\":[\"type\",\"openai\"],\"type\":\"object\"},\"AIProviderConfig_OpenaiCompatible\":{\"properties\":{\"openaiCompatible\":{\"$ref\":\"OpenAICompatibleConfig\"},\"type\":{\"const\":\"openaiCompatible\"}},\"required\":[\"type\",\"openaiCompatible\"],\"type\":\"object\"},\"AIProviderConfig_Openrouter\":{\"properties\":{\"openrouter\":{\"$ref\":\"OpenRouterConfig\"},\"type\":{\"const\":\"openrouter\"}},\"required\":[\"type\",\"openrouter\"],\"type\":\"object\"},\"AIProviderConfig_Vertex\":{\"properties\":{\"type\":{\"const\":\"vertex\"},\"vertex\":{\"$ref\":\"VertexConfig\"}},\"required\":[\"type\",\"vertex\"],\"type\":\"object\"},\"AIProviderCredential\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"AIProviderCredential_ApiKey\"},{\"$ref\":\"AIProviderCredential_Headers\"},{\"$ref\":\"AIProviderCredential_GoogleServiceAccount\"},{\"$ref\":\"AIProviderCredential_AwsAccessKey\"}]},\"AIProviderCredentialPatch\":{\"properties\":{\"clearFields\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"},\"credentials\":{\"$ref\":\"AIProviderCredential\"}},\"type\":\"object\"},\"AIProviderCredential_ApiKey\":{\"properties\":{\"apiKey\":{\"$ref\":\"CredentialAPIKey\",\"description\":\"Single API key (OpenRouter, OpenAI, Anthropic, Gemini, and most others).\"},\"type\":{\"const\":\"apiKey\"}},\"required\":[\"type\",\"apiKey\"],\"type\":\"object\"},\"AIProviderCredential_AwsAccessKey\":{\"properties\":{\"awsAccessKey\":{\"$ref\":\"CredentialAWSAccessKey\",\"description\":\"AWS access credentials for Bedrock SigV4 authentication.\"},\"type\":{\"const\":\"awsAccessKey\"}},\"required\":[\"type\",\"awsAccessKey\"],\"type\":\"object\"},\"AIProviderCredential_GoogleServiceAccount\":{\"properties\":{\"googleServiceAccount\":{\"$ref\":\"CredentialGoogleServiceAccount\",\"description\":\"Google service-account JSON for Vertex AI. The server accepts only the\\n service_account credential type and never writes the JSON to plaintext\\n storage.\"},\"type\":{\"const\":\"googleServiceAccount\"}},\"required\":[\"type\",\"googleServiceAccount\"],\"type\":\"object\"},\"AIProviderCredential_Headers\":{\"properties\":{\"headers\":{\"$ref\":\"CredentialHeaders\",\"description\":\"Arbitrary auth headers, for generic endpoints that authenticate with a\\n custom header rather than a bearer key (pairs with the OpenAI-compatible\\n provider).\"},\"type\":{\"const\":\"headers\"}},\"required\":[\"type\",\"headers\"],\"type\":\"object\"},\"AIProviderKeySpec\":{\"properties\":{\"config\":{\"$ref\":\"AIProviderConfig\",\"description\":\"Non-secret, provider-specific settings (OpenAI org/project, OpenRouter\\n region, OpenAI-compatible base URL, Vertex project/location, or Bedrock\\n Region). The set case must correspond to `provider`. Returned on reads.\\n Optional for providers that have usable defaults.\"},\"credentials\":{\"$ref\":\"AIProviderCredential\",\"description\":\"The provider credential. Accepted on create/update; never populated in\\n responses (the server returns an empty value to avoid leaking the secret).\"},\"provider\":{\"$ref\":\"AiProviderKeySpecProvider\",\"description\":\"The AI provider this key authenticates against.\"}},\"type\":\"object\"},\"AiProviderKeySpecProvider\":{\"enum\":[\"AI_PROVIDER_OPENROUTER\",\"AI_PROVIDER_OPENAI\",\"AI_PROVIDER_ANTHROPIC\",\"AI_PROVIDER_GEMINI\",\"AI_PROVIDER_OPENAI_COMPATIBLE\",\"AI_PROVIDER_VERTEX\",\"AI_PROVIDER_BEDROCK\"],\"enumShort\":{\"anthropic\":\"AI_PROVIDER_ANTHROPIC\",\"bedrock\":\"AI_PROVIDER_BEDROCK\",\"gemini\":\"AI_PROVIDER_GEMINI\",\"openai\":\"AI_PROVIDER_OPENAI\",\"openai-compatible\":\"AI_PROVIDER_OPENAI_COMPATIBLE\",\"openrouter\":\"AI_PROVIDER_OPENROUTER\",\"vertex\":\"AI_PROVIDER_VERTEX\"},\"type\":\"string\"},\"BedrockConfig\":{\"properties\":{\"region\":{\"type\":\"string\"}},\"type\":\"object\"},\"CredentialAPIKey\":{\"properties\":{\"apiKey\":{\"type\":\"string\"}},\"type\":\"object\"},\"CredentialAWSAccessKey\":{\"properties\":{\"accessKeyId\":{\"type\":\"string\"},\"secretAccessKey\":{\"type\":\"string\"},\"sessionToken\":{\"type\":\"string\"}},\"type\":\"object\"},\"CredentialGoogleServiceAccount\":{\"properties\":{\"json\":{\"type\":\"string\"}},\"type\":\"object\"},\"CredentialHeaders\":{\"properties\":{\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"}},\"type\":\"object\"},\"OpenAICompatibleConfig\":{\"properties\":{\"baseUrl\":{\"type\":\"string\"}},\"required\":[\"baseUrl\"],\"type\":\"object\"},\"OpenAIConfig\":{\"properties\":{\"organizationId\":{\"description\":\"Sent as the OpenAI-Organization header when set.\",\"type\":\"string\"},\"projectId\":{\"description\":\"Sent as the OpenAI-Project header when set.\",\"type\":\"string\"}},\"type\":\"object\"},\"OpenRouterConfig\":{\"properties\":{\"region\":{\"description\":\"Data-residency region (e.g. \\\"us\\\", \\\"eu\\\"). Empty uses the provider default.\",\"type\":\"string\"}},\"type\":\"object\"},\"UpdateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"VertexConfig\":{\"properties\":{\"location\":{\"type\":\"string\"},\"projectId\":{\"type\":\"string\"}},\"type\":\"object\"}},\"properties\":{\"credentialPatch\":{\"$ref\":\"AIProviderCredentialPatch\"},\"metadata\":{\"$ref\":\"UpdateResourceMetadata\"},\"spec\":{\"$ref\":\"AIProviderKeySpec\"},\"updateMask\":{\"type\":\"string\"}},\"type\":\"object\"}"
 
 // AIProviderKeysUpdateConversion is the typed request produced from one urfave command.
 type AIProviderKeysUpdateConversion struct {
@@ -41,12 +41,22 @@ func ConvertAIProviderKeysUpdate(cmd *cli.Command, out *AIProviderKeysUpdateConv
 		}
 	}
 	if cmd.IsSet("credentials") {
-		if err := _body.applyUnionFlag(unionSpec{Flag: "credentials", Path: []string{"spec", "credentials"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "apiKey", Keys: []string{"apiKey"}, Init: []string{"apiKey"}}, {Tag: "headers", Keys: []string{"headers"}, Init: []string{"headers"}}}}, cmd.String("credentials"), _schema, _strict); err != nil {
+		if err := _body.applyUnionFlag(unionSpec{Flag: "credentials", Path: []string{"spec", "credentials"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "apiKey", Keys: []string{"apiKey"}, Init: []string{"apiKey"}}, {Tag: "headers", Keys: []string{"headers"}, Init: []string{"headers"}}, {Tag: "googleServiceAccount", Keys: []string{"googleServiceAccount"}, Init: []string{"googleServiceAccount"}}, {Tag: "awsAccessKey", Keys: []string{"awsAccessKey"}, Init: []string{"awsAccessKey"}}}}, cmd.String("credentials"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("google-service-account") {
+		if err := _body.applyDoc("google-service-account", []string{"spec", "credentials", "googleServiceAccount"}, cmd.String("google-service-account"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("aws-access-key") {
+		if err := _body.applyDoc("aws-access-key", []string{"spec", "credentials", "awsAccessKey"}, cmd.String("aws-access-key"), _schema, _strict); err != nil {
 			return cli.Exit(err.Error(), 2)
 		}
 	}
 	if cmd.IsSet("config") {
-		if err := _body.applyUnionFlag(unionSpec{Flag: "config", Path: []string{"spec", "config"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "openrouter", Keys: []string{"openrouter"}, Init: []string{"openrouter"}}, {Tag: "openai", Keys: []string{"openai"}, Init: []string{"openai"}}, {Tag: "openaiCompatible", Keys: []string{"openaiCompatible"}, Init: []string{"openaiCompatible"}}}}, cmd.String("config"), _schema, _strict); err != nil {
+		if err := _body.applyUnionFlag(unionSpec{Flag: "config", Path: []string{"spec", "config"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "openrouter", Keys: []string{"openrouter"}, Init: []string{"openrouter"}}, {Tag: "openai", Keys: []string{"openai"}, Init: []string{"openai"}}, {Tag: "openaiCompatible", Keys: []string{"openaiCompatible"}, Init: []string{"openaiCompatible"}}, {Tag: "vertex", Keys: []string{"vertex"}, Init: []string{"vertex"}}, {Tag: "bedrock", Keys: []string{"bedrock"}, Init: []string{"bedrock"}}}}, cmd.String("config"), _schema, _strict); err != nil {
 			return cli.Exit(err.Error(), 2)
 		}
 	}
@@ -62,6 +72,36 @@ func ConvertAIProviderKeysUpdate(cmd *cli.Command, out *AIProviderKeysUpdateConv
 	}
 	if cmd.IsSet("openai-compatible") {
 		if err := _body.applyDoc("openai-compatible", []string{"spec", "config", "openaiCompatible"}, cmd.String("openai-compatible"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("vertex") {
+		if err := _body.applyDoc("vertex", []string{"spec", "config", "vertex"}, cmd.String("vertex"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("bedrock") {
+		if err := _body.applyDoc("bedrock", []string{"spec", "config", "bedrock"}, cmd.String("bedrock"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch") {
+		if err := _body.applyDoc("credential-patch", []string{"credentialPatch"}, cmd.String("credential-patch"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch-credentials") {
+		if err := _body.applyUnionFlag(unionSpec{Flag: "credential-patch-credentials", Path: []string{"credentialPatch", "credentials"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "apiKey", Keys: []string{"apiKey"}, Init: []string{"apiKey"}}, {Tag: "headers", Keys: []string{"headers"}, Init: []string{"headers"}}, {Tag: "googleServiceAccount", Keys: []string{"googleServiceAccount"}, Init: []string{"googleServiceAccount"}}, {Tag: "awsAccessKey", Keys: []string{"awsAccessKey"}, Init: []string{"awsAccessKey"}}}}, cmd.String("credential-patch-credentials"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch-google-service-account") {
+		if err := _body.applyDoc("credential-patch-google-service-account", []string{"credentialPatch", "credentials", "googleServiceAccount"}, cmd.String("credential-patch-google-service-account"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch-aws-access-key") {
+		if err := _body.applyDoc("credential-patch-aws-access-key", []string{"credentialPatch", "credentials", "awsAccessKey"}, cmd.String("credential-patch-aws-access-key"), _schema, _strict); err != nil {
 			return cli.Exit(err.Error(), 2)
 		}
 	}
@@ -89,7 +129,7 @@ func ConvertAIProviderKeysUpdate(cmd *cli.Command, out *AIProviderKeysUpdateConv
 		}
 	}
 	if cmd.IsSet("provider") {
-		_v, err := enumSpec{Values: []string{"AI_PROVIDER_OPENROUTER", "AI_PROVIDER_OPENAI", "AI_PROVIDER_ANTHROPIC", "AI_PROVIDER_GEMINI", "AI_PROVIDER_OPENAI_COMPATIBLE"}, Short: []string{"openrouter", "openai", "anthropic", "gemini", "openai-compatible"}}.parse("provider", cmd.String("provider"))
+		_v, err := enumSpec{Values: []string{"AI_PROVIDER_OPENROUTER", "AI_PROVIDER_OPENAI", "AI_PROVIDER_ANTHROPIC", "AI_PROVIDER_GEMINI", "AI_PROVIDER_OPENAI_COMPATIBLE", "AI_PROVIDER_VERTEX", "AI_PROVIDER_BEDROCK"}, Short: []string{"openrouter", "openai", "anthropic", "gemini", "openai-compatible", "vertex", "bedrock"}}.parse("provider", cmd.String("provider"))
 		if err != nil {
 			return cli.Exit(err.Error(), 2)
 		}
@@ -108,6 +148,42 @@ func ConvertAIProviderKeysUpdate(cmd *cli.Command, out *AIProviderKeysUpdateConv
 	}
 	if cmd.IsSet("header") {
 		if err := _body.applyEntries("header", []string{"spec", "credentials", "headers", "headers"}, cmd.StringSlice("header"), scalarString, nil); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("google-service-account-json") {
+		_v, err := stringArg("google-service-account-json", cmd.String("google-service-account-json"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("google-service-account-json", []string{"spec", "credentials", "googleServiceAccount", "json"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("aws-access-key-access-key-id") {
+		_v, err := stringArg("aws-access-key-access-key-id", cmd.String("aws-access-key-access-key-id"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("aws-access-key-access-key-id", []string{"spec", "credentials", "awsAccessKey", "accessKeyId"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("aws-access-key-secret-access-key") {
+		_v, err := stringArg("aws-access-key-secret-access-key", cmd.String("aws-access-key-secret-access-key"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("aws-access-key-secret-access-key", []string{"spec", "credentials", "awsAccessKey", "secretAccessKey"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("aws-access-key-session-token") {
+		_v, err := stringArg("aws-access-key-session-token", cmd.String("aws-access-key-session-token"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("aws-access-key-session-token", []string{"spec", "credentials", "awsAccessKey", "sessionToken"}, _v); err != nil {
 			return cli.Exit(err.Error(), 2)
 		}
 	}
@@ -147,6 +223,33 @@ func ConvertAIProviderKeysUpdate(cmd *cli.Command, out *AIProviderKeysUpdateConv
 			return cli.Exit(err.Error(), 2)
 		}
 	}
+	if cmd.IsSet("vertex-project-id") {
+		_v, err := stringArg("vertex-project-id", cmd.String("vertex-project-id"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("vertex-project-id", []string{"spec", "config", "vertex", "projectId"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("vertex-location") {
+		_v, err := stringArg("vertex-location", cmd.String("vertex-location"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("vertex-location", []string{"spec", "config", "vertex", "location"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("bedrock-region") {
+		_v, err := stringArg("bedrock-region", cmd.String("bedrock-region"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("bedrock-region", []string{"spec", "config", "bedrock", "region"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
 	if cmd.IsSet("update-mask") {
 		_v, err := stringArg("update-mask", cmd.String("update-mask"))
 		if err != nil {
@@ -156,10 +259,68 @@ func ConvertAIProviderKeysUpdate(cmd *cli.Command, out *AIProviderKeysUpdateConv
 			return cli.Exit(err.Error(), 2)
 		}
 	}
-	if err := _body.resolveUnion(unionSpec{Flag: "credentials", Path: []string{"spec", "credentials"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "apiKey", Keys: []string{"apiKey"}, Init: []string{"apiKey"}}, {Tag: "headers", Keys: []string{"headers"}, Init: []string{"headers"}}}}); err != nil {
+	if cmd.IsSet("credential-patch-api-key") {
+		_v, err := stringArg("credential-patch-api-key", cmd.String("credential-patch-api-key"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("credential-patch-api-key", []string{"credentialPatch", "credentials", "apiKey", "apiKey"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch-header") {
+		if err := _body.applyEntries("credential-patch-header", []string{"credentialPatch", "credentials", "headers", "headers"}, cmd.StringSlice("credential-patch-header"), scalarString, nil); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch-google-service-account-json") {
+		_v, err := stringArg("credential-patch-google-service-account-json", cmd.String("credential-patch-google-service-account-json"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("credential-patch-google-service-account-json", []string{"credentialPatch", "credentials", "googleServiceAccount", "json"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch-aws-access-key-access-key-id") {
+		_v, err := stringArg("credential-patch-aws-access-key-access-key-id", cmd.String("credential-patch-aws-access-key-access-key-id"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("credential-patch-aws-access-key-access-key-id", []string{"credentialPatch", "credentials", "awsAccessKey", "accessKeyId"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch-aws-access-key-secret-access-key") {
+		_v, err := stringArg("credential-patch-aws-access-key-secret-access-key", cmd.String("credential-patch-aws-access-key-secret-access-key"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("credential-patch-aws-access-key-secret-access-key", []string{"credentialPatch", "credentials", "awsAccessKey", "secretAccessKey"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch-aws-access-key-session-token") {
+		_v, err := stringArg("credential-patch-aws-access-key-session-token", cmd.String("credential-patch-aws-access-key-session-token"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("credential-patch-aws-access-key-session-token", []string{"credentialPatch", "credentials", "awsAccessKey", "sessionToken"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("credential-patch-clear-field") {
+		if err := _body.applyScalarItems("credential-patch-clear-field", []string{"credentialPatch", "clearFields"}, cmd.StringSlice("credential-patch-clear-field"), scalarString, nil); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if err := _body.resolveUnion(unionSpec{Flag: "credentials", Path: []string{"spec", "credentials"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "apiKey", Keys: []string{"apiKey"}, Init: []string{"apiKey"}}, {Tag: "headers", Keys: []string{"headers"}, Init: []string{"headers"}}, {Tag: "googleServiceAccount", Keys: []string{"googleServiceAccount"}, Init: []string{"googleServiceAccount"}}, {Tag: "awsAccessKey", Keys: []string{"awsAccessKey"}, Init: []string{"awsAccessKey"}}}}); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}
-	if err := _body.resolveUnion(unionSpec{Flag: "config", Path: []string{"spec", "config"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "openrouter", Keys: []string{"openrouter"}, Init: []string{"openrouter"}}, {Tag: "openai", Keys: []string{"openai"}, Init: []string{"openai"}}, {Tag: "openaiCompatible", Keys: []string{"openaiCompatible"}, Init: []string{"openaiCompatible"}}}}); err != nil {
+	if err := _body.resolveUnion(unionSpec{Flag: "config", Path: []string{"spec", "config"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "openrouter", Keys: []string{"openrouter"}, Init: []string{"openrouter"}}, {Tag: "openai", Keys: []string{"openai"}, Init: []string{"openai"}}, {Tag: "openaiCompatible", Keys: []string{"openaiCompatible"}, Init: []string{"openaiCompatible"}}, {Tag: "vertex", Keys: []string{"vertex"}, Init: []string{"vertex"}}, {Tag: "bedrock", Keys: []string{"bedrock"}, Init: []string{"bedrock"}}}}); err != nil {
+		return cli.Exit(err.Error(), 2)
+	}
+	if err := _body.resolveUnion(unionSpec{Flag: "credential-patch-credentials", Path: []string{"credentialPatch", "credentials"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "apiKey", Keys: []string{"apiKey"}, Init: []string{"apiKey"}}, {Tag: "headers", Keys: []string{"headers"}, Init: []string{"headers"}}, {Tag: "googleServiceAccount", Keys: []string{"googleServiceAccount"}, Init: []string{"googleServiceAccount"}}, {Tag: "awsAccessKey", Keys: []string{"awsAccessKey"}, Init: []string{"awsAccessKey"}}}}); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}
 	// A partial update names the paths it changes; a mask supplied
@@ -169,7 +330,7 @@ func ConvertAIProviderKeysUpdate(cmd *cli.Command, out *AIProviderKeysUpdateConv
 			_ = _body.set("update-mask", []string{"updateMask"}, _mask)
 		}
 	}
-	if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.provider": "--provider", "spec.credentials": "--credentials", "spec.credentials.apiKey.apiKey": "--api-key", "spec.credentials.headers.headers": "--header", "spec.config": "--config", "spec.config.openrouter": "--openrouter", "spec.config.openrouter.region": "--openrouter-region", "spec.config.openai": "--openai", "spec.config.openai.organizationId": "--openai-organization-id", "spec.config.openai.projectId": "--openai-project-id", "spec.config.openaiCompatible": "--openai-compatible", "spec.config.openaiCompatible.baseUrl": "--openai-compatible-base-url", "updateMask": "--update-mask"}, _strict); err != nil {
+	if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.provider": "--provider", "spec.credentials": "--credentials", "spec.credentials.apiKey.apiKey": "--api-key", "spec.credentials.headers.headers": "--header", "spec.credentials.googleServiceAccount": "--google-service-account", "spec.credentials.googleServiceAccount.json": "--google-service-account-json", "spec.credentials.awsAccessKey": "--aws-access-key", "spec.credentials.awsAccessKey.accessKeyId": "--aws-access-key-access-key-id", "spec.credentials.awsAccessKey.secretAccessKey": "--aws-access-key-secret-access-key", "spec.credentials.awsAccessKey.sessionToken": "--aws-access-key-session-token", "spec.config": "--config", "spec.config.openrouter": "--openrouter", "spec.config.openrouter.region": "--openrouter-region", "spec.config.openai": "--openai", "spec.config.openai.organizationId": "--openai-organization-id", "spec.config.openai.projectId": "--openai-project-id", "spec.config.openaiCompatible": "--openai-compatible", "spec.config.openaiCompatible.baseUrl": "--openai-compatible-base-url", "spec.config.vertex": "--vertex", "spec.config.vertex.projectId": "--vertex-project-id", "spec.config.vertex.location": "--vertex-location", "spec.config.bedrock": "--bedrock", "spec.config.bedrock.region": "--bedrock-region", "updateMask": "--update-mask", "credentialPatch": "--credential-patch", "credentialPatch.credentials": "--credential-patch-credentials", "credentialPatch.credentials.apiKey.apiKey": "--credential-patch-api-key", "credentialPatch.credentials.headers.headers": "--credential-patch-header", "credentialPatch.credentials.googleServiceAccount": "--credential-patch-google-service-account", "credentialPatch.credentials.googleServiceAccount.json": "--credential-patch-google-service-account-json", "credentialPatch.credentials.awsAccessKey": "--credential-patch-aws-access-key", "credentialPatch.credentials.awsAccessKey.accessKeyId": "--credential-patch-aws-access-key-access-key-id", "credentialPatch.credentials.awsAccessKey.secretAccessKey": "--credential-patch-aws-access-key-secret-access-key", "credentialPatch.credentials.awsAccessKey.sessionToken": "--credential-patch-aws-access-key-session-token", "credentialPatch.clearFields": "--credential-patch-clear-field"}, _strict); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}
 	_ = _rawBody
