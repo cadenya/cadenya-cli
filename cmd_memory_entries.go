@@ -8,8 +8,12 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	commands "go.cadenya.com/cadenya-cli/internal/commands"
+	sdk "go.cadenya.com/cadenya-go"
 )
+
+const bodySchemaMemoryEntriesCreate = "{\"$defs\":{\"CreateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"MemoryEntryCreateSpec\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"MemoryEntryCreateSpec_Content\"},{\"$ref\":\"MemoryEntryCreateSpec_UploadId\"}]},\"MemoryEntryCreateSpec_Content\":{\"properties\":{\"content\":{\"description\":\"Inline content, written directly into the entry.\",\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"key\":{\"description\":\"See MemoryEntrySpec.key for the full rule set. Same constraints apply\\n here.\",\"type\":\"string\"},\"type\":{\"const\":\"content\"}},\"required\":[\"type\",\"content\",\"key\"],\"type\":\"object\"},\"MemoryEntryCreateSpec_UploadId\":{\"properties\":{\"description\":{\"type\":\"string\"},\"key\":{\"description\":\"See MemoryEntrySpec.key for the full rule set. Same constraints apply\\n here.\",\"type\":\"string\"},\"type\":{\"const\":\"uploadId\"},\"uploadId\":{\"description\":\"ID of a COMPLETE Upload. The server reads the object from storage,\\n copies its bytes into the entry, and marks the upload consumed.\",\"type\":\"string\"}},\"required\":[\"type\",\"uploadId\",\"key\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateResourceMetadata\"},\"spec\":{\"$ref\":\"MemoryEntryCreateSpec\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"}"
+
+const bodySchemaMemoryEntriesUpdate = "{\"$defs\":{\"MemoryEntryUpdateSpec\":{\"properties\":{\"content\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"key\":{\"type\":\"string\"},\"uploadId\":{\"type\":\"string\"}},\"type\":\"object\"},\"UpdateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"UpdateResourceMetadata\"},\"spec\":{\"$ref\":\"MemoryEntryUpdateSpec\"},\"updateMask\":{\"type\":\"string\"}},\"type\":\"object\"}"
 
 func memoryEntriesCommand() *cli.Command {
 	return &cli.Command{
@@ -24,7 +28,7 @@ func memoryEntriesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "prefix", Usage: "Filter by key prefix (e.g., \"skills/postmortem/\" to list all entries under that hierarchy). Matches against the entry's key, not its name."},
 					&cli.StringFlag{Name: "query", Usage: "Free-form search query"},
@@ -45,15 +49,40 @@ func memoryEntriesCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "KEY", path: []string{"spec", "key"}}}
 					pos0 := cmd.Args().Get(0) // memory-layer-id
-					var converted commands.MemoryEntriesListConversion
-					if err := commands.ConvertMemoryEntriesList(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("prefix") {
+						values["prefix"] = cmd.String("prefix")
+					}
+					if cmd.IsSet("query") {
+						values["query"] = cmd.String("query")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					if cmd.IsSet("sort-order") {
+						values["sortOrder"] = cmd.String("sort-order")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					var params sdk.MemoryEntryListParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.MemoryLayers().Entries().List(ctx, pos0, &converted.Params)
+					page, err := client.MemoryLayers().Entries().List(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -99,18 +128,113 @@ func memoryEntriesCommand() *cli.Command {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // memory-layer-id
-					var converted commands.MemoryEntriesCreateConversion
-					if err := commands.ConvertMemoryEntriesCreate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaMemoryEntriesCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("type") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "type", Path: []string{"spec"}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "content", Keys: []string{"content"}, Init: []string{}}, {Tag: "uploadId", Keys: []string{"uploadId"}, Init: []string{}}}}, cmd.String("type"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("content") {
+						_v, err := stringArg("content", cmd.String("content"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("content", []string{"spec", "content"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("key") {
+						_v, err := stringArg("key", cmd.String("key"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("key", []string{"spec", "key"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("upload-id") {
+						_v, err := stringArg("upload-id", cmd.String("upload-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("upload-id", []string{"spec", "uploadId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "type", Path: []string{"spec"}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "content", Keys: []string{"content"}, Init: []string{}}, {Tag: "uploadId", Keys: []string{"uploadId"}, Init: []string{}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--type", "spec.content": "--content", "spec.key": "--key", "spec.description": "--description", "spec.uploadId": "--upload-id"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.MemoryEntryCreateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.MemoryLayers().Entries().Create(ctx, pos0, &converted.Params)
+					out, err := client.MemoryLayers().Entries().Create(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -143,15 +267,19 @@ func memoryEntriesCommand() *cli.Command {
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // memory-layer-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.MemoryEntriesRetrieveConversion
-					if err := commands.ConvertMemoryEntriesRetrieve(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.MemoryEntryRetrieveParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.MemoryLayers().Entries().Retrieve(ctx, pos0, pos1, &converted.Params)
+					out, err := client.MemoryLayers().Entries().Retrieve(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}
@@ -186,15 +314,19 @@ func memoryEntriesCommand() *cli.Command {
 					}
 					pos0 := cmd.Args().Get(0) // memory-layer-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.MemoryEntriesDeleteConversion
-					if err := commands.ConvertMemoryEntriesDelete(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.MemoryEntryDeleteParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.MemoryLayers().Entries().Delete(ctx, pos0, pos1, &converted.Params)
+					return client.MemoryLayers().Entries().Delete(ctx, pos0, pos1, &params)
 				},
 			},
 			{
@@ -241,18 +373,126 @@ func memoryEntriesCommand() *cli.Command {
 					}
 					pos0 := cmd.Args().Get(0) // memory-layer-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.MemoryEntriesUpdateConversion
-					if err := commands.ConvertMemoryEntriesUpdate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaMemoryEntriesUpdate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("key") {
+						_v, err := stringArg("key", cmd.String("key"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("key", []string{"spec", "key"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("content") {
+						_v, err := stringArg("content", cmd.String("content"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("content", []string{"spec", "content"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("upload-id") {
+						_v, err := stringArg("upload-id", cmd.String("upload-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("upload-id", []string{"spec", "uploadId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("update-mask") {
+						_v, err := stringArg("update-mask", cmd.String("update-mask"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("update-mask", []string{"updateMask"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.key": "--key", "spec.description": "--description", "spec.content": "--content", "spec.uploadId": "--upload-id", "updateMask": "--update-mask"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					// A partial update names the paths it changes; a mask supplied
+					// by flag or document wins.
+					if _, _given := _body.lookup([]string{"updateMask"}); !_given {
+						if _mask := _body.updateMask("updateMask"); _mask != "" {
+							_ = _body.set("update-mask", []string{"updateMask"}, _mask)
+						}
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.MemoryEntryUpdateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.MemoryLayers().Entries().Update(ctx, pos0, pos1, &converted.Params)
+					out, err := client.MemoryLayers().Entries().Update(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}

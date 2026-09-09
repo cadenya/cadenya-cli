@@ -8,8 +8,12 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	commands "go.cadenya.com/cadenya-cli/internal/commands"
+	sdk "go.cadenya.com/cadenya-go"
 )
+
+const bodySchemaToolsCreate = "{\"$defs\":{\"ConfigHttpRequestMethod\":{\"enum\":[\"GET\",\"POST\",\"PUT\",\"PATCH\",\"DELETE\"],\"enumShort\":{\"delete\":\"DELETE\",\"get\":\"GET\",\"patch\":\"PATCH\",\"post\":\"POST\",\"put\":\"PUT\"},\"type\":\"string\"},\"Config_Bare\":{\"properties\":{\"alwaysSetResult\":{\"description\":\"When set, the tool call's result is recorded immediately as this\\n fixed text instead of parking the call to wait for externally\\n supplied content. The tool_called event is still emitted. Useful for\\n tools whose dispatch is the intent (e.g. a frontend renders a\\n component from the call parameters) but whose LLM turn still needs\\n tool-result content.\",\"type\":\"string\"}},\"type\":\"object\"},\"Config_HTTP\":{\"properties\":{\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"},\"path\":{\"type\":\"string\"},\"query\":{\"type\":\"string\"},\"requestBodyContentType\":{\"type\":\"string\"},\"requestBodyTemplate\":{\"description\":\"These are only used when the request method is a POST, PUT, or PATCH\",\"type\":\"string\"},\"requestMethod\":{\"$ref\":\"ConfigHttpRequestMethod\"}},\"required\":[\"requestMethod\"],\"type\":\"object\"},\"Config_MCP\":{\"properties\":{\"annotations\":{\"$ref\":\"MCP_Annotations\",\"description\":\"Tool behavior annotations from the MCP server, captured during sync.\"}},\"type\":\"object\"},\"Config_OpenAPI\":{\"properties\":{\"method\":{\"type\":\"string\"},\"path\":{\"type\":\"string\"}},\"type\":\"object\"},\"CreateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"MCP_Annotations\":{\"properties\":{\"destructiveHint\":{\"description\":\"If true, the tool may perform destructive updates to its environment.\\n Only meaningful when read_only_hint is false.\",\"type\":\"boolean\"},\"idempotentHint\":{\"description\":\"If true, calling the tool repeatedly with the same arguments has no\\n additional effect. Only meaningful when read_only_hint is false.\",\"type\":\"boolean\"},\"openWorldHint\":{\"description\":\"If true, the tool may interact with an \\\"open world\\\" of external\\n entities (e.g. web search); if false, its domain is closed.\",\"type\":\"boolean\"},\"readOnlyHint\":{\"description\":\"If true, the tool does not modify its environment.\",\"type\":\"boolean\"},\"title\":{\"description\":\"A human-readable title for the tool.\",\"type\":\"string\"}},\"type\":\"object\"},\"ToolSpec\":{\"properties\":{\"config\":{\"$ref\":\"ToolSpec_Config\",\"description\":\"Configuration for this specific tool. Its transport is derived from the\\n tool set adapter, while details such as endpoint and method are stored on\\n the tool itself.\\n\\n Required, and exactly one adapter must be set.\"},\"description\":{\"type\":\"string\"},\"llmToolName\":{\"description\":\"The name provided to the LLM, which may differ from the metadata.name on the tool.\\n LLMs have specific length and format requirements, and tool set sources may not comply\\n with them, so Cadenya does its best to format names into a usable format.\",\"type\":\"string\"},\"parameters\":{\"additionalProperties\":{},\"description\":\"The tool's JSON Schema, as handed to the LLM. Required, but may be the\\n empty object `{}` for a tool that takes no arguments. Requiring it rather\\n than defaulting it means a misspelled field name (`inputSchema`, say) is a\\n 400 instead of a silently parameterless tool.\",\"type\":\"object\"},\"requiresApproval\":{\"type\":\"boolean\"}},\"required\":[\"description\",\"requiresApproval\",\"parameters\",\"config\"],\"type\":\"object\"},\"ToolSpec_Config\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSpec_Config_Http\"},{\"$ref\":\"ToolSpec_Config_Mcp\"},{\"$ref\":\"ToolSpec_Config_Openapi\"},{\"$ref\":\"ToolSpec_Config_Bare\"}]},\"ToolSpec_Config_Bare\":{\"properties\":{\"bare\":{\"$ref\":\"Config_Bare\"},\"type\":{\"const\":\"bare\"}},\"required\":[\"type\",\"bare\"],\"type\":\"object\"},\"ToolSpec_Config_Http\":{\"properties\":{\"http\":{\"$ref\":\"Config_HTTP\"},\"type\":{\"const\":\"http\"}},\"required\":[\"type\",\"http\"],\"type\":\"object\"},\"ToolSpec_Config_Mcp\":{\"properties\":{\"mcp\":{\"$ref\":\"Config_MCP\"},\"type\":{\"const\":\"mcp\"}},\"required\":[\"type\",\"mcp\"],\"type\":\"object\"},\"ToolSpec_Config_Openapi\":{\"properties\":{\"openapi\":{\"$ref\":\"Config_OpenAPI\"},\"type\":{\"const\":\"openapi\"}},\"required\":[\"type\",\"openapi\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateResourceMetadata\"},\"spec\":{\"$ref\":\"ToolSpec\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"}"
+
+const bodySchemaToolsUpdate = "{\"$defs\":{\"ConfigHttpRequestMethod\":{\"enum\":[\"GET\",\"POST\",\"PUT\",\"PATCH\",\"DELETE\"],\"enumShort\":{\"delete\":\"DELETE\",\"get\":\"GET\",\"patch\":\"PATCH\",\"post\":\"POST\",\"put\":\"PUT\"},\"type\":\"string\"},\"Config_Bare\":{\"properties\":{\"alwaysSetResult\":{\"description\":\"When set, the tool call's result is recorded immediately as this\\n fixed text instead of parking the call to wait for externally\\n supplied content. The tool_called event is still emitted. Useful for\\n tools whose dispatch is the intent (e.g. a frontend renders a\\n component from the call parameters) but whose LLM turn still needs\\n tool-result content.\",\"type\":\"string\"}},\"type\":\"object\"},\"Config_HTTP\":{\"properties\":{\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"},\"path\":{\"type\":\"string\"},\"query\":{\"type\":\"string\"},\"requestBodyContentType\":{\"type\":\"string\"},\"requestBodyTemplate\":{\"description\":\"These are only used when the request method is a POST, PUT, or PATCH\",\"type\":\"string\"},\"requestMethod\":{\"$ref\":\"ConfigHttpRequestMethod\"}},\"required\":[\"requestMethod\"],\"type\":\"object\"},\"Config_MCP\":{\"properties\":{\"annotations\":{\"$ref\":\"MCP_Annotations\",\"description\":\"Tool behavior annotations from the MCP server, captured during sync.\"}},\"type\":\"object\"},\"Config_OpenAPI\":{\"properties\":{\"method\":{\"type\":\"string\"},\"path\":{\"type\":\"string\"}},\"type\":\"object\"},\"MCP_Annotations\":{\"properties\":{\"destructiveHint\":{\"description\":\"If true, the tool may perform destructive updates to its environment.\\n Only meaningful when read_only_hint is false.\",\"type\":\"boolean\"},\"idempotentHint\":{\"description\":\"If true, calling the tool repeatedly with the same arguments has no\\n additional effect. Only meaningful when read_only_hint is false.\",\"type\":\"boolean\"},\"openWorldHint\":{\"description\":\"If true, the tool may interact with an \\\"open world\\\" of external\\n entities (e.g. web search); if false, its domain is closed.\",\"type\":\"boolean\"},\"readOnlyHint\":{\"description\":\"If true, the tool does not modify its environment.\",\"type\":\"boolean\"},\"title\":{\"description\":\"A human-readable title for the tool.\",\"type\":\"string\"}},\"type\":\"object\"},\"ToolSpec\":{\"properties\":{\"config\":{\"$ref\":\"ToolSpec_Config\",\"description\":\"Configuration for this specific tool. Its transport is derived from the\\n tool set adapter, while details such as endpoint and method are stored on\\n the tool itself.\\n\\n Required, and exactly one adapter must be set.\"},\"description\":{\"type\":\"string\"},\"llmToolName\":{\"description\":\"The name provided to the LLM, which may differ from the metadata.name on the tool.\\n LLMs have specific length and format requirements, and tool set sources may not comply\\n with them, so Cadenya does its best to format names into a usable format.\",\"type\":\"string\"},\"parameters\":{\"additionalProperties\":{},\"description\":\"The tool's JSON Schema, as handed to the LLM. Required, but may be the\\n empty object `{}` for a tool that takes no arguments. Requiring it rather\\n than defaulting it means a misspelled field name (`inputSchema`, say) is a\\n 400 instead of a silently parameterless tool.\",\"type\":\"object\"},\"requiresApproval\":{\"type\":\"boolean\"}},\"required\":[\"description\",\"requiresApproval\",\"parameters\",\"config\"],\"type\":\"object\"},\"ToolSpec_Config\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ToolSpec_Config_Http\"},{\"$ref\":\"ToolSpec_Config_Mcp\"},{\"$ref\":\"ToolSpec_Config_Openapi\"},{\"$ref\":\"ToolSpec_Config_Bare\"}]},\"ToolSpec_Config_Bare\":{\"properties\":{\"bare\":{\"$ref\":\"Config_Bare\"},\"type\":{\"const\":\"bare\"}},\"required\":[\"type\",\"bare\"],\"type\":\"object\"},\"ToolSpec_Config_Http\":{\"properties\":{\"http\":{\"$ref\":\"Config_HTTP\"},\"type\":{\"const\":\"http\"}},\"required\":[\"type\",\"http\"],\"type\":\"object\"},\"ToolSpec_Config_Mcp\":{\"properties\":{\"mcp\":{\"$ref\":\"Config_MCP\"},\"type\":{\"const\":\"mcp\"}},\"required\":[\"type\",\"mcp\"],\"type\":\"object\"},\"ToolSpec_Config_Openapi\":{\"properties\":{\"openapi\":{\"$ref\":\"Config_OpenAPI\"},\"type\":{\"const\":\"openapi\"}},\"required\":[\"type\",\"openapi\"],\"type\":\"object\"},\"UpdateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"UpdateResourceMetadata\"},\"spec\":{\"$ref\":\"ToolSpec\"},\"updateMask\":{\"type\":\"string\"}},\"type\":\"object\"}"
 
 func toolsCommand() *cli.Command {
 	return &cli.Command{
@@ -24,7 +28,7 @@ func toolsCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "prefix", Usage: "Filter expression (query param: prefix)"},
 					&cli.StringFlag{Name: "query", Usage: "Free-form search query"},
@@ -54,15 +58,52 @@ func toolsCommand() *cli.Command {
 						}
 					}
 					pos0 := cmd.Args().Get(0) // tool-set-id
-					var converted commands.ToolsListConversion
-					if err := commands.ConvertToolsList(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("prefix") {
+						values["prefix"] = cmd.String("prefix")
+					}
+					if cmd.IsSet("query") {
+						values["query"] = cmd.String("query")
+					}
+					if cmd.IsSet("names") {
+						values["names"] = cmd.StringSlice("names")
+					}
+					if cmd.IsSet("states") {
+						values["states"] = cmd.StringSlice("states")
+					}
+					if cmd.IsSet("requires-approval") {
+						values["requiresApproval"] = cmd.Bool("requires-approval")
+					}
+					if cmd.IsSet("overlays") {
+						values["overlays"] = cmd.StringSlice("overlays")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					if cmd.IsSet("sort-order") {
+						values["sortOrder"] = cmd.String("sort-order")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					var params sdk.ToolListParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.ToolSets().Tools().List(ctx, pos0, &converted.Params)
+					page, err := client.ToolSets().Tools().List(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -130,18 +171,241 @@ func toolsCommand() *cli.Command {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // tool-set-id
-					var converted commands.ToolsCreateConversion
-					if err := commands.ConvertToolsCreate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaToolsCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("config") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "config", Path: []string{"spec", "config"}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "http", Keys: []string{"http"}, Init: []string{"http"}}, {Tag: "mcp", Keys: []string{"mcp"}, Init: []string{"mcp"}}, {Tag: "openapi", Keys: []string{"openapi"}, Init: []string{"openapi"}}, {Tag: "bare", Keys: []string{"bare"}, Init: []string{"bare"}}}}, cmd.String("config"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http") {
+						if err := _body.applyDoc("http", []string{"spec", "config", "http"}, cmd.String("http"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp") {
+						if err := _body.applyDoc("mcp", []string{"spec", "config", "mcp"}, cmd.String("mcp"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations") {
+						if err := _body.applyDoc("mcp-annotations", []string{"spec", "config", "mcp", "annotations"}, cmd.String("mcp-annotations"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi") {
+						if err := _body.applyDoc("openapi", []string{"spec", "config", "openapi"}, cmd.String("openapi"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("bare") {
+						if err := _body.applyDoc("bare", []string{"spec", "config", "bare"}, cmd.String("bare"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("requires-approval") {
+						if err := _body.set("requires-approval", []string{"spec", "requiresApproval"}, cmd.Bool("requires-approval")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("parameter") {
+						if err := _body.applyEntryDocs("parameter", []string{"spec", "parameters"}, cmd.StringSlice("parameter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-request-method") {
+						_v, err := enumSpec{Values: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}, Short: []string{"get", "post", "put", "patch", "delete"}}.parse("http-request-method", cmd.String("http-request-method"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-request-method", []string{"spec", "config", "http", "requestMethod"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-path") {
+						_v, err := stringArg("http-path", cmd.String("http-path"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-path", []string{"spec", "config", "http", "path"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-query") {
+						_v, err := stringArg("http-query", cmd.String("http-query"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-query", []string{"spec", "config", "http", "query"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-header") {
+						if err := _body.applyEntries("http-header", []string{"spec", "config", "http", "headers"}, cmd.StringSlice("http-header"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-request-body-template") {
+						_v, err := stringArg("http-request-body-template", cmd.String("http-request-body-template"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-request-body-template", []string{"spec", "config", "http", "requestBodyTemplate"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-request-body-content-type") {
+						_v, err := stringArg("http-request-body-content-type", cmd.String("http-request-body-content-type"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-request-body-content-type", []string{"spec", "config", "http", "requestBodyContentType"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-title") {
+						_v, err := stringArg("mcp-annotations-title", cmd.String("mcp-annotations-title"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-annotations-title", []string{"spec", "config", "mcp", "annotations", "title"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-read-only-hint") {
+						if err := _body.set("mcp-annotations-read-only-hint", []string{"spec", "config", "mcp", "annotations", "readOnlyHint"}, cmd.Bool("mcp-annotations-read-only-hint")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-destructive-hint") {
+						if err := _body.set("mcp-annotations-destructive-hint", []string{"spec", "config", "mcp", "annotations", "destructiveHint"}, cmd.Bool("mcp-annotations-destructive-hint")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-idempotent-hint") {
+						if err := _body.set("mcp-annotations-idempotent-hint", []string{"spec", "config", "mcp", "annotations", "idempotentHint"}, cmd.Bool("mcp-annotations-idempotent-hint")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-open-world-hint") {
+						if err := _body.set("mcp-annotations-open-world-hint", []string{"spec", "config", "mcp", "annotations", "openWorldHint"}, cmd.Bool("mcp-annotations-open-world-hint")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-path") {
+						_v, err := stringArg("openapi-path", cmd.String("openapi-path"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-path", []string{"spec", "config", "openapi", "path"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-method") {
+						_v, err := stringArg("openapi-method", cmd.String("openapi-method"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-method", []string{"spec", "config", "openapi", "method"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("bare-always-set-result") {
+						_v, err := stringArg("bare-always-set-result", cmd.String("bare-always-set-result"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("bare-always-set-result", []string{"spec", "config", "bare", "alwaysSetResult"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("llm-tool-name") {
+						_v, err := stringArg("llm-tool-name", cmd.String("llm-tool-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("llm-tool-name", []string{"spec", "llmToolName"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "config", Path: []string{"spec", "config"}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "http", Keys: []string{"http"}, Init: []string{"http"}}, {Tag: "mcp", Keys: []string{"mcp"}, Init: []string{"mcp"}}, {Tag: "openapi", Keys: []string{"openapi"}, Init: []string{"openapi"}}, {Tag: "bare", Keys: []string{"bare"}, Init: []string{"bare"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.description": "--description", "spec.requiresApproval": "--requires-approval", "spec.parameters": "--parameter", "spec.config": "--config", "spec.config.http": "--http", "spec.config.http.requestMethod": "--http-request-method", "spec.config.http.path": "--http-path", "spec.config.http.query": "--http-query", "spec.config.http.headers": "--http-header", "spec.config.http.requestBodyTemplate": "--http-request-body-template", "spec.config.http.requestBodyContentType": "--http-request-body-content-type", "spec.config.mcp": "--mcp", "spec.config.mcp.annotations": "--mcp-annotations", "spec.config.mcp.annotations.title": "--mcp-annotations-title", "spec.config.mcp.annotations.readOnlyHint": "--mcp-annotations-read-only-hint", "spec.config.mcp.annotations.destructiveHint": "--mcp-annotations-destructive-hint", "spec.config.mcp.annotations.idempotentHint": "--mcp-annotations-idempotent-hint", "spec.config.mcp.annotations.openWorldHint": "--mcp-annotations-open-world-hint", "spec.config.openapi": "--openapi", "spec.config.openapi.path": "--openapi-path", "spec.config.openapi.method": "--openapi-method", "spec.config.bare": "--bare", "spec.config.bare.alwaysSetResult": "--bare-always-set-result", "spec.llmToolName": "--llm-tool-name"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ToolCreateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Tools().Create(ctx, pos0, &converted.Params)
+					out, err := client.ToolSets().Tools().Create(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -174,15 +438,19 @@ func toolsCommand() *cli.Command {
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.ToolsRetrieveConversion
-					if err := commands.ConvertToolsRetrieve(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ToolRetrieveParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Tools().Retrieve(ctx, pos0, pos1, &converted.Params)
+					out, err := client.ToolSets().Tools().Retrieve(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}
@@ -217,15 +485,19 @@ func toolsCommand() *cli.Command {
 					}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.ToolsDeleteConversion
-					if err := commands.ConvertToolsDelete(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ToolDeleteParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.ToolSets().Tools().Delete(ctx, pos0, pos1, &converted.Params)
+					return client.ToolSets().Tools().Delete(ctx, pos0, pos1, &params)
 				},
 			},
 			{
@@ -294,18 +566,257 @@ func toolsCommand() *cli.Command {
 					}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.ToolsUpdateConversion
-					if err := commands.ConvertToolsUpdate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaToolsUpdate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("config") {
+						if err := _body.applyUnionFlag(unionSpec{Flag: "config", Path: []string{"spec", "config"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "http", Keys: []string{"http"}, Init: []string{"http"}}, {Tag: "mcp", Keys: []string{"mcp"}, Init: []string{"mcp"}}, {Tag: "openapi", Keys: []string{"openapi"}, Init: []string{"openapi"}}, {Tag: "bare", Keys: []string{"bare"}, Init: []string{"bare"}}}}, cmd.String("config"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http") {
+						if err := _body.applyDoc("http", []string{"spec", "config", "http"}, cmd.String("http"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp") {
+						if err := _body.applyDoc("mcp", []string{"spec", "config", "mcp"}, cmd.String("mcp"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations") {
+						if err := _body.applyDoc("mcp-annotations", []string{"spec", "config", "mcp", "annotations"}, cmd.String("mcp-annotations"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi") {
+						if err := _body.applyDoc("openapi", []string{"spec", "config", "openapi"}, cmd.String("openapi"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("bare") {
+						if err := _body.applyDoc("bare", []string{"spec", "config", "bare"}, cmd.String("bare"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("requires-approval") {
+						if err := _body.set("requires-approval", []string{"spec", "requiresApproval"}, cmd.Bool("requires-approval")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("parameter") {
+						if err := _body.applyEntryDocs("parameter", []string{"spec", "parameters"}, cmd.StringSlice("parameter")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-request-method") {
+						_v, err := enumSpec{Values: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}, Short: []string{"get", "post", "put", "patch", "delete"}}.parse("http-request-method", cmd.String("http-request-method"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-request-method", []string{"spec", "config", "http", "requestMethod"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-path") {
+						_v, err := stringArg("http-path", cmd.String("http-path"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-path", []string{"spec", "config", "http", "path"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-query") {
+						_v, err := stringArg("http-query", cmd.String("http-query"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-query", []string{"spec", "config", "http", "query"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-header") {
+						if err := _body.applyEntries("http-header", []string{"spec", "config", "http", "headers"}, cmd.StringSlice("http-header"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-request-body-template") {
+						_v, err := stringArg("http-request-body-template", cmd.String("http-request-body-template"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-request-body-template", []string{"spec", "config", "http", "requestBodyTemplate"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("http-request-body-content-type") {
+						_v, err := stringArg("http-request-body-content-type", cmd.String("http-request-body-content-type"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("http-request-body-content-type", []string{"spec", "config", "http", "requestBodyContentType"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-title") {
+						_v, err := stringArg("mcp-annotations-title", cmd.String("mcp-annotations-title"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("mcp-annotations-title", []string{"spec", "config", "mcp", "annotations", "title"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-read-only-hint") {
+						if err := _body.set("mcp-annotations-read-only-hint", []string{"spec", "config", "mcp", "annotations", "readOnlyHint"}, cmd.Bool("mcp-annotations-read-only-hint")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-destructive-hint") {
+						if err := _body.set("mcp-annotations-destructive-hint", []string{"spec", "config", "mcp", "annotations", "destructiveHint"}, cmd.Bool("mcp-annotations-destructive-hint")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-idempotent-hint") {
+						if err := _body.set("mcp-annotations-idempotent-hint", []string{"spec", "config", "mcp", "annotations", "idempotentHint"}, cmd.Bool("mcp-annotations-idempotent-hint")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("mcp-annotations-open-world-hint") {
+						if err := _body.set("mcp-annotations-open-world-hint", []string{"spec", "config", "mcp", "annotations", "openWorldHint"}, cmd.Bool("mcp-annotations-open-world-hint")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-path") {
+						_v, err := stringArg("openapi-path", cmd.String("openapi-path"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-path", []string{"spec", "config", "openapi", "path"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("openapi-method") {
+						_v, err := stringArg("openapi-method", cmd.String("openapi-method"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("openapi-method", []string{"spec", "config", "openapi", "method"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("bare-always-set-result") {
+						_v, err := stringArg("bare-always-set-result", cmd.String("bare-always-set-result"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("bare-always-set-result", []string{"spec", "config", "bare", "alwaysSetResult"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("llm-tool-name") {
+						_v, err := stringArg("llm-tool-name", cmd.String("llm-tool-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("llm-tool-name", []string{"spec", "llmToolName"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("update-mask") {
+						_v, err := stringArg("update-mask", cmd.String("update-mask"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("update-mask", []string{"updateMask"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.resolveUnion(unionSpec{Flag: "config", Path: []string{"spec", "config"}, Discriminator: "type", Required: false, Inferable: true, Arms: []unionArm{{Tag: "http", Keys: []string{"http"}, Init: []string{"http"}}, {Tag: "mcp", Keys: []string{"mcp"}, Init: []string{"mcp"}}, {Tag: "openapi", Keys: []string{"openapi"}, Init: []string{"openapi"}}, {Tag: "bare", Keys: []string{"bare"}, Init: []string{"bare"}}}}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.description": "--description", "spec.requiresApproval": "--requires-approval", "spec.parameters": "--parameter", "spec.config": "--config", "spec.config.http": "--http", "spec.config.http.requestMethod": "--http-request-method", "spec.config.http.path": "--http-path", "spec.config.http.query": "--http-query", "spec.config.http.headers": "--http-header", "spec.config.http.requestBodyTemplate": "--http-request-body-template", "spec.config.http.requestBodyContentType": "--http-request-body-content-type", "spec.config.mcp": "--mcp", "spec.config.mcp.annotations": "--mcp-annotations", "spec.config.mcp.annotations.title": "--mcp-annotations-title", "spec.config.mcp.annotations.readOnlyHint": "--mcp-annotations-read-only-hint", "spec.config.mcp.annotations.destructiveHint": "--mcp-annotations-destructive-hint", "spec.config.mcp.annotations.idempotentHint": "--mcp-annotations-idempotent-hint", "spec.config.mcp.annotations.openWorldHint": "--mcp-annotations-open-world-hint", "spec.config.openapi": "--openapi", "spec.config.openapi.path": "--openapi-path", "spec.config.openapi.method": "--openapi-method", "spec.config.bare": "--bare", "spec.config.bare.alwaysSetResult": "--bare-always-set-result", "spec.llmToolName": "--llm-tool-name", "updateMask": "--update-mask"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					// A partial update names the paths it changes; a mask supplied
+					// by flag or document wins.
+					if _, _given := _body.lookup([]string{"updateMask"}); !_given {
+						if _mask := _body.updateMask("updateMask"); _mask != "" {
+							_ = _body.set("update-mask", []string{"updateMask"}, _mask)
+						}
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ToolUpdateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Tools().Update(ctx, pos0, pos1, &converted.Params)
+					out, err := client.ToolSets().Tools().Update(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}
@@ -338,15 +849,19 @@ func toolsCommand() *cli.Command {
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.ToolsOmitConversion
-					if err := commands.ConvertToolsOmit(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ToolOmitParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Tools().Omit(ctx, pos0, pos1, &converted.Params)
+					out, err := client.ToolSets().Tools().Omit(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}
@@ -379,15 +894,19 @@ func toolsCommand() *cli.Command {
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.ToolsRestoreConversion
-					if err := commands.ConvertToolsRestore(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ToolRestoreParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Tools().Restore(ctx, pos0, pos1, &converted.Params)
+					out, err := client.ToolSets().Tools().Restore(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}

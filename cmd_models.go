@@ -8,8 +8,14 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	commands "go.cadenya.com/cadenya-cli/internal/commands"
+	sdk "go.cadenya.com/cadenya-go"
 )
+
+const bodySchemaModelsCreate = "{\"$defs\":{\"CapabilityReasoningMode\":{\"enum\":[\"MODE_ADAPTIVE\",\"MODE_BUDGET\"],\"enumShort\":{\"adaptive\":\"MODE_ADAPTIVE\",\"budget\":\"MODE_BUDGET\"},\"type\":\"string\"},\"Capability_Caching\":{\"properties\":{},\"type\":\"object\"},\"Capability_MaxOutputTokens\":{\"properties\":{},\"type\":\"object\"},\"Capability_Reasoning\":{\"properties\":{\"mode\":{\"$ref\":\"CapabilityReasoningMode\",\"description\":\"How reasoning is enabled for this model. Catalog data used to decide\\n whether thinking is requested for objective iterations on this model.\"}},\"required\":[\"mode\"],\"type\":\"object\"},\"Capability_StopSequences\":{\"properties\":{\"limit\":{\"description\":\"Maximum number of stop sequences the model accepts per request.\\n 0 means the provider imposes no meaningful limit.\",\"type\":\"integer\"}},\"required\":[\"limit\"],\"type\":\"object\"},\"Capability_Temperature\":{\"properties\":{},\"type\":\"object\"},\"Capability_TopK\":{\"properties\":{},\"type\":\"object\"},\"Capability_TopP\":{\"properties\":{},\"type\":\"object\"},\"CreateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"ModelSpec\":{\"properties\":{\"capabilities\":{\"description\":\"The inference knobs this model supports. Catalog data; drives which\\n ModelConfig fields a variation on this model may set. Reasoning support\\n (and its mode) lives here too, as the \\\"reasoning\\\" capability.\",\"items\":{\"$ref\":\"ModelSpec_Capability\"},\"type\":\"array\"},\"family\":{\"description\":\"The model family (e.g., \\\"claude-sonnet-4.6\\\", \\\"gpt-5.4\\\", \\\"gemini-2.5-flash\\\")\",\"type\":\"string\"},\"inputPricePerMillionTokens\":{\"description\":\"Cost per million input tokens in cents (e.g., 300 = $3.00). On reads this\\n is the effective price: the catalog price unless\\n Model.pricing_override replaces it. Writes only apply to manually\\n entered models; use UpdateModel's pricing_override paths to override a\\n synced model's price.\",\"type\":\"string\"},\"maxInputTokens\":{\"description\":\"Maximum number of input tokens the model supports\",\"type\":\"integer\"},\"maxOutputTokens\":{\"description\":\"Maximum number of output tokens the model can generate\",\"type\":\"integer\"},\"outputPricePerMillionTokens\":{\"description\":\"Cost per million output tokens in cents (e.g., 1500 = $15.00). Effective\\n price on reads, see input_price_per_million_tokens.\",\"type\":\"string\"},\"provider\":{\"description\":\"The model provider (e.g., \\\"anthropic\\\", \\\"openai\\\", \\\"google\\\")\",\"type\":\"string\"},\"providerModelId\":{\"description\":\"The identifier the provider expects in inference requests, exactly as the\\n provider spells it: an OpenAI model name, a Vertex publisher model\\n resource, a Bedrock inference-profile ID or ARN, or an OpenAI-compatible\\n endpoint's model ID. Distinct from metadata.external_id, which is\\n Cadenya's slug. Verified with a minimal provider completion on creation\\n and whenever the identifier changes.\",\"type\":\"string\"}},\"required\":[\"provider\",\"family\",\"maxInputTokens\",\"maxOutputTokens\",\"inputPricePerMillionTokens\",\"outputPricePerMillionTokens\",\"capabilities\",\"providerModelId\"],\"type\":\"object\"},\"ModelSpec_Capability\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ModelSpec_Capability_Temperature\"},{\"$ref\":\"ModelSpec_Capability_TopP\"},{\"$ref\":\"ModelSpec_Capability_TopK\"},{\"$ref\":\"ModelSpec_Capability_StopSequences\"},{\"$ref\":\"ModelSpec_Capability_MaxOutputTokens\"},{\"$ref\":\"ModelSpec_Capability_Reasoning\"},{\"$ref\":\"ModelSpec_Capability_Caching\"}]},\"ModelSpec_Capability_Caching\":{\"properties\":{\"caching\":{\"$ref\":\"Capability_Caching\"},\"type\":{\"const\":\"caching\"}},\"required\":[\"type\",\"caching\"],\"type\":\"object\"},\"ModelSpec_Capability_MaxOutputTokens\":{\"properties\":{\"maxOutputTokens\":{\"$ref\":\"Capability_MaxOutputTokens\"},\"type\":{\"const\":\"maxOutputTokens\"}},\"required\":[\"type\",\"maxOutputTokens\"],\"type\":\"object\"},\"ModelSpec_Capability_Reasoning\":{\"properties\":{\"reasoning\":{\"$ref\":\"Capability_Reasoning\"},\"type\":{\"const\":\"reasoning\"}},\"required\":[\"type\",\"reasoning\"],\"type\":\"object\"},\"ModelSpec_Capability_StopSequences\":{\"properties\":{\"stopSequences\":{\"$ref\":\"Capability_StopSequences\"},\"type\":{\"const\":\"stopSequences\"}},\"required\":[\"type\",\"stopSequences\"],\"type\":\"object\"},\"ModelSpec_Capability_Temperature\":{\"properties\":{\"temperature\":{\"$ref\":\"Capability_Temperature\"},\"type\":{\"const\":\"temperature\"}},\"required\":[\"type\",\"temperature\"],\"type\":\"object\"},\"ModelSpec_Capability_TopK\":{\"properties\":{\"topK\":{\"$ref\":\"Capability_TopK\"},\"type\":{\"const\":\"topK\"}},\"required\":[\"type\",\"topK\"],\"type\":\"object\"},\"ModelSpec_Capability_TopP\":{\"properties\":{\"topP\":{\"$ref\":\"Capability_TopP\"},\"type\":{\"const\":\"topP\"}},\"required\":[\"type\",\"topP\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateResourceMetadata\"},\"spec\":{\"$ref\":\"ModelSpec\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"}"
+
+const bodySchemaModelsUpdate = "{\"$defs\":{\"CapabilityReasoningMode\":{\"enum\":[\"MODE_ADAPTIVE\",\"MODE_BUDGET\"],\"enumShort\":{\"adaptive\":\"MODE_ADAPTIVE\",\"budget\":\"MODE_BUDGET\"},\"type\":\"string\"},\"Capability_Caching\":{\"properties\":{},\"type\":\"object\"},\"Capability_MaxOutputTokens\":{\"properties\":{},\"type\":\"object\"},\"Capability_Reasoning\":{\"properties\":{\"mode\":{\"$ref\":\"CapabilityReasoningMode\",\"description\":\"How reasoning is enabled for this model. Catalog data used to decide\\n whether thinking is requested for objective iterations on this model.\"}},\"required\":[\"mode\"],\"type\":\"object\"},\"Capability_StopSequences\":{\"properties\":{\"limit\":{\"description\":\"Maximum number of stop sequences the model accepts per request.\\n 0 means the provider imposes no meaningful limit.\",\"type\":\"integer\"}},\"required\":[\"limit\"],\"type\":\"object\"},\"Capability_Temperature\":{\"properties\":{},\"type\":\"object\"},\"Capability_TopK\":{\"properties\":{},\"type\":\"object\"},\"Capability_TopP\":{\"properties\":{},\"type\":\"object\"},\"ModelPricingOverride\":{\"properties\":{\"inputPricePerMillionTokens\":{\"description\":\"Override for input token price, in cents per million tokens.\",\"type\":\"string\"},\"outputPricePerMillionTokens\":{\"description\":\"Override for output token price, in cents per million tokens.\",\"type\":\"string\"}},\"type\":\"object\"},\"ModelSpec\":{\"properties\":{\"capabilities\":{\"description\":\"The inference knobs this model supports. Catalog data; drives which\\n ModelConfig fields a variation on this model may set. Reasoning support\\n (and its mode) lives here too, as the \\\"reasoning\\\" capability.\",\"items\":{\"$ref\":\"ModelSpec_Capability\"},\"type\":\"array\"},\"family\":{\"description\":\"The model family (e.g., \\\"claude-sonnet-4.6\\\", \\\"gpt-5.4\\\", \\\"gemini-2.5-flash\\\")\",\"type\":\"string\"},\"inputPricePerMillionTokens\":{\"description\":\"Cost per million input tokens in cents (e.g., 300 = $3.00). On reads this\\n is the effective price: the catalog price unless\\n Model.pricing_override replaces it. Writes only apply to manually\\n entered models; use UpdateModel's pricing_override paths to override a\\n synced model's price.\",\"type\":\"string\"},\"maxInputTokens\":{\"description\":\"Maximum number of input tokens the model supports\",\"type\":\"integer\"},\"maxOutputTokens\":{\"description\":\"Maximum number of output tokens the model can generate\",\"type\":\"integer\"},\"outputPricePerMillionTokens\":{\"description\":\"Cost per million output tokens in cents (e.g., 1500 = $15.00). Effective\\n price on reads, see input_price_per_million_tokens.\",\"type\":\"string\"},\"provider\":{\"description\":\"The model provider (e.g., \\\"anthropic\\\", \\\"openai\\\", \\\"google\\\")\",\"type\":\"string\"},\"providerModelId\":{\"description\":\"The identifier the provider expects in inference requests, exactly as the\\n provider spells it: an OpenAI model name, a Vertex publisher model\\n resource, a Bedrock inference-profile ID or ARN, or an OpenAI-compatible\\n endpoint's model ID. Distinct from metadata.external_id, which is\\n Cadenya's slug. Verified with a minimal provider completion on creation\\n and whenever the identifier changes.\",\"type\":\"string\"}},\"required\":[\"provider\",\"family\",\"maxInputTokens\",\"maxOutputTokens\",\"inputPricePerMillionTokens\",\"outputPricePerMillionTokens\",\"capabilities\",\"providerModelId\"],\"type\":\"object\"},\"ModelSpec_Capability\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"ModelSpec_Capability_Temperature\"},{\"$ref\":\"ModelSpec_Capability_TopP\"},{\"$ref\":\"ModelSpec_Capability_TopK\"},{\"$ref\":\"ModelSpec_Capability_StopSequences\"},{\"$ref\":\"ModelSpec_Capability_MaxOutputTokens\"},{\"$ref\":\"ModelSpec_Capability_Reasoning\"},{\"$ref\":\"ModelSpec_Capability_Caching\"}]},\"ModelSpec_Capability_Caching\":{\"properties\":{\"caching\":{\"$ref\":\"Capability_Caching\"},\"type\":{\"const\":\"caching\"}},\"required\":[\"type\",\"caching\"],\"type\":\"object\"},\"ModelSpec_Capability_MaxOutputTokens\":{\"properties\":{\"maxOutputTokens\":{\"$ref\":\"Capability_MaxOutputTokens\"},\"type\":{\"const\":\"maxOutputTokens\"}},\"required\":[\"type\",\"maxOutputTokens\"],\"type\":\"object\"},\"ModelSpec_Capability_Reasoning\":{\"properties\":{\"reasoning\":{\"$ref\":\"Capability_Reasoning\"},\"type\":{\"const\":\"reasoning\"}},\"required\":[\"type\",\"reasoning\"],\"type\":\"object\"},\"ModelSpec_Capability_StopSequences\":{\"properties\":{\"stopSequences\":{\"$ref\":\"Capability_StopSequences\"},\"type\":{\"const\":\"stopSequences\"}},\"required\":[\"type\",\"stopSequences\"],\"type\":\"object\"},\"ModelSpec_Capability_Temperature\":{\"properties\":{\"temperature\":{\"$ref\":\"Capability_Temperature\"},\"type\":{\"const\":\"temperature\"}},\"required\":[\"type\",\"temperature\"],\"type\":\"object\"},\"ModelSpec_Capability_TopK\":{\"properties\":{\"topK\":{\"$ref\":\"Capability_TopK\"},\"type\":{\"const\":\"topK\"}},\"required\":[\"type\",\"topK\"],\"type\":\"object\"},\"ModelSpec_Capability_TopP\":{\"properties\":{\"topP\":{\"$ref\":\"Capability_TopP\"},\"type\":{\"const\":\"topP\"}},\"required\":[\"type\",\"topP\"],\"type\":\"object\"},\"UpdateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"UpdateResourceMetadata\"},\"pricingOverride\":{\"$ref\":\"ModelPricingOverride\"},\"spec\":{\"$ref\":\"ModelSpec\"},\"updateMask\":{\"type\":\"string\"}},\"type\":\"object\"}"
+
+const bodySchemaModelsSwapOnVariations = "{\"$defs\":{\"SwapModelOnVariationsRequest_ModelSwap\":{\"properties\":{\"currentModelId\":{\"description\":\"The model variations are currently on. Accepts an id or \\\"external_id:\\\" slug.\",\"type\":\"string\"},\"disableCurrentAfterSwap\":{\"description\":\"Whether to disable the current model after the swap.\",\"type\":\"boolean\"},\"nextModelId\":{\"description\":\"The model to move variations to. Accepts an id or \\\"external_id:\\\" slug.\",\"type\":\"string\"}},\"type\":\"object\"}},\"properties\":{\"modelSwaps\":{\"items\":{\"$ref\":\"SwapModelOnVariationsRequest_ModelSwap\"},\"type\":\"array\"}},\"type\":\"object\"}"
 
 func modelsCommand() *cli.Command {
 	return &cli.Command{
@@ -17,13 +23,191 @@ func modelsCommand() *cli.Command {
 		DisableSliceFlagSeparator: true,
 		Commands: []*cli.Command{
 			{
+				Name:                      "create",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Create a model",
+				ArgsUsage:                 "<ai-provider-key-id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "provider", Usage: "Required. The model provider (e.g., \"anthropic\", \"openai\", \"google\")."},
+					&cli.StringFlag{Name: "family", Usage: "Required. The model family (e.g., \"claude-sonnet-4.6\", \"gpt-5.4\", \"gemini-2.5-flash\")."},
+					&cli.IntFlag{Name: "max-input-tokens", Usage: "Required. Maximum number of input tokens the model supports."},
+					&cli.IntFlag{Name: "max-output-tokens", Usage: "Required. Maximum number of output tokens the model can generate."},
+					&cli.StringFlag{Name: "input-price-per-million-tokens", Usage: "Required. Cost per million input tokens in cents (e.g., 300 = $3.00). On reads this is the effective price: the catalog price unless Model.pricing_override replaces it.…."},
+					&cli.StringFlag{Name: "output-price-per-million-tokens", Usage: "Required. Cost per million output tokens in cents (e.g., 1500 = $15.00). Effective price on reads, see input_price_per_million_tokens."},
+					&cli.StringSliceFlag{Name: "capability", Usage: "Required. The inference knobs this model supports. Catalog data; drives which ModelConfig fields a variation on this model may set. Reasoning support (and its mode)…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "provider-model-id", Usage: "Required. The identifier the provider expects in inference requests, exactly as the provider spells it: an OpenAI model name, a Vertex publisher model resource, a…."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<ai-provider-key-id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<ai-provider-key-id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("provider"), cmd.String("family"), cmd.String("input-price-per-million-tokens"), cmd.String("output-price-per-million-tokens"), cmd.String("provider-model-id")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("capability")...)
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					pos0 := cmd.Args().Get(0) // ai-provider-key-id
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaModelsCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("provider") {
+						_v, err := stringArg("provider", cmd.String("provider"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("provider", []string{"spec", "provider"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("family") {
+						_v, err := stringArg("family", cmd.String("family"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("family", []string{"spec", "family"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("max-input-tokens") {
+						if err := _body.set("max-input-tokens", []string{"spec", "maxInputTokens"}, cmd.Int("max-input-tokens")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("max-output-tokens") {
+						if err := _body.set("max-output-tokens", []string{"spec", "maxOutputTokens"}, cmd.Int("max-output-tokens")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("input-price-per-million-tokens") {
+						_v, err := stringArg("input-price-per-million-tokens", cmd.String("input-price-per-million-tokens"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("input-price-per-million-tokens", []string{"spec", "inputPricePerMillionTokens"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("output-price-per-million-tokens") {
+						_v, err := stringArg("output-price-per-million-tokens", cmd.String("output-price-per-million-tokens"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("output-price-per-million-tokens", []string{"spec", "outputPricePerMillionTokens"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("capability") {
+						if err := _body.applyDocItems("capability", []string{"spec", "capabilities"}, cmd.StringSlice("capability")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("provider-model-id") {
+						_v, err := stringArg("provider-model-id", cmd.String("provider-model-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("provider-model-id", []string{"spec", "providerModelId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.provider": "--provider", "spec.family": "--family", "spec.maxInputTokens": "--max-input-tokens", "spec.maxOutputTokens": "--max-output-tokens", "spec.inputPricePerMillionTokens": "--input-price-per-million-tokens", "spec.outputPricePerMillionTokens": "--output-price-per-million-tokens", "spec.capabilities": "--capability", "spec.providerModelId": "--provider-model-id"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					if cmd.Bool("dry-run") {
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ModelCreateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.Models().Create(ctx, pos0, &params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
 				Name:                      "list",
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List models",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "prefix", Usage: "Filter by a prefix of the model's display name, external id, or id (case-insensitive). A model's external id is the form used in modelConfig.modelId, so a…"},
 					&cli.StringFlag{Name: "query", Usage: "Free-form search query"},
@@ -46,15 +230,49 @@ func modelsCommand() *cli.Command {
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_ENABLED", "STATE_DISABLED"}) {
 						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: STATE_UNSPECIFIED, STATE_ENABLED, STATE_DISABLED)", cmd.String("state")), 2)
 					}
-					var converted commands.ModelsListConversion
-					if err := commands.ConvertModelsList(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("prefix") {
+						values["prefix"] = cmd.String("prefix")
+					}
+					if cmd.IsSet("query") {
+						values["query"] = cmd.String("query")
+					}
+					if cmd.IsSet("state") {
+						values["state"] = cmd.String("state")
+					}
+					if cmd.IsSet("ai-provider-key-id") {
+						values["aiProviderKeyId"] = cmd.String("ai-provider-key-id")
+					}
+					if cmd.IsSet("is-assigned") {
+						values["isAssigned"] = cmd.Bool("is-assigned")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					if cmd.IsSet("sort-order") {
+						values["sortOrder"] = cmd.String("sort-order")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					var params sdk.ModelListParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Models().List(ctx, &converted.Params)
+					page, err := client.Models().List(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -83,15 +301,240 @@ func modelsCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					var converted commands.ModelsRetrieveConversion
-					if err := commands.ConvertModelsRetrieve(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ModelRetrieveParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Models().Retrieve(ctx, pos0, &converted.Params)
+					out, err := client.Models().Retrieve(ctx, pos0, &params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
+				Name:                      "update",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Update a model",
+				ArgsUsage:                 "<id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "When any spec.* path is masked, send the complete spec (current values plus edits); it is validated as a whole. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "provider", Usage: "The model provider (e.g., \"anthropic\", \"openai\", \"google\")."},
+					&cli.StringFlag{Name: "family", Usage: "The model family (e.g., \"claude-sonnet-4.6\", \"gpt-5.4\", \"gemini-2.5-flash\")."},
+					&cli.IntFlag{Name: "max-input-tokens", Usage: "Maximum number of input tokens the model supports."},
+					&cli.IntFlag{Name: "max-output-tokens", Usage: "Maximum number of output tokens the model can generate."},
+					&cli.StringFlag{Name: "input-price-per-million-tokens", Usage: "Cost per million input tokens in cents (e.g., 300 = $3.00). On reads this is the effective price: the catalog price unless Model.pricing_override replaces it.…."},
+					&cli.StringFlag{Name: "output-price-per-million-tokens", Usage: "Cost per million output tokens in cents (e.g., 1500 = $15.00). Effective price on reads, see input_price_per_million_tokens."},
+					&cli.StringSliceFlag{Name: "capability", Usage: "The inference knobs this model supports. Catalog data; drives which ModelConfig fields a variation on this model may set. Reasoning support (and its mode)…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "provider-model-id", Usage: "The identifier the provider expects in inference requests, exactly as the provider spells it: an OpenAI model name, a Vertex publisher model resource, a…."},
+					&cli.StringFlag{Name: "pricing-override", Usage: "Customer price overrides, applied per masked path. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "pricing-override-input-price-per-million-tokens", Usage: "Override for input token price, in cents per million tokens."},
+					&cli.StringFlag{Name: "pricing-override-output-price-per-million-tokens", Usage: "Override for output token price, in cents per million tokens."},
+					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update. Required; leaf paths only."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("provider"), cmd.String("family"), cmd.String("input-price-per-million-tokens"), cmd.String("output-price-per-million-tokens"), cmd.String("provider-model-id"), cmd.String("pricing-override"), cmd.String("pricing-override-input-price-per-million-tokens"), cmd.String("pricing-override-output-price-per-million-tokens"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("capability")...)
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					pos0 := cmd.Args().Get(0) // id
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaModelsUpdate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("pricing-override") {
+						if err := _body.applyDoc("pricing-override", []string{"pricingOverride"}, cmd.String("pricing-override"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("provider") {
+						_v, err := stringArg("provider", cmd.String("provider"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("provider", []string{"spec", "provider"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("family") {
+						_v, err := stringArg("family", cmd.String("family"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("family", []string{"spec", "family"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("max-input-tokens") {
+						if err := _body.set("max-input-tokens", []string{"spec", "maxInputTokens"}, cmd.Int("max-input-tokens")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("max-output-tokens") {
+						if err := _body.set("max-output-tokens", []string{"spec", "maxOutputTokens"}, cmd.Int("max-output-tokens")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("input-price-per-million-tokens") {
+						_v, err := stringArg("input-price-per-million-tokens", cmd.String("input-price-per-million-tokens"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("input-price-per-million-tokens", []string{"spec", "inputPricePerMillionTokens"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("output-price-per-million-tokens") {
+						_v, err := stringArg("output-price-per-million-tokens", cmd.String("output-price-per-million-tokens"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("output-price-per-million-tokens", []string{"spec", "outputPricePerMillionTokens"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("capability") {
+						if err := _body.applyDocItems("capability", []string{"spec", "capabilities"}, cmd.StringSlice("capability")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("provider-model-id") {
+						_v, err := stringArg("provider-model-id", cmd.String("provider-model-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("provider-model-id", []string{"spec", "providerModelId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("pricing-override-input-price-per-million-tokens") {
+						_v, err := stringArg("pricing-override-input-price-per-million-tokens", cmd.String("pricing-override-input-price-per-million-tokens"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("pricing-override-input-price-per-million-tokens", []string{"pricingOverride", "inputPricePerMillionTokens"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("pricing-override-output-price-per-million-tokens") {
+						_v, err := stringArg("pricing-override-output-price-per-million-tokens", cmd.String("pricing-override-output-price-per-million-tokens"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("pricing-override-output-price-per-million-tokens", []string{"pricingOverride", "outputPricePerMillionTokens"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("update-mask") {
+						_v, err := stringArg("update-mask", cmd.String("update-mask"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("update-mask", []string{"updateMask"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.provider": "--provider", "spec.family": "--family", "spec.maxInputTokens": "--max-input-tokens", "spec.maxOutputTokens": "--max-output-tokens", "spec.inputPricePerMillionTokens": "--input-price-per-million-tokens", "spec.outputPricePerMillionTokens": "--output-price-per-million-tokens", "spec.capabilities": "--capability", "spec.providerModelId": "--provider-model-id", "pricingOverride": "--pricing-override", "pricingOverride.inputPricePerMillionTokens": "--pricing-override-input-price-per-million-tokens", "pricingOverride.outputPricePerMillionTokens": "--pricing-override-output-price-per-million-tokens", "updateMask": "--update-mask"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					// A partial update names the paths it changes; a mask supplied
+					// by flag or document wins.
+					if _, _given := _body.lookup([]string{"updateMask"}); !_given {
+						if _mask := _body.updateMask("updateMask"); _mask != "" {
+							_ = _body.set("update-mask", []string{"updateMask"}, _mask)
+						}
+					}
+					if cmd.Bool("dry-run") {
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ModelUpdateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.Models().Update(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -120,15 +563,19 @@ func modelsCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					var converted commands.ModelsDisableConversion
-					if err := commands.ConvertModelsDisable(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ModelDisableParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Models().Disable(ctx, pos0, &converted.Params)
+					out, err := client.Models().Disable(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -157,15 +604,19 @@ func modelsCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					var converted commands.ModelsEnableConversion
-					if err := commands.ConvertModelsEnable(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ModelEnableParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Models().Enable(ctx, pos0, &converted.Params)
+					out, err := client.Models().Enable(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -200,18 +651,46 @@ func modelsCommand() *cli.Command {
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					var converted commands.ModelsSwapOnVariationsConversion
-					if err := commands.ConvertModelsSwapOnVariations(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaModelsSwapOnVariations)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("model-swap") {
+						if err := _body.applyShorthandItems("model-swap", []string{"modelSwaps"}, cmd.StringSlice("model-swap"), shorthandSpec{Fields: []shorthandField{{Wire: "currentModelId", Key: "current-model-id", Kind: scalarString, Enum: nil, Required: false}, {Wire: "nextModelId", Key: "next-model-id", Kind: scalarString, Enum: nil, Required: false}, {Wire: "disableCurrentAfterSwap", Key: "disable-current-after-swap", Kind: scalarBool, Enum: nil, Required: false}}}); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"modelSwaps": "--model-swap"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ModelSwapOnVariationsParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.Models().SwapOnVariations(ctx, &converted.Params)
+					return client.Models().SwapOnVariations(ctx, &params)
 				},
 			},
 		},

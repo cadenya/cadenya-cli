@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	commands "go.cadenya.com/cadenya-cli/internal/commands"
+	sdk "go.cadenya.com/cadenya-go"
 )
 
 func tenantsCommand() *cli.Command {
@@ -23,7 +23,7 @@ func tenantsCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return."},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response."},
 					&cli.StringFlag{Name: "query", Usage: "Substring match against the tenant's name and external_id. Built for type-ahead filter pickers, where the operator knows the customer's own identifier rather…"},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
@@ -39,15 +39,37 @@ func tenantsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					var converted commands.TenantsListConversion
-					if err := commands.ConvertTenantsList(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("query") {
+						values["query"] = cmd.String("query")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					if cmd.IsSet("sort-order") {
+						values["sortOrder"] = cmd.String("sort-order")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					var params sdk.TenantListParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Tenants().List(ctx, &converted.Params)
+					page, err := client.Tenants().List(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -77,15 +99,22 @@ func tenantsCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					var converted commands.TenantsRetrieveConversion
-					if err := commands.ConvertTenantsRetrieve(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					var params sdk.TenantRetrieveParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Tenants().Retrieve(ctx, pos0, &converted.Params)
+					out, err := client.Tenants().Retrieve(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -114,15 +143,19 @@ func tenantsCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					var converted commands.TenantsDeleteConversion
-					if err := commands.ConvertTenantsDelete(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.TenantDeleteParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Tenants().Delete(ctx, pos0, &converted.Params)
+					out, err := client.Tenants().Delete(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -137,7 +170,7 @@ func tenantsCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return."},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response."},
 					&cli.StringFlag{Name: "query", Usage: "Substring match against the subject's name and external_id."},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)."},
@@ -156,15 +189,34 @@ func tenantsCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // tenant-id
-					var converted commands.TenantsListSubjectsConversion
-					if err := commands.ConvertTenantsListSubjects(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("query") {
+						values["query"] = cmd.String("query")
+					}
+					if cmd.IsSet("sort-order") {
+						values["sortOrder"] = cmd.String("sort-order")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					var params sdk.TenantListSubjectsParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Tenants().ListSubjects(ctx, pos0, &converted.Params)
+					page, err := client.Tenants().ListSubjects(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}

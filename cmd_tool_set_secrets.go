@@ -8,8 +8,12 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	commands "go.cadenya.com/cadenya-cli/internal/commands"
+	sdk "go.cadenya.com/cadenya-go"
 )
+
+const bodySchemaToolSetSecretsCreate = "{\"$defs\":{\"CreateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"ToolSetSecretSpec\":{\"properties\":{\"value\":{\"type\":\"string\"}},\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateResourceMetadata\"},\"spec\":{\"$ref\":\"ToolSetSecretSpec\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"}"
+
+const bodySchemaToolSetSecretsUpdate = "{\"$defs\":{\"ToolSetSecretSpec\":{\"properties\":{\"value\":{\"type\":\"string\"}},\"type\":\"object\"},\"UpdateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"UpdateResourceMetadata\"},\"spec\":{\"$ref\":\"ToolSetSecretSpec\"},\"updateMask\":{\"type\":\"string\"}},\"type\":\"object\"}"
 
 func toolSetSecretsCommand() *cli.Command {
 	return &cli.Command{
@@ -24,7 +28,7 @@ func toolSetSecretsCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace that owns the tool set."},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "prefix", Usage: "Filter expression (query param: prefix)"},
 					&cli.StringFlag{Name: "query", Usage: "Free-form search query"},
@@ -44,15 +48,37 @@ func toolSetSecretsCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
-					var converted commands.ToolSetSecretsListConversion
-					if err := commands.ConvertToolSetSecretsList(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("prefix") {
+						values["prefix"] = cmd.String("prefix")
+					}
+					if cmd.IsSet("query") {
+						values["query"] = cmd.String("query")
+					}
+					if cmd.IsSet("sort-order") {
+						values["sortOrder"] = cmd.String("sort-order")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					var params sdk.ToolSetSecretListParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.ToolSets().Secrets().List(ctx, pos0, &converted.Params)
+					page, err := client.ToolSets().Secrets().List(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -95,18 +121,83 @@ func toolSetSecretsCommand() *cli.Command {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // tool-set-id
-					var converted commands.ToolSetSecretsCreateConversion
-					if err := commands.ConvertToolSetSecretsCreate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaToolSetSecretsCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("value") {
+						_v, err := stringArg("value", cmd.String("value"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("value", []string{"spec", "value"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.value": "--value"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ToolSetSecretCreateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Secrets().Create(ctx, pos0, &converted.Params)
+					out, err := client.ToolSets().Secrets().Create(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -139,15 +230,19 @@ func toolSetSecretsCommand() *cli.Command {
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.ToolSetSecretsRetrieveConversion
-					if err := commands.ConvertToolSetSecretsRetrieve(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ToolSetSecretRetrieveParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Secrets().Retrieve(ctx, pos0, pos1, &converted.Params)
+					out, err := client.ToolSets().Secrets().Retrieve(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}
@@ -182,15 +277,19 @@ func toolSetSecretsCommand() *cli.Command {
 					}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.ToolSetSecretsDeleteConversion
-					if err := commands.ConvertToolSetSecretsDelete(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ToolSetSecretDeleteParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.ToolSets().Secrets().Delete(ctx, pos0, pos1, &converted.Params)
+					return client.ToolSets().Secrets().Delete(ctx, pos0, pos1, &params)
 				},
 			},
 			{
@@ -234,18 +333,99 @@ func toolSetSecretsCommand() *cli.Command {
 					}
 					pos0 := cmd.Args().Get(0) // tool-set-id
 					pos1 := cmd.Args().Get(1) // id
-					var converted commands.ToolSetSecretsUpdateConversion
-					if err := commands.ConvertToolSetSecretsUpdate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaToolSetSecretsUpdate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("value") {
+						_v, err := stringArg("value", cmd.String("value"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("value", []string{"spec", "value"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("update-mask") {
+						_v, err := stringArg("update-mask", cmd.String("update-mask"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("update-mask", []string{"updateMask"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.value": "--value", "updateMask": "--update-mask"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					// A partial update names the paths it changes; a mask supplied
+					// by flag or document wins.
+					if _, _given := _body.lookup([]string{"updateMask"}); !_given {
+						if _mask := _body.updateMask("updateMask"); _mask != "" {
+							_ = _body.set("update-mask", []string{"updateMask"}, _mask)
+						}
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ToolSetSecretUpdateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSets().Secrets().Update(ctx, pos0, pos1, &converted.Params)
+					out, err := client.ToolSets().Secrets().Update(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}

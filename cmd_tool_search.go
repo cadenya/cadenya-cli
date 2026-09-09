@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	commands "go.cadenya.com/cadenya-cli/internal/commands"
+	sdk "go.cadenya.com/cadenya-go"
 )
 
 func toolSearchCommand() *cli.Command {
@@ -44,15 +44,22 @@ func toolSearchCommand() *cli.Command {
 					if len(_missing) > 0 {
 						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
 					}
-					var converted commands.ToolSearchSearchOrSetsConversion
-					if err := commands.ConvertToolSearchSearchOrSets(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("query") {
+						values["query"] = cmd.String("query")
+					}
+					var params sdk.ToolSearchSearchOrSetsParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.ToolSearch().SearchOrSets(ctx, &converted.Params)
+					out, err := client.ToolSearch().SearchOrSets(ctx, &params)
 					if err != nil {
 						return err
 					}

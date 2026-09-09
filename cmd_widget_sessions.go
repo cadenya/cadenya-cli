@@ -8,8 +8,10 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	commands "go.cadenya.com/cadenya-cli/internal/commands"
+	sdk "go.cadenya.com/cadenya-go"
 )
+
+const bodySchemaWidgetSessionsCreate = "{\"$defs\":{\"CreateOperationMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the operation (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"priority\\\": \\\"high\\\", \\\"source\\\": \\\"api\\\", \\\"workflow\\\": \\\"onboarding\\\"}\",\"type\":\"object\"}},\"type\":\"object\"},\"CreateWidgetSessionRequest_Secret\":{\"properties\":{\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"type\":\"object\"},\"SubjectAssertion\":{\"properties\":{\"id\":{\"description\":\"The subject identifier in the customer's namespace (e.g. their user id).\\n Stored as the subject record's external_id; unique within the tenant.\",\"type\":\"string\"},\"name\":{\"description\":\"Optional human-readable name for the subject. Updates the subject\\n record's name on every assertion that provides it.\",\"type\":\"string\"}},\"required\":[\"id\"],\"type\":\"object\"},\"TenantAssertion\":{\"properties\":{\"id\":{\"description\":\"The tenant identifier in the customer's namespace (e.g. \\\"acme-corp\\\").\\n Stored as the tenant record's external_id; stable across requests.\",\"type\":\"string\"},\"name\":{\"description\":\"Optional human-readable name for the tenant. Updates the tenant record's\\n name on every assertion that provides it.\",\"type\":\"string\"}},\"required\":[\"id\"],\"type\":\"object\"},\"WidgetSessionSpec\":{\"properties\":{\"expiresAt\":{\"description\":\"Hard session expiry. Tokens never outlive it; after it passes the session\\n transitions to STATE_EXPIRED. Defaults to a server-chosen horizon when\\n unset.\",\"format\":\"date-time\",\"type\":\"string\"},\"pinnedParameters\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Parameters forced onto tool calls made by this session's conversations.\\n A pinned parameter is removed from the tool schema the LLM sees, and its\\n value is always overwritten server-side with the pinned value — so the\\n model cannot be tricked into calling a tool with a different id than the\\n one the session was minted for (e.g. pin \\\"workspaceId\\\" for an OpenAPI\\n tool with a /workspaces/{workspaceId} path). Flows to every objective\\n the session creates. See ToolSetSpec.overlays for binding pinned keys to\\n nested or differently named parameters.\",\"type\":\"object\"},\"subject\":{\"$ref\":\"SubjectAssertion\",\"description\":\"Optional subject assertion — the visitor within the tenant (e.g. their\\n user id in the customer's namespace). Requires `tenant`; a subject\\n asserted without a tenant is rejected with InvalidArgument.\"},\"tenant\":{\"$ref\":\"TenantAssertion\",\"description\":\"Optional tenant assertion — the customer's org/company identifier for the\\n visitor. Upserts the tenant record in the workspace and tags the session\\n and every conversation it creates. Conversation listing at the widget\\n host is scoped to this tenant.\"},\"widgetId\":{\"description\":\"Widget this session is minted against. Accepts the canonical `wgt_…` form\\n or the `external_id:<value>` form.\",\"type\":\"string\"}},\"required\":[\"widgetId\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateOperationMetadata\"},\"secrets\":{\"items\":{\"$ref\":\"CreateWidgetSessionRequest_Secret\"},\"type\":\"array\"},\"spec\":{\"$ref\":\"WidgetSessionSpec\"}},\"required\":[\"spec\"],\"type\":\"object\"}"
 
 func widgetSessionsCommand() *cli.Command {
 	return &cli.Command{
@@ -23,7 +25,7 @@ func widgetSessionsCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return."},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return."},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response."},
 					&cli.StringFlag{Name: "widget-id", Usage: "Filter to sessions on a specific widget. Accepts the canonical `wgt_…` form or the `external_id:<value>` form."},
 					&cli.StringFlag{Name: "tenant-id", Usage: "Filter to sessions belonging to a tenant. Accepts the canonical `tenant_…` form or the `external_id:<value>` form."},
@@ -45,15 +47,46 @@ func widgetSessionsCommand() *cli.Command {
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_ACTIVE", "STATE_EXPIRED", "STATE_REVOKED", "STATE_EXHAUSTED"}) {
 						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: STATE_UNSPECIFIED, STATE_ACTIVE, STATE_EXPIRED, STATE_REVOKED, STATE_EXHAUSTED)", cmd.String("state")), 2)
 					}
-					var converted commands.WidgetSessionsListConversion
-					if err := commands.ConvertWidgetSessionsList(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("widget-id") {
+						values["widgetId"] = cmd.String("widget-id")
+					}
+					if cmd.IsSet("tenant-id") {
+						values["tenantId"] = cmd.String("tenant-id")
+					}
+					if cmd.IsSet("subject-id") {
+						values["subjectId"] = cmd.String("subject-id")
+					}
+					if cmd.IsSet("state") {
+						values["state"] = cmd.String("state")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					if cmd.IsSet("sort-order") {
+						values["sortOrder"] = cmd.String("sort-order")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					var params sdk.WidgetSessionListParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.WidgetSessions().List(ctx, &converted.Params)
+					page, err := client.WidgetSessions().List(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -101,18 +134,135 @@ func widgetSessionsCommand() *cli.Command {
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					var converted commands.WidgetSessionsCreateConversion
-					if err := commands.ConvertWidgetSessionsCreate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaWidgetSessionsCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("tenant") {
+						if err := _body.applyDoc("tenant", []string{"spec", "tenant"}, cmd.String("tenant"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("subject") {
+						if err := _body.applyDoc("subject", []string{"spec", "subject"}, cmd.String("subject"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("widget-id") {
+						_v, err := stringArg("widget-id", cmd.String("widget-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("widget-id", []string{"spec", "widgetId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("tenant-id") {
+						_v, err := stringArg("tenant-id", cmd.String("tenant-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("tenant-id", []string{"spec", "tenant", "id"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("tenant-name") {
+						_v, err := stringArg("tenant-name", cmd.String("tenant-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("tenant-name", []string{"spec", "tenant", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("subject-id") {
+						_v, err := stringArg("subject-id", cmd.String("subject-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("subject-id", []string{"spec", "subject", "id"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("subject-name") {
+						_v, err := stringArg("subject-name", cmd.String("subject-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("subject-name", []string{"spec", "subject", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("expires-at") {
+						if err := _body.set("expires-at", []string{"spec", "expiresAt"}, cmd.String("expires-at")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("pinned-parameter") {
+						if err := _body.applyEntries("pinned-parameter", []string{"spec", "pinnedParameters"}, cmd.StringSlice("pinned-parameter"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("secret") {
+						if err := _body.applyShorthandItems("secret", []string{"secrets"}, cmd.StringSlice("secret"), shorthandSpec{Fields: []shorthandField{{Wire: "name", Key: "name", Kind: scalarString, Enum: nil, Required: false}, {Wire: "value", Key: "value", Kind: scalarString, Enum: nil, Required: false}}, PairKey: "name", PairValue: "value"}); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.labels": "--label", "metadata.externalId": "--external-id", "spec": "--spec", "spec.widgetId": "--widget-id", "spec.tenant": "--tenant", "spec.tenant.id": "--tenant-id", "spec.tenant.name": "--tenant-name", "spec.subject": "--subject", "spec.subject.id": "--subject-id", "spec.subject.name": "--subject-name", "spec.expiresAt": "--expires-at", "spec.pinnedParameters": "--pinned-parameter", "secrets": "--secret"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.WidgetSessionCreateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WidgetSessions().Create(ctx, &converted.Params)
+					out, err := client.WidgetSessions().Create(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -140,15 +290,22 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
 					}
 					_columns := []displayColumn(nil)
-					var converted commands.WidgetSessionsDeleteTenantConversion
-					if err := commands.ConvertWidgetSessionsDeleteTenant(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("tenant-id") {
+						values["tenantId"] = cmd.String("tenant-id")
+					}
+					var params sdk.WidgetSessionDeleteTenantParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WidgetSessions().DeleteTenant(ctx, &converted.Params)
+					out, err := client.WidgetSessions().DeleteTenant(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -177,15 +334,19 @@ func widgetSessionsCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					var converted commands.WidgetSessionsRetrieveConversion
-					if err := commands.ConvertWidgetSessionsRetrieve(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.WidgetSessionRetrieveParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WidgetSessions().Retrieve(ctx, pos0, &converted.Params)
+					out, err := client.WidgetSessions().Retrieve(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -216,15 +377,19 @@ func widgetSessionsCommand() *cli.Command {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // id
-					var converted commands.WidgetSessionsDeleteConversion
-					if err := commands.ConvertWidgetSessionsDelete(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.WidgetSessionDeleteParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.WidgetSessions().Delete(ctx, pos0, &converted.Params)
+					return client.WidgetSessions().Delete(ctx, pos0, &params)
 				},
 			},
 			{
@@ -249,15 +414,19 @@ func widgetSessionsCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					var converted commands.WidgetSessionsRevokeConversion
-					if err := commands.ConvertWidgetSessionsRevoke(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.WidgetSessionRevokeParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WidgetSessions().Revoke(ctx, pos0, &converted.Params)
+					out, err := client.WidgetSessions().Revoke(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}

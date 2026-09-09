@@ -8,8 +8,14 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	commands "go.cadenya.com/cadenya-cli/internal/commands"
+	sdk "go.cadenya.com/cadenya-go"
 )
+
+const bodySchemaWorkspaceAdminCreate = "{\"$defs\":{\"CreateAccountResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Production API Key\\\", \\\"Staging Workspace\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"WorkspaceSpec\":{\"properties\":{\"description\":{\"type\":\"string\"}},\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateAccountResourceMetadata\"},\"spec\":{\"$ref\":\"WorkspaceSpec\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"}"
+
+const bodySchemaWorkspaceAdminUpdate = "{\"$defs\":{\"UpdateAccountResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Production API Key\\\", \\\"Staging Workspace\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"WorkspaceSpec\":{\"properties\":{\"description\":{\"type\":\"string\"}},\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"UpdateAccountResourceMetadata\"},\"spec\":{\"$ref\":\"WorkspaceSpec\"},\"updateMask\":{\"type\":\"string\"}},\"type\":\"object\"}"
+
+const bodySchemaWorkspaceAdminAddMember = "{\"$defs\":{},\"properties\":{\"email\":{\"type\":\"string\"},\"profileId\":{\"type\":\"string\"}},\"type\":\"object\"}"
 
 func workspaceAdminCommand() *cli.Command {
 	return &cli.Command{
@@ -22,7 +28,7 @@ func workspaceAdminCommand() *cli.Command {
 				Usage:                     "Search account profiles",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "query", Usage: "Free-form search over profile name and email. Case-insensitive substring match; empty returns all profiles."},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
@@ -36,15 +42,28 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "TYPE", path: []string{"spec", "type"}}}
-					var converted commands.WorkspaceAdminListProfilesConversion
-					if err := commands.ConvertWorkspaceAdminListProfiles(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("query") {
+						values["query"] = cmd.String("query")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					var params sdk.WorkspaceAdminListProfilesParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.WorkspaceAdmin().ListProfiles(ctx, &converted.Params)
+					page, err := client.WorkspaceAdmin().ListProfiles(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -57,7 +76,7 @@ func workspaceAdminCommand() *cli.Command {
 				Usage:                     "List all workspaces in the account",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.BoolFlag{Name: "include-archived", Usage: "When true, archived workspaces are included in the results. Defaults to false (active workspaces only)."},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
@@ -71,15 +90,28 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					var converted commands.WorkspaceAdminListAccountConversion
-					if err := commands.ConvertWorkspaceAdminListAccount(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("include-archived") {
+						values["includeArchived"] = cmd.Bool("include-archived")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					var params sdk.WorkspaceAdminListAccountParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.WorkspaceAdmin().ListAccount(ctx, &converted.Params)
+					page, err := client.WorkspaceAdmin().ListAccount(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -116,18 +148,80 @@ func workspaceAdminCommand() *cli.Command {
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					var converted commands.WorkspaceAdminCreateConversion
-					if err := commands.ConvertWorkspaceAdminCreate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					_schema := parseBodySchema(bodySchemaWorkspaceAdminCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.description": "--description"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.WorkspaceAdminCreateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WorkspaceAdmin().Create(ctx, &converted.Params)
+					out, err := client.WorkspaceAdmin().Create(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -151,15 +245,19 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					var converted commands.WorkspaceAdminRetrieveConversion
-					if err := commands.ConvertWorkspaceAdminRetrieve(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.WorkspaceAdminRetrieveParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WorkspaceAdmin().Retrieve(ctx, &converted.Params)
+					out, err := client.WorkspaceAdmin().Retrieve(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -185,15 +283,19 @@ func workspaceAdminCommand() *cli.Command {
 					if _display != "json" && _display != "yaml" {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
-					var converted commands.WorkspaceAdminArchiveConversion
-					if err := commands.ConvertWorkspaceAdminArchive(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.WorkspaceAdminArchiveParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.WorkspaceAdmin().Archive(ctx, &converted.Params)
+					return client.WorkspaceAdmin().Archive(ctx, &params)
 				},
 			},
 			{
@@ -228,18 +330,99 @@ func workspaceAdminCommand() *cli.Command {
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					var converted commands.WorkspaceAdminUpdateConversion
-					if err := commands.ConvertWorkspaceAdminUpdate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaWorkspaceAdminUpdate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("spec") {
+						if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("name") {
+						_v, err := stringArg("name", cmd.String("name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("name", []string{"metadata", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("description") {
+						_v, err := stringArg("description", cmd.String("description"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("description", []string{"spec", "description"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("update-mask") {
+						_v, err := stringArg("update-mask", cmd.String("update-mask"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("update-mask", []string{"updateMask"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.description": "--description", "updateMask": "--update-mask"}); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					// A partial update names the paths it changes; a mask supplied
+					// by flag or document wins.
+					if _, _given := _body.lookup([]string{"updateMask"}); !_given {
+						if _mask := _body.updateMask("updateMask"); _mask != "" {
+							_ = _body.set("update-mask", []string{"updateMask"}, _mask)
+						}
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.WorkspaceAdminUpdateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WorkspaceAdmin().Update(ctx, &converted.Params)
+					out, err := client.WorkspaceAdmin().Update(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -253,7 +436,7 @@ func workspaceAdminCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "The workspace whose members will be listed (path)."},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -265,15 +448,25 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "PROFILE", path: []string{"profileId"}}, {header: "ACTOR", path: []string{"actorId"}}}
-					var converted commands.WorkspaceAdminListMembersConversion
-					if err := commands.ConvertWorkspaceAdminListMembers(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					var params sdk.WorkspaceAdminListMembersParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.WorkspaceAdmin().ListMembers(ctx, &converted.Params)
+					page, err := client.WorkspaceAdmin().ListMembers(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -309,18 +502,59 @@ func workspaceAdminCommand() *cli.Command {
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					var converted commands.WorkspaceAdminAddMemberConversion
-					if err := commands.ConvertWorkspaceAdminAddMember(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaWorkspaceAdminAddMember)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("profile-id") {
+						_v, err := stringArg("profile-id", cmd.String("profile-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("profile-id", []string{"profileId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("email") {
+						_v, err := stringArg("email", cmd.String("email"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("email", []string{"email"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"profileId": "--profile-id", "email": "--email"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.WorkspaceAdminAddMemberParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.WorkspaceAdmin().AddMember(ctx, &converted.Params)
+					out, err := client.WorkspaceAdmin().AddMember(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -351,15 +585,19 @@ func workspaceAdminCommand() *cli.Command {
 						return cli.Exit("this command has no displayable response; use --display json", 2)
 					}
 					pos0 := cmd.Args().Get(0) // profile-id
-					var converted commands.WorkspaceAdminRemoveMemberConversion
-					if err := commands.ConvertWorkspaceAdminRemoveMember(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.WorkspaceAdminRemoveMemberParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.WorkspaceAdmin().RemoveMember(ctx, pos0, &converted.Params)
+					return client.WorkspaceAdmin().RemoveMember(ctx, pos0, &params)
 				},
 			},
 		},

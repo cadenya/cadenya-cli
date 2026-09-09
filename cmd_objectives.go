@@ -8,10 +8,22 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	commands "go.cadenya.com/cadenya-cli/internal/commands"
-
 	sdk "go.cadenya.com/cadenya-go"
 )
+
+const bodySchemaObjectivesCreate = "{\"$defs\":{\"CreateObjectiveRequest_Secret\":{\"properties\":{\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"type\":\"object\"},\"CreateOperationMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the operation (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"priority\\\": \\\"high\\\", \\\"source\\\": \\\"api\\\", \\\"workflow\\\": \\\"onboarding\\\"}\",\"type\":\"object\"}},\"type\":\"object\"},\"MemoryReference\":{\"properties\":{\"memoryEntryId\":{\"description\":\"When set, inserts only this entry from memory_layer_id into the cascade —\\n behaves as a single-entry layer (only this key resolves at this\\n position). The entry must belong to memory_layer_id; mismatches are\\n rejected with InvalidArgument.\",\"type\":\"string\"},\"memoryLayerId\":{\"type\":\"string\"}},\"required\":[\"memoryLayerId\"],\"type\":\"object\"},\"ObjectiveEpisodicConfig\":{\"properties\":{\"key\":{\"description\":\"The caller-supplied episodic key. Objectives created with the same key\\n (for the same agent) share one episodic memory layer.\",\"type\":\"string\"}},\"required\":[\"key\"],\"type\":\"object\"},\"SubjectAssertion\":{\"properties\":{\"id\":{\"description\":\"The subject identifier in the customer's namespace (e.g. their user id).\\n Stored as the subject record's external_id; unique within the tenant.\",\"type\":\"string\"},\"name\":{\"description\":\"Optional human-readable name for the subject. Updates the subject\\n record's name on every assertion that provides it.\",\"type\":\"string\"}},\"required\":[\"id\"],\"type\":\"object\"},\"TenantAssertion\":{\"properties\":{\"id\":{\"description\":\"The tenant identifier in the customer's namespace (e.g. \\\"acme-corp\\\").\\n Stored as the tenant record's external_id; stable across requests.\",\"type\":\"string\"},\"name\":{\"description\":\"Optional human-readable name for the tenant. Updates the tenant record's\\n name on every assertion that provides it.\",\"type\":\"string\"}},\"required\":[\"id\"],\"type\":\"object\"}},\"properties\":{\"agentId\":{\"type\":\"string\"},\"episodicMemory\":{\"$ref\":\"ObjectiveEpisodicConfig\"},\"firstUserMessage\":{\"type\":\"string\"},\"firstUserMessageData\":{\"additionalProperties\":{},\"type\":\"object\"},\"memoryCascade\":{\"items\":{\"$ref\":\"MemoryReference\"},\"type\":\"array\"},\"metadata\":{\"$ref\":\"CreateOperationMetadata\"},\"pinnedParameters\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"},\"secrets\":{\"items\":{\"$ref\":\"CreateObjectiveRequest_Secret\"},\"type\":\"array\"},\"subject\":{\"$ref\":\"SubjectAssertion\"},\"systemPromptData\":{\"additionalProperties\":{},\"type\":\"object\"},\"tenant\":{\"$ref\":\"TenantAssertion\"},\"variationId\":{\"type\":\"string\"}},\"required\":[\"agentId\",\"systemPromptData\"],\"type\":\"object\"}"
+
+const bodySchemaObjectivesCreateFeedback = "{\"$defs\":{\"CreateOperationMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the operation (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"priority\\\": \\\"high\\\", \\\"source\\\": \\\"api\\\", \\\"workflow\\\": \\\"onboarding\\\"}\",\"type\":\"object\"}},\"type\":\"object\"},\"ObjectiveFeedbackData\":{\"properties\":{\"comment\":{\"description\":\"Optional human-readable comment explaining the feedback\",\"type\":\"string\"},\"score\":{\"description\":\"A score between -1.0 and 1.0 representing the quality of the objective's execution.\\n -1.0 is the worst possible score, 0.0 is neutral, and 1.0 is the best.\",\"type\":\"number\"}},\"type\":\"object\"}},\"properties\":{\"data\":{\"$ref\":\"ObjectiveFeedbackData\"},\"metadata\":{\"$ref\":\"CreateOperationMetadata\"}},\"required\":[\"metadata\",\"data\"],\"type\":\"object\"}"
+
+const bodySchemaObjectivesDenyToolCall = "{\"$defs\":{},\"properties\":{\"memo\":{\"type\":\"string\"}},\"type\":\"object\"}"
+
+const bodySchemaObjectivesSetToolCallContent = "{\"$defs\":{\"SetToolCallContentRequest_AudioBlock\":{\"properties\":{\"data\":{\"description\":\"Base64-encoded audio bytes.\",\"type\":\"string\"},\"mimeType\":{\"description\":\"IANA media type of the audio, e.g. audio/wav.\",\"type\":\"string\"}},\"required\":[\"data\",\"mimeType\"],\"type\":\"object\"},\"SetToolCallContentRequest_ContentBlock\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"SetToolCallContentRequest_ContentBlock_Text\"},{\"$ref\":\"SetToolCallContentRequest_ContentBlock_Image\"},{\"$ref\":\"SetToolCallContentRequest_ContentBlock_Audio\"}]},\"SetToolCallContentRequest_ContentBlock_Audio\":{\"properties\":{\"audio\":{\"$ref\":\"SetToolCallContentRequest_AudioBlock\"},\"type\":{\"const\":\"audio\"}},\"required\":[\"type\",\"audio\"],\"type\":\"object\"},\"SetToolCallContentRequest_ContentBlock_Image\":{\"properties\":{\"image\":{\"$ref\":\"SetToolCallContentRequest_ImageBlock\"},\"type\":{\"const\":\"image\"}},\"required\":[\"type\",\"image\"],\"type\":\"object\"},\"SetToolCallContentRequest_ContentBlock_Text\":{\"properties\":{\"text\":{\"$ref\":\"SetToolCallContentRequest_TextBlock\"},\"type\":{\"const\":\"text\"}},\"required\":[\"type\",\"text\"],\"type\":\"object\"},\"SetToolCallContentRequest_ImageBlock\":{\"properties\":{\"data\":{\"description\":\"Base64-encoded image bytes.\",\"type\":\"string\"},\"mimeType\":{\"description\":\"IANA media type of the image, e.g. image/png.\",\"type\":\"string\"}},\"required\":[\"data\",\"mimeType\"],\"type\":\"object\"},\"SetToolCallContentRequest_TextBlock\":{\"properties\":{\"text\":{\"type\":\"string\"}},\"required\":[\"text\"],\"type\":\"object\"}},\"properties\":{\"content\":{\"items\":{\"$ref\":\"SetToolCallContentRequest_ContentBlock\"},\"type\":\"array\"}},\"required\":[\"content\"],\"type\":\"object\"}"
+
+const bodySchemaObjectivesCancel = "{\"$defs\":{},\"properties\":{\"reason\":{\"type\":\"string\"}},\"type\":\"object\"}"
+
+const bodySchemaObjectivesCompact = "{\"$defs\":{\"AgentVariationSpec_CompactionConfig\":{\"properties\":{\"summarization\":{\"$ref\":\"CompactionConfig_SummarizationStrategy\",\"description\":\"Strategies — set one or more. When multiple are set, they execute in order:\\n tool_result_clearing → summarization.\\n When none are set, defaults to summarization with the system default prompt.\"},\"toolResultClearing\":{\"$ref\":\"CompactionConfig_ToolResultClearingStrategy\"},\"triggerThreshold\":{\"description\":\"Trigger threshold as a percentage of the model's context window (0.0 to 1.0).\\n When input tokens reach this percentage of the model's limit, compaction triggers.\\n Default: 0.75 (75%)\",\"type\":\"number\"}},\"type\":\"object\"},\"CompactionConfig_SummarizationStrategy\":{\"properties\":{\"instructions\":{\"description\":\"Custom instructions that guide what the summarizer preserves.\\n Replaces the default summarization prompt entirely.\\n Example: \\\"Preserve all code snippets, variable names, and technical decisions.\\\"\",\"type\":\"string\"}},\"type\":\"object\"},\"CompactionConfig_ToolResultClearingStrategy\":{\"properties\":{\"preserveRecentResults\":{\"description\":\"Number of most recent tool call results to keep intact.\\n Older tool results have their content replaced with \\\"[result cleared]\\\"\\n while preserving the assistant tool call message (function name, arguments).\\n Default: 2\",\"type\":\"integer\"}},\"type\":\"object\"}},\"properties\":{\"compactionConfig\":{\"$ref\":\"AgentVariationSpec_CompactionConfig\"}},\"type\":\"object\"}"
+
+const bodySchemaObjectivesContinue = "{\"$defs\":{},\"properties\":{\"enqueue\":{\"type\":\"boolean\"},\"message\":{\"type\":\"string\"}},\"required\":[\"message\"],\"type\":\"object\"}"
 
 func objectivesCommand() *cli.Command {
 	return &cli.Command{
@@ -25,7 +37,7 @@ func objectivesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "agent-id", Usage: "Agent ID for filtering"},
 					&cli.StringFlag{Name: "parent-objective-id", Usage: "Optional filters"},
@@ -52,15 +64,61 @@ func objectivesCommand() *cli.Command {
 					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_PENDING", "STATE_RUNNING", "STATE_WAITING", "STATE_FAILED", "STATE_CANCELLED", "STATE_FINALIZED", "STATE_TIMED_OUT"}) {
 						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: STATE_UNSPECIFIED, STATE_PENDING, STATE_RUNNING, STATE_WAITING, STATE_FAILED, STATE_CANCELLED, STATE_FINALIZED, STATE_TIMED_OUT)", cmd.String("state")), 2)
 					}
-					var converted commands.ObjectivesListConversion
-					if err := commands.ConvertObjectivesList(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("agent-id") {
+						values["agentId"] = cmd.String("agent-id")
+					}
+					if cmd.IsSet("parent-objective-id") {
+						values["parentObjectiveId"] = cmd.String("parent-objective-id")
+					}
+					if cmd.IsSet("state") {
+						values["state"] = cmd.String("state")
+					}
+					if cmd.IsSet("profile-id") {
+						values["profileId"] = cmd.String("profile-id")
+					}
+					if cmd.IsSet("sort-order") {
+						values["sortOrder"] = cmd.String("sort-order")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					if cmd.IsSet("agent-schedule-id") {
+						values["agentScheduleId"] = cmd.String("agent-schedule-id")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					if cmd.IsSet("tenant-id") {
+						values["tenantId"] = cmd.String("tenant-id")
+					}
+					if cmd.IsSet("subject-id") {
+						values["subjectId"] = cmd.String("subject-id")
+					}
+					if cmd.IsSet("widget-id") {
+						values["widgetId"] = cmd.String("widget-id")
+					}
+					if cmd.IsSet("widget-session-id") {
+						values["widgetSessionId"] = cmd.String("widget-session-id")
+					}
+					var params sdk.ObjectiveListParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Objectives().List(ctx, &converted.Params)
+					page, err := client.Objectives().List(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -116,18 +174,172 @@ func objectivesCommand() *cli.Command {
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
-					var converted commands.ObjectivesCreateConversion
-					if err := commands.ConvertObjectivesCreate(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaObjectivesCreate)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("episodic-memory") {
+						if err := _body.applyDoc("episodic-memory", []string{"episodicMemory"}, cmd.String("episodic-memory"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("tenant") {
+						if err := _body.applyDoc("tenant", []string{"tenant"}, cmd.String("tenant"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("subject") {
+						if err := _body.applyDoc("subject", []string{"subject"}, cmd.String("subject"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("agent-id") {
+						_v, err := stringArg("agent-id", cmd.String("agent-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("agent-id", []string{"agentId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("variation-id") {
+						_v, err := stringArg("variation-id", cmd.String("variation-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("variation-id", []string{"variationId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("system-prompt-data") {
+						if err := _body.applyEntryDocs("system-prompt-data", []string{"systemPromptData"}, cmd.StringSlice("system-prompt-data")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("first-user-message") {
+						_v, err := stringArg("first-user-message", cmd.String("first-user-message"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("first-user-message", []string{"firstUserMessage"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("secret") {
+						if err := _body.applyShorthandItems("secret", []string{"secrets"}, cmd.StringSlice("secret"), shorthandSpec{Fields: []shorthandField{{Wire: "name", Key: "name", Kind: scalarString, Enum: nil, Required: false}, {Wire: "value", Key: "value", Kind: scalarString, Enum: nil, Required: false}}, PairKey: "name", PairValue: "value"}); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("memory-cascade") {
+						if err := _body.applyShorthandItems("memory-cascade", []string{"memoryCascade"}, cmd.StringSlice("memory-cascade"), shorthandSpec{Fields: []shorthandField{{Wire: "memoryLayerId", Key: "memory-layer-id", Kind: scalarString, Enum: nil, Required: true}, {Wire: "memoryEntryId", Key: "memory-entry-id", Kind: scalarString, Enum: nil, Required: false}}}); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("first-user-message-data") {
+						if err := _body.applyEntryDocs("first-user-message-data", []string{"firstUserMessageData"}, cmd.StringSlice("first-user-message-data")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("episodic-memory-key") {
+						_v, err := stringArg("episodic-memory-key", cmd.String("episodic-memory-key"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("episodic-memory-key", []string{"episodicMemory", "key"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("tenant-id") {
+						_v, err := stringArg("tenant-id", cmd.String("tenant-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("tenant-id", []string{"tenant", "id"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("tenant-name") {
+						_v, err := stringArg("tenant-name", cmd.String("tenant-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("tenant-name", []string{"tenant", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("subject-id") {
+						_v, err := stringArg("subject-id", cmd.String("subject-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("subject-id", []string{"subject", "id"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("subject-name") {
+						_v, err := stringArg("subject-name", cmd.String("subject-name"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("subject-name", []string{"subject", "name"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("pinned-parameter") {
+						if err := _body.applyEntries("pinned-parameter", []string{"pinnedParameters"}, cmd.StringSlice("pinned-parameter"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"agentId": "--agent-id", "variationId": "--variation-id", "metadata": "--metadata", "metadata.labels": "--label", "metadata.externalId": "--external-id", "systemPromptData": "--system-prompt-data", "firstUserMessage": "--first-user-message", "secrets": "--secret", "memoryCascade": "--memory-cascade", "firstUserMessageData": "--first-user-message-data", "episodicMemory": "--episodic-memory", "episodicMemory.key": "--episodic-memory-key", "tenant": "--tenant", "tenant.id": "--tenant-id", "tenant.name": "--tenant-name", "subject": "--subject", "subject.id": "--subject-id", "subject.name": "--subject-name", "pinnedParameters": "--pinned-parameter"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ObjectiveCreateParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().Create(ctx, &converted.Params)
+					out, err := client.Objectives().Create(ctx, &params)
 					if err != nil {
 						return err
 					}
@@ -156,15 +368,19 @@ func objectivesCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					pos0 := cmd.Args().Get(0) // id
-					var converted commands.ObjectivesRetrieveConversion
-					if err := commands.ConvertObjectivesRetrieve(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ObjectiveRetrieveParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().Retrieve(ctx, pos0, &converted.Params)
+					out, err := client.Objectives().Retrieve(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -179,7 +395,7 @@ func objectivesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
@@ -197,15 +413,31 @@ func objectivesCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesListContextWindowsConversion
-					if err := commands.ConvertObjectivesListContextWindows(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					var params sdk.ObjectiveListContextWindowsParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Objectives().ListContextWindows(ctx, pos0, &converted.Params)
+					page, err := client.Objectives().ListContextWindows(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -237,15 +469,19 @@ func objectivesCommand() *cli.Command {
 					}
 					_columns := []displayColumn(nil)
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesRetrieveDiagnosticsConversion
-					if err := commands.ConvertObjectivesRetrieveDiagnostics(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ObjectiveRetrieveDiagnosticsParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().RetrieveDiagnostics(ctx, pos0, &converted.Params)
+					out, err := client.Objectives().RetrieveDiagnostics(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -260,7 +496,7 @@ func objectivesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
@@ -281,15 +517,40 @@ func objectivesCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "TYPE", path: []string{"data", "type"}}, {header: "WINDOW", path: []string{"contextWindowId"}}, {header: "DATA", path: []string{"data"}, truncate: 30}}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesListEventsConversion
-					if err := commands.ConvertObjectivesListEvents(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("sort-order") {
+						values["sortOrder"] = cmd.String("sort-order")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					if cmd.IsSet("window-id") {
+						values["windowId"] = cmd.String("window-id")
+					}
+					if cmd.IsSet("since-event-id") {
+						values["sinceEventId"] = cmd.String("since-event-id")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					var params sdk.ObjectiveListEventsParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Objectives().ListEvents(ctx, pos0, &converted.Params)
+					page, err := client.Objectives().ListEvents(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -321,9 +582,13 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit("streaming commands support only --display json (one JSON document per event)", 2)
 					}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesStreamEventsConversion
-					if err := commands.ConvertObjectivesStreamEvents(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ObjectiveStreamEventsParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
@@ -333,7 +598,7 @@ func objectivesCommand() *cli.Command {
 					if cmd.IsSet("last-event-id") {
 						streamOpts = append(streamOpts, sdk.WithLastEventID(cmd.String("last-event-id")))
 					}
-					stream, err := client.Objectives().StreamEvents(ctx, pos0, &converted.Params, streamOpts...)
+					stream, err := client.Objectives().StreamEvents(ctx, pos0, &params, streamOpts...)
 					if err != nil {
 						return err
 					}
@@ -354,7 +619,7 @@ func objectivesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
 				},
@@ -371,15 +636,28 @@ func objectivesCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesListFeedbackConversion
-					if err := commands.ConvertObjectivesListFeedback(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					var params sdk.ObjectiveListFeedbackParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Objectives().ListFeedback(ctx, pos0, &converted.Params)
+					page, err := client.Objectives().ListFeedback(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -398,7 +676,7 @@ func objectivesCommand() *cli.Command {
 					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
 					&cli.StringFlag{Name: "external-id", Usage: "External ID for the operation (e.g., a workflow ID from an external system)."},
 					&cli.StringFlag{Name: "data", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
-					&cli.Float32Flag{Name: "data-score", Usage: "A score between -1.0 and 1.0 representing the quality of the objective's execution. -1.0 is the worst possible score, 0.0 is neutral, and 1.0 is the best."},
+					&cli.FloatFlag{Name: "data-score", Usage: "A score between -1.0 and 1.0 representing the quality of the objective's execution. -1.0 is the worst possible score, 0.0 is neutral, and 1.0 is the best."},
 					&cli.StringFlag{Name: "data-comment", Usage: "Optional human-readable comment explaining the feedback."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
@@ -422,18 +700,79 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesCreateFeedbackConversion
-					if err := commands.ConvertObjectivesCreateFeedback(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaObjectivesCreateFeedback)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("metadata") {
+						if err := _body.applyDoc("metadata", []string{"metadata"}, cmd.String("metadata"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("data") {
+						if err := _body.applyDoc("data", []string{"data"}, cmd.String("data"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("label") {
+						if err := _body.applyEntries("label", []string{"metadata", "labels"}, cmd.StringSlice("label"), scalarString, nil); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("external-id") {
+						_v, err := stringArg("external-id", cmd.String("external-id"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("external-id", []string{"metadata", "externalId"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("data-score") {
+						if err := _body.set("data-score", []string{"data", "score"}, cmd.Float("data-score")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("data-comment") {
+						_v, err := stringArg("data-comment", cmd.String("data-comment"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("data-comment", []string{"data", "comment"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.labels": "--label", "metadata.externalId": "--external-id", "data": "--data", "data.score": "--data-score", "data.comment": "--data-comment"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ObjectiveCreateFeedbackParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().CreateFeedback(ctx, pos0, &converted.Params)
+					out, err := client.Objectives().CreateFeedback(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -448,7 +787,7 @@ func objectivesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "status", Usage: "Filter by tool call status (one of: TOOL_CALL_STATUS_UNSPECIFIED, TOOL_CALL_STATUS_AUTO_APPROVED, TOOL_CALL_STATUS_WAITING_FOR_APPROVAL, TOOL_CALL_STATUS_APPROVED, TOOL_CALL_STATUS_DENIED)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
@@ -474,15 +813,37 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--execution-status: invalid value %q (valid: TOOL_CALL_EXECUTION_STATUS_UNSPECIFIED, TOOL_CALL_EXECUTION_STATUS_PENDING, TOOL_CALL_EXECUTION_STATUS_RUNNING, TOOL_CALL_EXECUTION_STATUS_COMPLETED, TOOL_CALL_EXECUTION_STATUS_ERRORED, TOOL_CALL_EXECUTION_STATUS_WAITING_FOR_CONTENT)", cmd.String("execution-status")), 2)
 					}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesListToolCallsConversion
-					if err := commands.ConvertObjectivesListToolCalls(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					if cmd.IsSet("status") {
+						values["status"] = cmd.String("status")
+					}
+					if cmd.IsSet("include-info") {
+						values["includeInfo"] = cmd.Bool("include-info")
+					}
+					if cmd.IsSet("execution-status") {
+						values["executionStatus"] = cmd.String("execution-status")
+					}
+					if cmd.IsSet("labels") {
+						values["labels"] = cmd.String("labels")
+					}
+					var params sdk.ObjectiveListToolCallsParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Objectives().ListToolCalls(ctx, pos0, &converted.Params)
+					page, err := client.Objectives().ListToolCalls(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -515,15 +876,19 @@ func objectivesCommand() *cli.Command {
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
 					pos1 := cmd.Args().Get(1) // tool-call-id
-					var converted commands.ObjectivesRetrieveToolCallConversion
-					if err := commands.ConvertObjectivesRetrieveToolCall(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ObjectiveRetrieveToolCallParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().RetrieveToolCall(ctx, pos0, pos1, &converted.Params)
+					out, err := client.Objectives().RetrieveToolCall(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}
@@ -556,15 +921,19 @@ func objectivesCommand() *cli.Command {
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
 					pos1 := cmd.Args().Get(1) // tool-call-id
-					var converted commands.ObjectivesApproveToolCallConversion
-					if err := commands.ConvertObjectivesApproveToolCall(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					var params sdk.ObjectiveApproveToolCallParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().ApproveToolCall(ctx, pos0, pos1, &converted.Params)
+					out, err := client.Objectives().ApproveToolCall(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}
@@ -605,18 +974,50 @@ func objectivesCommand() *cli.Command {
 					}
 					pos0 := cmd.Args().Get(0) // objective-id
 					pos1 := cmd.Args().Get(1) // tool-call-id
-					var converted commands.ObjectivesDenyToolCallConversion
-					if err := commands.ConvertObjectivesDenyToolCall(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaObjectivesDenyToolCall)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("memo") {
+						_v, err := stringArg("memo", cmd.String("memo"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("memo", []string{"memo"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"memo": "--memo"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ObjectiveDenyToolCallParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().DenyToolCall(ctx, pos0, pos1, &converted.Params)
+					out, err := client.Objectives().DenyToolCall(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}
@@ -658,18 +1059,46 @@ func objectivesCommand() *cli.Command {
 					}
 					pos0 := cmd.Args().Get(0) // objective-id
 					pos1 := cmd.Args().Get(1) // tool-call-id
-					var converted commands.ObjectivesSetToolCallContentConversion
-					if err := commands.ConvertObjectivesSetToolCallContent(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaObjectivesSetToolCallContent)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("content") {
+						if err := _body.applyDocItems("content", []string{"content"}, cmd.StringSlice("content")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"content": "--content"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ObjectiveSetToolCallContentParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().SetToolCallContent(ctx, pos0, pos1, &converted.Params)
+					out, err := client.Objectives().SetToolCallContent(ctx, pos0, pos1, &params)
 					if err != nil {
 						return err
 					}
@@ -684,7 +1113,7 @@ func objectivesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
-					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -700,15 +1129,25 @@ func objectivesCommand() *cli.Command {
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "NAME", path: []string{"metadata", "name"}}}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesListToolsConversion
-					if err := commands.ConvertObjectivesListTools(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					if cmd.IsSet("limit") {
+						values["limit"] = cmd.Int("limit")
+					}
+					if cmd.IsSet("cursor") {
+						values["cursor"] = cmd.String("cursor")
+					}
+					var params sdk.ObjectiveListToolsParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					page, err := client.Objectives().ListTools(ctx, pos0, &converted.Params)
+					page, err := client.Objectives().ListTools(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -745,18 +1184,50 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesCancelConversion
-					if err := commands.ConvertObjectivesCancel(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaObjectivesCancel)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("reason") {
+						_v, err := stringArg("reason", cmd.String("reason"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("reason", []string{"reason"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"reason": "--reason"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ObjectiveCancelParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().Cancel(ctx, pos0, &converted.Params)
+					out, err := client.Objectives().Cancel(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -772,11 +1243,11 @@ func objectivesCommand() *cli.Command {
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
 					&cli.StringFlag{Name: "compaction-config", Usage: "Optional compaction config override. When not set, uses the variation's compaction_config. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
-					&cli.Float32Flag{Name: "compaction-config-trigger-threshold", Usage: "Trigger threshold as a percentage of the model's context window (0.0 to 1.0). When input tokens reach this percentage of the model's limit, compaction…."},
+					&cli.FloatFlag{Name: "compaction-config-trigger-threshold", Usage: "Trigger threshold as a percentage of the model's context window (0.0 to 1.0). When input tokens reach this percentage of the model's limit, compaction…."},
 					&cli.StringFlag{Name: "compaction-config-summarization", Usage: "Strategies — set one or more. When multiple are set, they execute in order: tool_result_clearing → summarization. When none are set, defaults to…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.StringFlag{Name: "compaction-config-summarization-instructions", Usage: "Custom instructions that guide what the summarizer preserves. Replaces the default summarization prompt entirely. Example: \"Preserve all code snippets,…."},
 					&cli.StringFlag{Name: "compaction-config-tool-result-clearing", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
-					&cli.Int32Flag{Name: "compaction-config-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
+					&cli.IntFlag{Name: "compaction-config-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -801,18 +1272,75 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesCompactConversion
-					if err := commands.ConvertObjectivesCompact(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaObjectivesCompact)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("compaction-config") {
+						if err := _body.applyDoc("compaction-config", []string{"compactionConfig"}, cmd.String("compaction-config"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("compaction-config-summarization") {
+						if err := _body.applyDoc("compaction-config-summarization", []string{"compactionConfig", "summarization"}, cmd.String("compaction-config-summarization"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("compaction-config-tool-result-clearing") {
+						if err := _body.applyDoc("compaction-config-tool-result-clearing", []string{"compactionConfig", "toolResultClearing"}, cmd.String("compaction-config-tool-result-clearing"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("compaction-config-trigger-threshold") {
+						if err := _body.set("compaction-config-trigger-threshold", []string{"compactionConfig", "triggerThreshold"}, cmd.Float("compaction-config-trigger-threshold")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("compaction-config-summarization-instructions") {
+						_v, err := stringArg("compaction-config-summarization-instructions", cmd.String("compaction-config-summarization-instructions"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("compaction-config-summarization-instructions", []string{"compactionConfig", "summarization", "instructions"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("compaction-config-tool-result-clearing-preserve-recent-results") {
+						if err := _body.set("compaction-config-tool-result-clearing-preserve-recent-results", []string{"compactionConfig", "toolResultClearing", "preserveRecentResults"}, cmd.Int("compaction-config-tool-result-clearing-preserve-recent-results")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"compactionConfig": "--compaction-config", "compactionConfig.triggerThreshold": "--compaction-config-trigger-threshold", "compactionConfig.summarization": "--compaction-config-summarization", "compactionConfig.summarization.instructions": "--compaction-config-summarization-instructions", "compactionConfig.toolResultClearing": "--compaction-config-tool-result-clearing", "compactionConfig.toolResultClearing.preserveRecentResults": "--compaction-config-tool-result-clearing-preserve-recent-results"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ObjectiveCompactParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().Compact(ctx, pos0, &converted.Params)
+					out, err := client.Objectives().Compact(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
@@ -850,18 +1378,55 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // objective-id
-					var converted commands.ObjectivesContinueConversion
-					if err := commands.ConvertObjectivesContinue(cmd, &converted); err != nil {
-						return err
+					values := map[string]any{}
+					if cmd.IsSet("workspace-id") {
+						values["workspaceId"] = cmd.String("workspace-id")
+					}
+					_schema := parseBodySchema(bodySchemaObjectivesContinue)
+					_body := newBodyBuilder()
+					_strict := cmd.Bool("strict")
+					var _rawBody any
+					if cmd.IsSet("file") {
+						if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("message") {
+						_v, err := stringArg("message", cmd.String("message"))
+						if err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+						if err := _body.set("message", []string{"message"}, _v); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if cmd.IsSet("enqueue") {
+						if err := _body.set("enqueue", []string{"enqueue"}, cmd.Bool("enqueue")); err != nil {
+							return cli.Exit(err.Error(), 2)
+						}
+					}
+					if err := _body.finish(_schema, map[string]string{"message": "--message", "enqueue": "--enqueue"}); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					if cmd.Bool("dry-run") {
-						return printDocument(_display, converted.Body)
+						if _rawBody != nil {
+							return printDocument(_display, _rawBody)
+						}
+						return printDocument(_display, _body.body)
+					}
+					_ = _rawBody
+					for _k, _v := range _body.body {
+						values[_k] = _v
+					}
+					var params sdk.ObjectiveContinueParams
+					if err := decodeParams(values, &params); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					out, err := client.Objectives().Continue(ctx, pos0, &converted.Params)
+					out, err := client.Objectives().Continue(ctx, pos0, &params)
 					if err != nil {
 						return err
 					}
