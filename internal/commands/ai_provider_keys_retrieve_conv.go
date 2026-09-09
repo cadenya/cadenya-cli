@@ -19,6 +19,9 @@ func ConvertAIProviderKeysRetrieve(cmd *cli.Command, out *AIProviderKeysRetrieve
 	if cmd.IsSet("workspace-id") {
 		values["workspaceId"] = cmd.String("workspace-id")
 	}
+	if cmd.IsSet("include-info") {
+		values["includeInfo"] = cmd.Bool("include-info")
+	}
 	if err := decodeParams(values, &out.Params); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}

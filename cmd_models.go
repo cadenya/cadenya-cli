@@ -17,6 +17,68 @@ func modelsCommand() *cli.Command {
 		DisableSliceFlagSeparator: true,
 		Commands: []*cli.Command{
 			{
+				Name:                      "create",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Create a model",
+				ArgsUsage:                 "<ai-provider-key-id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "provider", Usage: "Required. The model provider (e.g., \"anthropic\", \"openai\", \"google\")."},
+					&cli.StringFlag{Name: "family", Usage: "Required. The model family (e.g., \"claude-sonnet-4.6\", \"gpt-5.4\", \"gemini-2.5-flash\")."},
+					&cli.Int32Flag{Name: "max-input-tokens", Usage: "Required. Maximum number of input tokens the model supports."},
+					&cli.Int32Flag{Name: "max-output-tokens", Usage: "Required. Maximum number of output tokens the model can generate."},
+					&cli.StringFlag{Name: "input-price-per-million-tokens", Usage: "Required. Cost per million input tokens in cents (e.g., 300 = $3.00). On reads this is the effective price: the catalog price unless Model.pricing_override replaces it.…."},
+					&cli.StringFlag{Name: "output-price-per-million-tokens", Usage: "Required. Cost per million output tokens in cents (e.g., 1500 = $15.00). Effective price on reads, see input_price_per_million_tokens."},
+					&cli.StringSliceFlag{Name: "capability", Usage: "Required. The inference knobs this model supports. Catalog data; drives which ModelConfig fields a variation on this model may set. Reasoning support (and its mode)…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "provider-model-id", Usage: "Required. The identifier the provider expects in inference requests, exactly as the provider spells it: an OpenAI model name, a Vertex publisher model resource, a…."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<ai-provider-key-id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<ai-provider-key-id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("provider"), cmd.String("family"), cmd.String("input-price-per-million-tokens"), cmd.String("output-price-per-million-tokens"), cmd.String("provider-model-id")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("capability")...)
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					pos0 := cmd.Args().Get(0) // ai-provider-key-id
+					var converted commands.ModelsCreateConversion
+					if err := commands.ConvertModelsCreate(cmd, &converted); err != nil {
+						return err
+					}
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.Models().Create(ctx, pos0, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
 				Name:                      "list",
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List models",
@@ -92,6 +154,72 @@ func modelsCommand() *cli.Command {
 						return err
 					}
 					out, err := client.Models().Retrieve(ctx, pos0, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
+				Name:                      "update",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Update a model",
+				ArgsUsage:                 "<id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Human-readable name for the resource (e.g., \"Customer Support Agent\", \"Email Tool\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "When any spec.* path is masked, send the complete spec (current values plus edits); it is validated as a whole. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "provider", Usage: "The model provider (e.g., \"anthropic\", \"openai\", \"google\")."},
+					&cli.StringFlag{Name: "family", Usage: "The model family (e.g., \"claude-sonnet-4.6\", \"gpt-5.4\", \"gemini-2.5-flash\")."},
+					&cli.Int32Flag{Name: "max-input-tokens", Usage: "Maximum number of input tokens the model supports."},
+					&cli.Int32Flag{Name: "max-output-tokens", Usage: "Maximum number of output tokens the model can generate."},
+					&cli.StringFlag{Name: "input-price-per-million-tokens", Usage: "Cost per million input tokens in cents (e.g., 300 = $3.00). On reads this is the effective price: the catalog price unless Model.pricing_override replaces it.…."},
+					&cli.StringFlag{Name: "output-price-per-million-tokens", Usage: "Cost per million output tokens in cents (e.g., 1500 = $15.00). Effective price on reads, see input_price_per_million_tokens."},
+					&cli.StringSliceFlag{Name: "capability", Usage: "The inference knobs this model supports. Catalog data; drives which ModelConfig fields a variation on this model may set. Reasoning support (and its mode)…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "provider-model-id", Usage: "The identifier the provider expects in inference requests, exactly as the provider spells it: an OpenAI model name, a Vertex publisher model resource, a…."},
+					&cli.StringFlag{Name: "pricing-override", Usage: "Customer price overrides, applied per masked path. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "pricing-override-input-price-per-million-tokens", Usage: "Override for input token price, in cents per million tokens."},
+					&cli.StringFlag{Name: "pricing-override-output-price-per-million-tokens", Usage: "Override for output token price, in cents per million tokens."},
+					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update. Required; leaf paths only."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("provider"), cmd.String("family"), cmd.String("input-price-per-million-tokens"), cmd.String("output-price-per-million-tokens"), cmd.String("provider-model-id"), cmd.String("pricing-override"), cmd.String("pricing-override-input-price-per-million-tokens"), cmd.String("pricing-override-output-price-per-million-tokens"), cmd.String("update-mask")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("capability")...)
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					pos0 := cmd.Args().Get(0) // id
+					var converted commands.ModelsUpdateConversion
+					if err := commands.ConvertModelsUpdate(cmd, &converted); err != nil {
+						return err
+					}
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.Models().Update(ctx, pos0, &converted.Params)
 					if err != nil {
 						return err
 					}
