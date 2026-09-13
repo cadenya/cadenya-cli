@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/cadenya/cadenya-cli/compare/v1.3.0...v1.4.0) (2026-09-13)
+
+
+### Features
+
+* add declarative variation assignments ([657c97c](https://github.com/cadenya/cadenya-cli/commit/657c97c92c3123fce22c1222d719c5597edacee5))
+
 ## [1.3.0](https://github.com/cadenya/cadenya-cli/compare/v1.2.0...v1.3.0) (2026-09-09)
 
 
