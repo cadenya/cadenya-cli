@@ -7,6 +7,8 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
+const bodySchemaAgentVariationsRemoveMemoryLayer = "{\"$defs\":{},\"properties\":{\"memoryLayerId\":{\"type\":\"string\"}},\"required\":[\"memoryLayerId\"],\"type\":\"object\"}"
+
 // AgentVariationsRemoveMemoryLayerConversion is the typed request produced from one urfave command.
 type AgentVariationsRemoveMemoryLayerConversion struct {
 	Params sdk.AgentVariationRemoveMemoryLayerParams
@@ -19,8 +21,34 @@ func ConvertAgentVariationsRemoveMemoryLayer(cmd *cli.Command, out *AgentVariati
 	if cmd.IsSet("workspace-id") {
 		values["workspaceId"] = cmd.String("workspace-id")
 	}
+	_schema := parseBodySchema(bodySchemaAgentVariationsRemoveMemoryLayer)
+	_body := newBodyBuilder()
+	_strict := cmd.Bool("strict")
+	var _rawBody any
+	if cmd.IsSet("file") {
+		if err := _body.applyFile("file", cmd.String("file"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("memory-layer-id") {
+		_v, err := stringArg("memory-layer-id", cmd.String("memory-layer-id"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("memory-layer-id", []string{"memoryLayerId"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if err := _body.finish(_schema, map[string]string{"memoryLayerId": "--memory-layer-id"}, _strict); err != nil {
+		return cli.Exit(err.Error(), 2)
+	}
+	_ = _rawBody
+	for _k, _v := range _body.body {
+		values[_k] = _v
+	}
 	if err := decodeParams(values, &out.Params); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}
+	out.Body = _body.body
 	return nil
 }

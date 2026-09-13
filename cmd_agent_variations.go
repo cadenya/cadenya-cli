@@ -96,6 +96,8 @@ func agentVariationsCommand() *cli.Command {
 					&cli.StringFlag{Name: "compaction-tool-result-clearing", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.Int32Flag{Name: "compaction-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
 					&cli.StringFlag{Name: "first-user-message-template", Usage: "Liquid template for the first user message of objectives using this variation. Rendered with CreateObjectiveRequest.first_user_message_data into…."},
+					&cli.StringSliceFlag{Name: "assignment", Usage: "Complete set of assigned tools, tool sets, and sub-agents. Order has no meaning. Duplicate (target kind, canonical target ID) pairs are collapsed. On create,…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringSliceFlag{Name: "memory-layer-assignment", Usage: "Complete baseline memory cascade, returned in ascending position. At most 10 whole layers; system-managed layers cannot be assigned. Duplicate layer IDs (after…. key=value,... over memory-layer-id, position (repeatable; or a document)."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -114,6 +116,8 @@ func agentVariationsCommand() *cli.Command {
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("system-prompt-template"), cmd.String("discovery"), cmd.String("constraints"), cmd.String("constraints-inactivity-timeout"), cmd.String("description"), cmd.String("model"), cmd.String("model-id"), cmd.String("compaction"), cmd.String("compaction-summarization"), cmd.String("compaction-summarization-instructions"), cmd.String("compaction-tool-result-clearing"), cmd.String("first-user-message-template")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("assignment")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("memory-layer-assignment")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -254,7 +258,9 @@ func agentVariationsCommand() *cli.Command {
 					&cli.StringFlag{Name: "compaction-tool-result-clearing", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.Int32Flag{Name: "compaction-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
 					&cli.StringFlag{Name: "first-user-message-template", Usage: "Liquid template for the first user message of objectives using this variation. Rendered with CreateObjectiveRequest.first_user_message_data into…."},
-					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update."},
+					&cli.StringSliceFlag{Name: "assignment", Usage: "Complete set of assigned tools, tool sets, and sub-agents. Order has no meaning. Duplicate (target kind, canonical target ID) pairs are collapsed. On create,…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringSliceFlag{Name: "memory-layer-assignment", Usage: "Complete baseline memory cascade, returned in ascending position. At most 10 whole layers; system-managed layers cannot be assigned. Duplicate layer IDs (after…. key=value,... over memory-layer-id, position (repeatable; or a document)."},
+					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update. Assignment lists are replaced as a whole, never merged. Select spec.assignments or spec.memory_layer_assignments to replace/clear one list.…."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -276,6 +282,8 @@ func agentVariationsCommand() *cli.Command {
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("system-prompt-template"), cmd.String("discovery"), cmd.String("constraints"), cmd.String("constraints-inactivity-timeout"), cmd.String("description"), cmd.String("model"), cmd.String("model-id"), cmd.String("compaction"), cmd.String("compaction-summarization"), cmd.String("compaction-summarization-instructions"), cmd.String("compaction-tool-result-clearing"), cmd.String("first-user-message-template"), cmd.String("update-mask")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("assignment")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("memory-layer-assignment")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -329,10 +337,7 @@ func agentVariationsCommand() *cli.Command {
 					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
-						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
-					}
-					_columns := []displayColumn(nil)
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_stdinInputs := []string{cmd.String("file"), cmd.String("type"), cmd.String("tool-id"), cmd.String("tool-set-id"), cmd.String("sub-agent-id")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
@@ -355,49 +360,6 @@ func agentVariationsCommand() *cli.Command {
 						return err
 					}
 					return renderDisplay(_display, _columns, false, out)
-				},
-			},
-			{
-				Name:                      "remove-assignment",
-				DisableSliceFlagSeparator: true,
-				Usage:                     "Remove an assignment from a variation",
-				ArgsUsage:                 "<agent-id> <variation-id> <id>",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
-					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-				},
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					if cmd.Args().Len() != 3 {
-						return cli.Exit(fmt.Sprintf("expected exactly 3 positional argument(s) (<agent-id> <variation-id> <id>), got %d", cmd.Args().Len()), 2)
-					}
-					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
-						return cli.Exit("<agent-id> must not be empty", 2)
-					}
-					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
-						return cli.Exit("<variation-id> must not be empty", 2)
-					}
-					if strings.TrimSpace(cmd.Args().Get(2)) == "" {
-						return cli.Exit("<id> must not be empty", 2)
-					}
-					_display := displayMode(cmd, "json")
-					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
-						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
-					}
-					if _display != "json" && _display != "yaml" {
-						return cli.Exit("this command has no displayable response; use --display json", 2)
-					}
-					pos0 := cmd.Args().Get(0) // agent-id
-					pos1 := cmd.Args().Get(1) // variation-id
-					pos2 := cmd.Args().Get(2) // id
-					var converted commands.AgentVariationsRemoveAssignmentConversion
-					if err := commands.ConvertAgentVariationsRemoveAssignment(cmd, &converted); err != nil {
-						return err
-					}
-					client, err := newClient(cmd)
-					if err != nil {
-						return err
-					}
-					return client.Agents().Variations().RemoveAssignment(ctx, pos0, pos1, pos2, &converted.Params)
 				},
 			},
 			{
@@ -428,10 +390,7 @@ func agentVariationsCommand() *cli.Command {
 					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
-						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
-					}
-					_columns := []displayColumn(nil)
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
 					_stdinInputs := []string{cmd.String("file"), cmd.String("memory-layer-id")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
@@ -457,17 +416,24 @@ func agentVariationsCommand() *cli.Command {
 				},
 			},
 			{
-				Name:                      "remove-memory-layer",
+				Name:                      "remove-assignment",
 				DisableSliceFlagSeparator: true,
-				Usage:                     "Remove a memory layer assignment from a variation",
-				ArgsUsage:                 "<agent-id> <variation-id> <id>",
+				Usage:                     "Remove an assignment from a variation",
+				ArgsUsage:                 "<agent-id> <variation-id>",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
+					&cli.StringFlag{Name: "type", Usage: "Required. One of: tool-id, tool-set-id, sub-agent-id; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "tool-id", Usage: "Required.", Category: "type = tool-id"},
+					&cli.StringFlag{Name: "tool-set-id", Usage: "Required.", Category: "type = tool-set-id"},
+					&cli.StringFlag{Name: "sub-agent-id", Usage: "Required.", Category: "type = sub-agent-id"},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					if cmd.Args().Len() != 3 {
-						return cli.Exit(fmt.Sprintf("expected exactly 3 positional argument(s) (<agent-id> <variation-id> <id>), got %d", cmd.Args().Len()), 2)
+					if cmd.Args().Len() != 2 {
+						return cli.Exit(fmt.Sprintf("expected exactly 2 positional argument(s) (<agent-id> <variation-id>), got %d", cmd.Args().Len()), 2)
 					}
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<agent-id> must not be empty", 2)
@@ -475,46 +441,104 @@ func agentVariationsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<variation-id> must not be empty", 2)
 					}
-					if strings.TrimSpace(cmd.Args().Get(2)) == "" {
-						return cli.Exit("<id> must not be empty", 2)
-					}
-					_display := displayMode(cmd, "json")
+					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" && _display != "yaml" {
-						return cli.Exit("this command has no displayable response; use --display json", 2)
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("type"), cmd.String("tool-id"), cmd.String("tool-set-id"), cmd.String("sub-agent-id")}
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // variation-id
-					pos2 := cmd.Args().Get(2) // id
-					var converted commands.AgentVariationsRemoveMemoryLayerConversion
-					if err := commands.ConvertAgentVariationsRemoveMemoryLayer(cmd, &converted); err != nil {
+					var converted commands.AgentVariationsRemoveAssignmentConversion
+					if err := commands.ConvertAgentVariationsRemoveAssignment(cmd, &converted); err != nil {
 						return err
+					}
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
 					}
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
 					}
-					return client.Agents().Variations().RemoveMemoryLayer(ctx, pos0, pos1, pos2, &converted.Params)
+					out, err := client.Agents().Variations().RemoveAssignment(ctx, pos0, pos1, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
+				Name:                      "remove-memory-layer",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Remove a memory layer assignment from a variation",
+				ArgsUsage:                 "<agent-id> <variation-id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
+					&cli.StringFlag{Name: "memory-layer-id", Usage: "Required. Layer to detach. Accepts memlyr_… or external_id:<value>."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 2 {
+						return cli.Exit(fmt.Sprintf("expected exactly 2 positional argument(s) (<agent-id> <variation-id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<agent-id> must not be empty", 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
+						return cli.Exit("<variation-id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("memory-layer-id")}
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					pos0 := cmd.Args().Get(0) // agent-id
+					pos1 := cmd.Args().Get(1) // variation-id
+					var converted commands.AgentVariationsRemoveMemoryLayerConversion
+					if err := commands.ConvertAgentVariationsRemoveMemoryLayer(cmd, &converted); err != nil {
+						return err
+					}
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.Agents().Variations().RemoveMemoryLayer(ctx, pos0, pos1, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
 				},
 			},
 			{
 				Name:                      "update-memory-layer",
 				DisableSliceFlagSeparator: true,
 				Usage:                     "Update a variation's memory layer assignment",
-				ArgsUsage:                 "<agent-id> <variation-id> <id>",
+				ArgsUsage:                 "<agent-id> <variation-id>",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.Int32Flag{Name: "position", Usage: "New position. Only field currently updatable on an assignment."},
+					&cli.StringFlag{Name: "memory-layer-id", Usage: "Required. Layer to reposition. Accepts memlyr_… or external_id:<value>."},
+					&cli.Int32Flag{Name: "position", Usage: "Required. New position. Only field currently updatable on an assignment."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					if cmd.Args().Len() != 3 {
-						return cli.Exit(fmt.Sprintf("expected exactly 3 positional argument(s) (<agent-id> <variation-id> <id>), got %d", cmd.Args().Len()), 2)
+					if cmd.Args().Len() != 2 {
+						return cli.Exit(fmt.Sprintf("expected exactly 2 positional argument(s) (<agent-id> <variation-id>), got %d", cmd.Args().Len()), 2)
 					}
 					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
 						return cli.Exit("<agent-id> must not be empty", 2)
@@ -522,24 +546,17 @@ func agentVariationsCommand() *cli.Command {
 					if strings.TrimSpace(cmd.Args().Get(1)) == "" {
 						return cli.Exit("<variation-id> must not be empty", 2)
 					}
-					if strings.TrimSpace(cmd.Args().Get(2)) == "" {
-						return cli.Exit("<id> must not be empty", 2)
-					}
 					_display := displayMode(cmd, "table")
 					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
-						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
-					}
-					_columns := []displayColumn(nil)
-					_stdinInputs := []string{cmd.String("file")}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("memory-layer-id")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
 					pos0 := cmd.Args().Get(0) // agent-id
 					pos1 := cmd.Args().Get(1) // variation-id
-					pos2 := cmd.Args().Get(2) // id
 					var converted commands.AgentVariationsUpdateMemoryLayerConversion
 					if err := commands.ConvertAgentVariationsUpdateMemoryLayer(cmd, &converted); err != nil {
 						return err
@@ -551,7 +568,7 @@ func agentVariationsCommand() *cli.Command {
 					if err != nil {
 						return err
 					}
-					out, err := client.Agents().Variations().UpdateMemoryLayer(ctx, pos0, pos1, pos2, &converted.Params)
+					out, err := client.Agents().Variations().UpdateMemoryLayer(ctx, pos0, pos1, &converted.Params)
 					if err != nil {
 						return err
 					}

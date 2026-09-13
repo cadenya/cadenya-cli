@@ -157,7 +157,7 @@ cadenya agents list [--workspace-id <value>] [--limit <value>] [--cursor <value>
 Create a new agent
 
 ```sh
-cadenya agents create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] [--variation-selection-mode <random|weighted>] [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--default-variation-name <value>] [--default-variation-external-id <value>] [--default-variation-label KEY=VALUE]... [--default-variation-system-prompt-template <value>] [--default-variation-discovery-max-tools <value>] [--default-variation-discovery-hint <value>]... [--default-variation-constraints-max-tool-calls <value>] [--default-variation-constraints-max-sub-objectives <value>] [--default-variation-constraints-inactivity-timeout <value>] [--default-variation-description <value>] [--default-variation-model-id <value>] [--default-variation-model-temperature <value>] [--default-variation-model-top-p <value>] [--default-variation-model-top-k <value>] [--default-variation-model-stop-sequence <value>]... [--default-variation-model-max-output-tokens <value>] [--default-variation-model-reasoning-effort <none|low|medium|high>] [--default-variation-model-caching-enabled[=true|false]] [--default-variation-compaction-trigger-threshold <value>] [--default-variation-compaction-summarization-instructions <value>] [--default-variation-compaction-tool-result-clearing-preserve-recent-results <value>] [--default-variation-first-user-message-template <value>] [-f <doc>] [--dry-run]
+cadenya agents create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] [--variation-selection-mode <random|weighted>] [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--default-variation-name <value>] [--default-variation-external-id <value>] [--default-variation-label KEY=VALUE]... [--default-variation-system-prompt-template <value>] [--default-variation-discovery-max-tools <value>] [--default-variation-discovery-hint <value>]... [--default-variation-constraints-max-tool-calls <value>] [--default-variation-constraints-max-sub-objectives <value>] [--default-variation-constraints-inactivity-timeout <value>] [--default-variation-description <value>] [--default-variation-model-id <value>] [--default-variation-model-temperature <value>] [--default-variation-model-top-p <value>] [--default-variation-model-top-k <value>] [--default-variation-model-stop-sequence <value>]... [--default-variation-model-max-output-tokens <value>] [--default-variation-model-reasoning-effort <none|low|medium|high>] [--default-variation-model-caching-enabled[=true|false]] [--default-variation-compaction-trigger-threshold <value>] [--default-variation-compaction-summarization-instructions <value>] [--default-variation-compaction-tool-result-clearing-preserve-recent-results <value>] [--default-variation-first-user-message-template <value>] [--default-variation-assignment <doc>]... [--default-variation-memory-layer-assignment k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 List feedback for an agent
 
@@ -258,7 +258,7 @@ cadenya agents variations list <agent-id> [--workspace-id <value>] [--limit <val
 Create a new variation
 
 ```sh
-cadenya agents variations create <agent-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [-f <doc>] [--dry-run]
+cadenya agents variations create <agent-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [--assignment <doc>]... [--memory-layer-assignment k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 Get a variation by ID
 
@@ -273,32 +273,32 @@ cadenya agents variations delete <agent-id> <id> [--workspace-id <value>]
 Update a variation
 
 ```sh
-cadenya agents variations update <agent-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
+cadenya agents variations update <agent-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [--assignment <doc>]... [--memory-layer-assignment k=v,...|<doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Add an assignment to a variation
 
 ```sh
 cadenya agents variations add-assignment <agent-id> <variation-id> [--workspace-id <value>] --type <tool-id|tool-set-id|sub-agent-id> [--tool-id <value>] [--tool-set-id <value>] [--sub-agent-id <value>] [-f <doc>] [--dry-run]
 ```
-Remove an assignment from a variation
-
-```sh
-cadenya agents variations remove-assignment <agent-id> <variation-id> <id> [--workspace-id <value>]
-```
 Attach a memory layer to a variation
 
 ```sh
 cadenya agents variations add-memory-layer <agent-id> <variation-id> [--workspace-id <value>] --memory-layer-id <value> [--position <value>] [-f <doc>] [--dry-run]
 ```
+Remove an assignment from a variation
+
+```sh
+cadenya agents variations remove-assignment <agent-id> <variation-id> [--workspace-id <value>] --type <tool-id|tool-set-id|sub-agent-id> [--tool-id <value>] [--tool-set-id <value>] [--sub-agent-id <value>] [-f <doc>] [--dry-run]
+```
 Remove a memory layer assignment from a variation
 
 ```sh
-cadenya agents variations remove-memory-layer <agent-id> <variation-id> <id> [--workspace-id <value>]
+cadenya agents variations remove-memory-layer <agent-id> <variation-id> [--workspace-id <value>] --memory-layer-id <value> [-f <doc>] [--dry-run]
 ```
 Update a variation's memory layer assignment
 
 ```sh
-cadenya agents variations update-memory-layer <agent-id> <variation-id> <id> [--workspace-id <value>] [--position <value>] [-f <doc>] [--dry-run]
+cadenya agents variations update-memory-layer <agent-id> <variation-id> [--workspace-id <value>] --memory-layer-id <value> --position <value> [-f <doc>] [--dry-run]
 ```
 
 ## cadenya ai-provider-keys

@@ -7,7 +7,7 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
-const bodySchemaAgentVariationsUpdateMemoryLayer = "{\"$defs\":{},\"properties\":{\"position\":{\"type\":\"integer\"}},\"type\":\"object\"}"
+const bodySchemaAgentVariationsUpdateMemoryLayer = "{\"$defs\":{},\"properties\":{\"memoryLayerId\":{\"type\":\"string\"},\"position\":{\"type\":\"integer\"}},\"required\":[\"memoryLayerId\",\"position\"],\"type\":\"object\"}"
 
 // AgentVariationsUpdateMemoryLayerConversion is the typed request produced from one urfave command.
 type AgentVariationsUpdateMemoryLayerConversion struct {
@@ -30,12 +30,21 @@ func ConvertAgentVariationsUpdateMemoryLayer(cmd *cli.Command, out *AgentVariati
 			return cli.Exit(err.Error(), 2)
 		}
 	}
+	if cmd.IsSet("memory-layer-id") {
+		_v, err := stringArg("memory-layer-id", cmd.String("memory-layer-id"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("memory-layer-id", []string{"memoryLayerId"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
 	if cmd.IsSet("position") {
 		if err := _body.set("position", []string{"position"}, cmd.Int32("position")); err != nil {
 			return cli.Exit(err.Error(), 2)
 		}
 	}
-	if err := _body.finish(_schema, map[string]string{"position": "--position"}, _strict); err != nil {
+	if err := _body.finish(_schema, map[string]string{"memoryLayerId": "--memory-layer-id", "position": "--position"}, _strict); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}
 	_ = _rawBody

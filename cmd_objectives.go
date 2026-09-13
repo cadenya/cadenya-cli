@@ -29,7 +29,7 @@ func objectivesCommand() *cli.Command {
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "agent-id", Usage: "Agent ID for filtering"},
 					&cli.StringFlag{Name: "parent-objective-id", Usage: "Optional filters"},
-					&cli.StringFlag{Name: "state", Usage: "Filter by state (one of: STATE_UNSPECIFIED, STATE_PENDING, STATE_RUNNING, STATE_WAITING, STATE_FAILED, STATE_CANCELLED, STATE_FINALIZED, STATE_TIMED_OUT)"},
+					&cli.StringFlag{Name: "state", Usage: "Filter by state (one of: OBJECTIVE_STATE_UNSPECIFIED, OBJECTIVE_STATE_PENDING, OBJECTIVE_STATE_RUNNING, OBJECTIVE_STATE_WAITING, OBJECTIVE_STATE_FAILED, OBJECTIVE_STATE_CANCELLED, OBJECTIVE_STATE_FINALIZED, OBJECTIVE_STATE_TIMED_OUT)"},
 					&cli.StringFlag{Name: "profile-id"},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
@@ -49,8 +49,8 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_PENDING", "STATE_RUNNING", "STATE_WAITING", "STATE_FAILED", "STATE_CANCELLED", "STATE_FINALIZED", "STATE_TIMED_OUT"}) {
-						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: STATE_UNSPECIFIED, STATE_PENDING, STATE_RUNNING, STATE_WAITING, STATE_FAILED, STATE_CANCELLED, STATE_FINALIZED, STATE_TIMED_OUT)", cmd.String("state")), 2)
+					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"OBJECTIVE_STATE_UNSPECIFIED", "OBJECTIVE_STATE_PENDING", "OBJECTIVE_STATE_RUNNING", "OBJECTIVE_STATE_WAITING", "OBJECTIVE_STATE_FAILED", "OBJECTIVE_STATE_CANCELLED", "OBJECTIVE_STATE_FINALIZED", "OBJECTIVE_STATE_TIMED_OUT"}) {
+						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: OBJECTIVE_STATE_UNSPECIFIED, OBJECTIVE_STATE_PENDING, OBJECTIVE_STATE_RUNNING, OBJECTIVE_STATE_WAITING, OBJECTIVE_STATE_FAILED, OBJECTIVE_STATE_CANCELLED, OBJECTIVE_STATE_FINALIZED, OBJECTIVE_STATE_TIMED_OUT)", cmd.String("state")), 2)
 					}
 					var converted commands.ObjectivesListConversion
 					if err := commands.ConvertObjectivesList(cmd, &converted); err != nil {
