@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/cadenya/cadenya-cli/compare/v1.4.0...v1.5.0) (2026-09-14)
+
+
+### Features
+
+* expose variation assignment metadata ([29497a8](https://github.com/cadenya/cadenya-cli/commit/29497a8e93a6e98ccce59327340386e52cad6449))
+
 ## [1.4.0](https://github.com/cadenya/cadenya-cli/compare/v1.3.0...v1.4.0) (2026-09-13)
 
 
