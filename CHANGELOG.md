@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/cadenya/cadenya-cli/compare/v1.5.0...v1.6.0) (2026-09-16)
+
+
+### Features
+
+* consume objective heartbeat SDK ([3a49bbe](https://github.com/cadenya/cadenya-cli/commit/3a49bbe3108718ee3dfb13741c34f6095b7c5cc7))
+
 ## [1.5.0](https://github.com/cadenya/cadenya-cli/compare/v1.4.0...v1.5.0) (2026-09-14)
 
 
