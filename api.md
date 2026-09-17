@@ -689,7 +689,7 @@ cadenya widget-sessions list [--workspace-id <value>] [--limit <value>] [--curso
 Create a widget session
 
 ```sh
-cadenya widget-sessions create [--workspace-id <value>] [--label KEY=VALUE]... [--external-id <value>] --widget-id <value> [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--expires-at <value>] [--pinned-parameter KEY=VALUE]... [--secret k=v,...|<doc>]... [-f <doc>] [--dry-run]
+cadenya widget-sessions create [--workspace-id <value>] [--label KEY=VALUE]... [--external-id <value>] --widget-id <value> --tenant-id <value> [--tenant-name <value>] --subject-id <value> [--subject-name <value>] [--expires-at <value>] [--pinned-parameter KEY=VALUE]... [--secret k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 Delete all of a tenant's widget sessions
 
