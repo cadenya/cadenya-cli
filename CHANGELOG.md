@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/cadenya/cadenya-cli/compare/v1.6.0...v1.7.0) (2026-09-17)
+
+
+### Features
+
+* require widget session identity and expose credentials ([#57](https://github.com/cadenya/cadenya-cli/issues/57)) ([1fd02cb](https://github.com/cadenya/cadenya-cli/commit/1fd02cb2f767576b36a57e9036430ca1119f8424))
+
 ## [1.6.0](https://github.com/cadenya/cadenya-cli/compare/v1.5.0...v1.6.0) (2026-09-16)
 
 
