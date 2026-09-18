@@ -7,7 +7,7 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
-const bodySchemaAgentVariationsRemoveAssignment = "{\"$defs\":{\"RemoveAgentVariationAssignmentRequest\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"RemoveAgentVariationAssignmentRequest_ToolId\"},{\"$ref\":\"RemoveAgentVariationAssignmentRequest_ToolSetId\"},{\"$ref\":\"RemoveAgentVariationAssignmentRequest_SubAgentId\"}]},\"RemoveAgentVariationAssignmentRequest_SubAgentId\":{\"properties\":{\"subAgentId\":{\"type\":\"string\"},\"type\":{\"const\":\"subAgentId\"}},\"required\":[\"type\",\"subAgentId\"],\"type\":\"object\"},\"RemoveAgentVariationAssignmentRequest_ToolId\":{\"properties\":{\"toolId\":{\"type\":\"string\"},\"type\":{\"const\":\"toolId\"}},\"required\":[\"type\",\"toolId\"],\"type\":\"object\"},\"RemoveAgentVariationAssignmentRequest_ToolSetId\":{\"properties\":{\"toolSetId\":{\"type\":\"string\"},\"type\":{\"const\":\"toolSetId\"}},\"required\":[\"type\",\"toolSetId\"],\"type\":\"object\"}},\"$ref\":\"RemoveAgentVariationAssignmentRequest\"}"
+const bodySchemaAgentVariationsRemoveAssignment = "{\"$defs\":{\"RemoveAgentVariationAssignmentRequest\":{\"discriminator\":{\"propertyName\":\"type\"},\"oneOf\":[{\"$ref\":\"RemoveAgentVariationAssignmentRequest_ToolId\"},{\"$ref\":\"RemoveAgentVariationAssignmentRequest_ToolSetId\"},{\"$ref\":\"RemoveAgentVariationAssignmentRequest_SubAgentId\"},{\"$ref\":\"RemoveAgentVariationAssignmentRequest_AgentPoolId\"}]},\"RemoveAgentVariationAssignmentRequest_AgentPoolId\":{\"properties\":{\"agentPoolId\":{\"description\":\"Canonical agent pool ID in the variation's workspace.\",\"type\":\"string\"},\"type\":{\"const\":\"agentPoolId\"}},\"required\":[\"type\",\"agentPoolId\"],\"type\":\"object\"},\"RemoveAgentVariationAssignmentRequest_SubAgentId\":{\"properties\":{\"subAgentId\":{\"type\":\"string\"},\"type\":{\"const\":\"subAgentId\"}},\"required\":[\"type\",\"subAgentId\"],\"type\":\"object\"},\"RemoveAgentVariationAssignmentRequest_ToolId\":{\"properties\":{\"toolId\":{\"type\":\"string\"},\"type\":{\"const\":\"toolId\"}},\"required\":[\"type\",\"toolId\"],\"type\":\"object\"},\"RemoveAgentVariationAssignmentRequest_ToolSetId\":{\"properties\":{\"toolSetId\":{\"type\":\"string\"},\"type\":{\"const\":\"toolSetId\"}},\"required\":[\"type\",\"toolSetId\"],\"type\":\"object\"}},\"$ref\":\"RemoveAgentVariationAssignmentRequest\"}"
 
 // AgentVariationsRemoveAssignmentConversion is the typed request produced from one urfave command.
 type AgentVariationsRemoveAssignmentConversion struct {
@@ -32,11 +32,11 @@ func ConvertAgentVariationsRemoveAssignment(cmd *cli.Command, out *AgentVariatio
 		}
 		_rawBody = _value
 	}
-	if _rawBody != nil && (cmd.IsSet("type") || cmd.IsSet("tool-id") || cmd.IsSet("tool-set-id") || cmd.IsSet("sub-agent-id")) {
+	if _rawBody != nil && (cmd.IsSet("type") || cmd.IsSet("tool-id") || cmd.IsSet("tool-set-id") || cmd.IsSet("sub-agent-id") || cmd.IsSet("agent-pool-id")) {
 		_rawBody = nil
 	}
 	if cmd.IsSet("type") {
-		if err := _body.applyUnionFlag(unionSpec{Flag: "type", Path: []string{}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "toolId", Keys: []string{"toolId"}, Init: []string{}}, {Tag: "toolSetId", Keys: []string{"toolSetId"}, Init: []string{}}, {Tag: "subAgentId", Keys: []string{"subAgentId"}, Init: []string{}}}}, cmd.String("type"), _schema, _strict); err != nil {
+		if err := _body.applyUnionFlag(unionSpec{Flag: "type", Path: []string{}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "toolId", Keys: []string{"toolId"}, Init: []string{}}, {Tag: "toolSetId", Keys: []string{"toolSetId"}, Init: []string{}}, {Tag: "subAgentId", Keys: []string{"subAgentId"}, Init: []string{}}, {Tag: "agentPoolId", Keys: []string{"agentPoolId"}, Init: []string{}}}}, cmd.String("type"), _schema, _strict); err != nil {
 			return cli.Exit(err.Error(), 2)
 		}
 	}
@@ -67,16 +67,25 @@ func ConvertAgentVariationsRemoveAssignment(cmd *cli.Command, out *AgentVariatio
 			return cli.Exit(err.Error(), 2)
 		}
 	}
-	if err := _body.resolveUnion(unionSpec{Flag: "type", Path: []string{}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "toolId", Keys: []string{"toolId"}, Init: []string{}}, {Tag: "toolSetId", Keys: []string{"toolSetId"}, Init: []string{}}, {Tag: "subAgentId", Keys: []string{"subAgentId"}, Init: []string{}}}}); err != nil {
+	if cmd.IsSet("agent-pool-id") {
+		_v, err := stringArg("agent-pool-id", cmd.String("agent-pool-id"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("agent-pool-id", []string{"agentPoolId"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if err := _body.resolveUnion(unionSpec{Flag: "type", Path: []string{}, Discriminator: "type", Required: true, Inferable: true, Arms: []unionArm{{Tag: "toolId", Keys: []string{"toolId"}, Init: []string{}}, {Tag: "toolSetId", Keys: []string{"toolSetId"}, Init: []string{}}, {Tag: "subAgentId", Keys: []string{"subAgentId"}, Init: []string{}}, {Tag: "agentPoolId", Keys: []string{"agentPoolId"}, Init: []string{}}}}); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}
 	if _rawBody != nil {
-		_value, err := _body.finishValue(_schema, _rawBody, map[string]string{"toolId": "--tool-id", "toolSetId": "--tool-set-id", "subAgentId": "--sub-agent-id"}, _strict)
+		_value, err := _body.finishValue(_schema, _rawBody, map[string]string{"toolId": "--tool-id", "toolSetId": "--tool-set-id", "subAgentId": "--sub-agent-id", "agentPoolId": "--agent-pool-id"}, _strict)
 		if err != nil {
 			return cli.Exit(err.Error(), 2)
 		}
 		_rawBody = _value
-	} else if err := _body.finish(_schema, map[string]string{"toolId": "--tool-id", "toolSetId": "--tool-set-id", "subAgentId": "--sub-agent-id"}, _strict); err != nil {
+	} else if err := _body.finish(_schema, map[string]string{"toolId": "--tool-id", "toolSetId": "--tool-set-id", "subAgentId": "--sub-agent-id", "agentPoolId": "--agent-pool-id"}, _strict); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}
 	if _rawBody != nil {

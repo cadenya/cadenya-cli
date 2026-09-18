@@ -147,6 +147,54 @@ List workspaces
 cadenya workspaces list [--limit <value>] [--cursor <value>] [--sort-order <value>] [--include-info[=true|false]] [--labels <value>]
 ```
 
+## cadenya agent-pools
+
+List agent pools
+
+```sh
+cadenya agent-pools list [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--prefix <value>] [--query <value>] [--state <value>] [--labels <value>] [--sort-order <value>] [--include-info[=true|false]]
+```
+Create a new agent pool
+
+```sh
+cadenya agent-pools create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --description <value> [--state KEY=VALUE|<doc>]... --assignment k=v,...|<doc>... [--instructions <value>] [-f <doc>] [--dry-run]
+```
+Get an agent pool by ID
+
+```sh
+cadenya agent-pools retrieve <id> [--workspace-id <value>]
+```
+Delete an agent pool
+
+```sh
+cadenya agent-pools delete <id> [--workspace-id <value>]
+```
+Update an agent pool
+
+```sh
+cadenya agent-pools update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--state KEY=VALUE|<doc>]... [--assignment k=v,...|<doc>]... [--instructions <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
+```
+Activate an agent pool
+
+```sh
+cadenya agent-pools activate <id> [--workspace-id <value>]
+```
+Archive an agent pool
+
+```sh
+cadenya agent-pools archive <id> [--workspace-id <value>]
+```
+Deactivate an agent pool
+
+```sh
+cadenya agent-pools deactivate <id> [--workspace-id <value>]
+```
+Unarchive an agent pool
+
+```sh
+cadenya agent-pools unarchive <id> [--workspace-id <value>]
+```
+
 ## cadenya agents
 
 List agents
@@ -278,7 +326,7 @@ cadenya agents variations update <agent-id> <id> [--workspace-id <value>] [--nam
 Add an assignment to a variation
 
 ```sh
-cadenya agents variations add-assignment <agent-id> <variation-id> [--workspace-id <value>] --type <tool-id|tool-set-id|sub-agent-id> [--tool-id <value>] [--tool-set-id <value>] [--sub-agent-id <value>] [-f <doc>] [--dry-run]
+cadenya agents variations add-assignment <agent-id> <variation-id> [--workspace-id <value>] --type <tool-id|tool-set-id|sub-agent-id|agent-pool-id> [--tool-id <value>] [--tool-set-id <value>] [--sub-agent-id <value>] [--agent-pool-id <value>] [-f <doc>] [--dry-run]
 ```
 Attach a memory layer to a variation
 
@@ -288,7 +336,7 @@ cadenya agents variations add-memory-layer <agent-id> <variation-id> [--workspac
 Remove an assignment from a variation
 
 ```sh
-cadenya agents variations remove-assignment <agent-id> <variation-id> [--workspace-id <value>] --type <tool-id|tool-set-id|sub-agent-id> [--tool-id <value>] [--tool-set-id <value>] [--sub-agent-id <value>] [-f <doc>] [--dry-run]
+cadenya agents variations remove-assignment <agent-id> <variation-id> [--workspace-id <value>] --type <tool-id|tool-set-id|sub-agent-id|agent-pool-id> [--tool-id <value>] [--tool-set-id <value>] [--sub-agent-id <value>] [--agent-pool-id <value>] [-f <doc>] [--dry-run]
 ```
 Remove a memory layer assignment from a variation
 

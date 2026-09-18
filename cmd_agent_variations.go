@@ -96,7 +96,7 @@ func agentVariationsCommand() *cli.Command {
 					&cli.StringFlag{Name: "compaction-tool-result-clearing", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.Int32Flag{Name: "compaction-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
 					&cli.StringFlag{Name: "first-user-message-template", Usage: "Liquid template for the first user message of objectives using this variation. Rendered with CreateObjectiveRequest.first_user_message_data into…."},
-					&cli.StringSliceFlag{Name: "assignment", Usage: "Complete set of assigned tools, tool sets, and sub-agents. Order has no meaning. Duplicate (target kind, canonical target ID) pairs are collapsed. On create,…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringSliceFlag{Name: "assignment", Usage: "Complete set of assigned tools, tool sets, sub-agents, and agent pools. Order has no meaning. Duplicate (target kind, canonical target ID) pairs are collapsed.…. One YAML/JSON document per occurrence (literal, @path, or -)."},
 					&cli.StringSliceFlag{Name: "memory-layer-assignment", Usage: "Complete baseline memory cascade, returned in ascending position. At most 10 whole layers; system-managed layers cannot be assigned. Duplicate layer IDs (after…. key=value,... over memory-layer-id, position (repeatable; or a document)."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
@@ -258,7 +258,7 @@ func agentVariationsCommand() *cli.Command {
 					&cli.StringFlag{Name: "compaction-tool-result-clearing", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.Int32Flag{Name: "compaction-tool-result-clearing-preserve-recent-results", Usage: "Number of most recent tool call results to keep intact. Older tool results have their content replaced with \"[result cleared]\" while preserving the assistant…."},
 					&cli.StringFlag{Name: "first-user-message-template", Usage: "Liquid template for the first user message of objectives using this variation. Rendered with CreateObjectiveRequest.first_user_message_data into…."},
-					&cli.StringSliceFlag{Name: "assignment", Usage: "Complete set of assigned tools, tool sets, and sub-agents. Order has no meaning. Duplicate (target kind, canonical target ID) pairs are collapsed. On create,…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringSliceFlag{Name: "assignment", Usage: "Complete set of assigned tools, tool sets, sub-agents, and agent pools. Order has no meaning. Duplicate (target kind, canonical target ID) pairs are collapsed.…. One YAML/JSON document per occurrence (literal, @path, or -)."},
 					&cli.StringSliceFlag{Name: "memory-layer-assignment", Usage: "Complete baseline memory cascade, returned in ascending position. At most 10 whole layers; system-managed layers cannot be assigned. Duplicate layer IDs (after…. key=value,... over memory-layer-id, position (repeatable; or a document)."},
 					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update. Assignment lists are replaced as a whole, never merged. Select spec.assignments or spec.memory_layer_assignments to replace/clear one list.…."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
@@ -315,10 +315,11 @@ func agentVariationsCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "type", Usage: "Required. One of: tool-id, tool-set-id, sub-agent-id; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "type", Usage: "Required. One of: tool-id, tool-set-id, sub-agent-id, agent-pool-id; inferred from the arm's flags. Or a YAML/JSON document."},
 					&cli.StringFlag{Name: "tool-id", Usage: "Required.", Category: "type = tool-id"},
 					&cli.StringFlag{Name: "tool-set-id", Usage: "Required.", Category: "type = tool-set-id"},
 					&cli.StringFlag{Name: "sub-agent-id", Usage: "Required.", Category: "type = sub-agent-id"},
+					&cli.StringFlag{Name: "agent-pool-id", Usage: "Required. Canonical agent pool ID in the variation's workspace.", Category: "type = agent-pool-id"},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -338,7 +339,7 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("type"), cmd.String("tool-id"), cmd.String("tool-set-id"), cmd.String("sub-agent-id")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("type"), cmd.String("tool-id"), cmd.String("tool-set-id"), cmd.String("sub-agent-id"), cmd.String("agent-pool-id")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -423,10 +424,11 @@ func agentVariationsCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
-					&cli.StringFlag{Name: "type", Usage: "Required. One of: tool-id, tool-set-id, sub-agent-id; inferred from the arm's flags. Or a YAML/JSON document."},
+					&cli.StringFlag{Name: "type", Usage: "Required. One of: tool-id, tool-set-id, sub-agent-id, agent-pool-id; inferred from the arm's flags. Or a YAML/JSON document."},
 					&cli.StringFlag{Name: "tool-id", Usage: "Required.", Category: "type = tool-id"},
 					&cli.StringFlag{Name: "tool-set-id", Usage: "Required.", Category: "type = tool-set-id"},
 					&cli.StringFlag{Name: "sub-agent-id", Usage: "Required.", Category: "type = sub-agent-id"},
+					&cli.StringFlag{Name: "agent-pool-id", Usage: "Required. Canonical agent pool ID in the variation's workspace.", Category: "type = agent-pool-id"},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -446,7 +448,7 @@ func agentVariationsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("type"), cmd.String("tool-id"), cmd.String("tool-set-id"), cmd.String("sub-agent-id")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("type"), cmd.String("tool-id"), cmd.String("tool-set-id"), cmd.String("sub-agent-id"), cmd.String("agent-pool-id")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
