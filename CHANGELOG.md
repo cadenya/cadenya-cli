@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/cadenya/cadenya-cli/compare/v1.7.0...v1.8.0) (2026-09-18)
+
+
+### Features
+
+* add agent pools and callable identity ([60d97d7](https://github.com/cadenya/cadenya-cli/commit/60d97d77357ebb27e0bec1876485782b196c1d29))
+
 ## [1.7.0](https://github.com/cadenya/cadenya-cli/compare/v1.6.0...v1.7.0) (2026-09-17)
 
 
