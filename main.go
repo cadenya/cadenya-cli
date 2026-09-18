@@ -55,6 +55,7 @@ func main() {
 			workspaceAdminCommand(),
 			profilesCommand(),
 			workspacesCommand(),
+			agentPoolsCommand(),
 			agentsCommand(),
 			aIProviderKeysCommand(),
 			modelsCommand(),
