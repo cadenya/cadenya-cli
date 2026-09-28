@@ -4,8 +4,9 @@ go 1.22
 
 require (
 	github.com/pelletier/go-toml/v2 v2.2.4
-	github.com/urfave/cli/v3 v3.3.8
+	github.com/urfave/cli/v3 v3.13.0
 	go.cadenya.com/cadenya-go v1.7.0
+	go.yaml.in/yaml/v3 v3.0.5
 	sigs.k8s.io/yaml v1.6.0
 )
 
