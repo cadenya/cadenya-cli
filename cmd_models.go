@@ -35,6 +35,7 @@ func modelsCommand() *cli.Command {
 					&cli.Int32Flag{Name: "max-output-tokens", Usage: "Required. Maximum number of output tokens the model can generate."},
 					&cli.StringFlag{Name: "input-price-per-million-tokens", Usage: "Required. Cost per million input tokens in cents (e.g., 300 = $3.00). On reads this is the effective price: the catalog price unless Model.pricing_override replaces it.…."},
 					&cli.StringFlag{Name: "output-price-per-million-tokens", Usage: "Required. Cost per million output tokens in cents (e.g., 1500 = $15.00). Effective price on reads, see input_price_per_million_tokens."},
+					&cli.StringFlag{Name: "cached-input-price-per-million-tokens", Usage: "Cost per million input tokens served from the provider's prompt cache, in cents (e.g., 30 = $0.30). Cached tokens are a subset of the input tokens and are…."},
 					&cli.StringSliceFlag{Name: "capability", Usage: "Required. The inference knobs this model supports. Catalog data; drives which ModelConfig fields a variation on this model may set. Reasoning support (and its mode)…. One YAML/JSON document per occurrence (literal, @path, or -)."},
 					&cli.StringFlag{Name: "provider-model-id", Usage: "Required. The identifier the provider expects in inference requests, exactly as the provider spells it: an OpenAI model name, a Vertex publisher model resource, a…."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
@@ -53,7 +54,7 @@ func modelsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("provider"), cmd.String("family"), cmd.String("input-price-per-million-tokens"), cmd.String("output-price-per-million-tokens"), cmd.String("provider-model-id")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("provider"), cmd.String("family"), cmd.String("input-price-per-million-tokens"), cmd.String("output-price-per-million-tokens"), cmd.String("cached-input-price-per-million-tokens"), cmd.String("provider-model-id")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("capability")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
@@ -179,11 +180,13 @@ func modelsCommand() *cli.Command {
 					&cli.Int32Flag{Name: "max-output-tokens", Usage: "Maximum number of output tokens the model can generate."},
 					&cli.StringFlag{Name: "input-price-per-million-tokens", Usage: "Cost per million input tokens in cents (e.g., 300 = $3.00). On reads this is the effective price: the catalog price unless Model.pricing_override replaces it.…."},
 					&cli.StringFlag{Name: "output-price-per-million-tokens", Usage: "Cost per million output tokens in cents (e.g., 1500 = $15.00). Effective price on reads, see input_price_per_million_tokens."},
+					&cli.StringFlag{Name: "cached-input-price-per-million-tokens", Usage: "Cost per million input tokens served from the provider's prompt cache, in cents (e.g., 30 = $0.30). Cached tokens are a subset of the input tokens and are…."},
 					&cli.StringSliceFlag{Name: "capability", Usage: "The inference knobs this model supports. Catalog data; drives which ModelConfig fields a variation on this model may set. Reasoning support (and its mode)…. One YAML/JSON document per occurrence (literal, @path, or -)."},
 					&cli.StringFlag{Name: "provider-model-id", Usage: "The identifier the provider expects in inference requests, exactly as the provider spells it: an OpenAI model name, a Vertex publisher model resource, a…."},
 					&cli.StringFlag{Name: "pricing-override", Usage: "Customer price overrides, applied per masked path. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.StringFlag{Name: "pricing-override-input-price-per-million-tokens", Usage: "Override for input token price, in cents per million tokens."},
 					&cli.StringFlag{Name: "pricing-override-output-price-per-million-tokens", Usage: "Override for output token price, in cents per million tokens."},
+					&cli.StringFlag{Name: "pricing-override-cached-input-price-per-million-tokens", Usage: "Override for cached input token price, in cents per million tokens."},
 					&cli.StringFlag{Name: "update-mask", Usage: "Fields to update. Required; leaf paths only."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
@@ -201,7 +204,7 @@ func modelsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("provider"), cmd.String("family"), cmd.String("input-price-per-million-tokens"), cmd.String("output-price-per-million-tokens"), cmd.String("provider-model-id"), cmd.String("pricing-override"), cmd.String("pricing-override-input-price-per-million-tokens"), cmd.String("pricing-override-output-price-per-million-tokens"), cmd.String("update-mask")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("provider"), cmd.String("family"), cmd.String("input-price-per-million-tokens"), cmd.String("output-price-per-million-tokens"), cmd.String("cached-input-price-per-million-tokens"), cmd.String("provider-model-id"), cmd.String("pricing-override"), cmd.String("pricing-override-input-price-per-million-tokens"), cmd.String("pricing-override-output-price-per-million-tokens"), cmd.String("pricing-override-cached-input-price-per-million-tokens"), cmd.String("update-mask")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("capability")...)
 					if err := stdinBudget(_stdinInputs); err != nil {

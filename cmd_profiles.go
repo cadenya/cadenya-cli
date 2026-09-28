@@ -28,7 +28,10 @@ func profilesCommand() *cli.Command {
 					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
+					}
+					_columns := []displayColumn(nil)
 					client, err := newClient(cmd)
 					if err != nil {
 						return err
