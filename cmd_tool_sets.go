@@ -113,6 +113,7 @@ func toolSetsCommand() *cli.Command {
 					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = bare"},
 					&cli.Int32Flag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely.", Category: "adapter = bare"},
 					&cli.StringSliceFlag{Name: "overlay", Usage: "Overlays applied to this tool set's tools, evaluated in order. See ToolOverlay. Overlay keys must be unique within the list. As a repeated field this is…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringSliceFlag{Name: "secret", Usage: "The tool set's secrets, identified by normalized name. Order has no meaning. Values are write-only; reads return names only. On create, the tool set and its…. key=value,... over name, value (repeatable; or a document). NAME=VALUE is also accepted."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -138,6 +139,7 @@ func toolSetsCommand() *cli.Command {
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-exclude-tools-filter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-tool-approvals-only-filter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("overlay")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -286,6 +288,7 @@ func toolSetsCommand() *cli.Command {
 					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = bare"},
 					&cli.Int32Flag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely.", Category: "adapter = bare"},
 					&cli.StringSliceFlag{Name: "overlay", Usage: "Overlays applied to this tool set's tools, evaluated in order. See ToolOverlay. Overlay keys must be unique within the list. As a repeated field this is…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringSliceFlag{Name: "secret", Usage: "The tool set's secrets, identified by normalized name. Order has no meaning. Values are write-only; reads return names only. On create, the tool set and its…. key=value,... over name, value (repeatable; or a document). NAME=VALUE is also accepted."},
 					&cli.StringFlag{Name: "update-mask", Usage: ""},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
@@ -315,6 +318,7 @@ func toolSetsCommand() *cli.Command {
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-exclude-tools-filter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-tool-approvals-only-filter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("overlay")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}

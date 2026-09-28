@@ -29,7 +29,7 @@ func objectivesCommand() *cli.Command {
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "agent-id", Usage: "Agent ID for filtering"},
 					&cli.StringFlag{Name: "parent-objective-id", Usage: "Optional filters"},
-					&cli.StringFlag{Name: "state", Usage: "Filter by state (one of: OBJECTIVE_STATE_UNSPECIFIED, OBJECTIVE_STATE_PENDING, OBJECTIVE_STATE_RUNNING, OBJECTIVE_STATE_WAITING, OBJECTIVE_STATE_FAILED, OBJECTIVE_STATE_CANCELLED, OBJECTIVE_STATE_FINALIZED, OBJECTIVE_STATE_TIMED_OUT)"},
+					&cli.StringFlag{Name: "state", Usage: "Filter by state (one of: OBJECTIVE_STATE_UNSPECIFIED, OBJECTIVE_STATE_PENDING, OBJECTIVE_STATE_RUNNING, OBJECTIVE_STATE_WAITING, OBJECTIVE_STATE_FAILED, OBJECTIVE_STATE_CANCELLED, OBJECTIVE_STATE_FINALIZED, OBJECTIVE_STATE_TIMED_OUT, OBJECTIVE_STATE_INTERRUPTING)"},
 					&cli.StringFlag{Name: "profile-id"},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
@@ -49,8 +49,8 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"OBJECTIVE_STATE_UNSPECIFIED", "OBJECTIVE_STATE_PENDING", "OBJECTIVE_STATE_RUNNING", "OBJECTIVE_STATE_WAITING", "OBJECTIVE_STATE_FAILED", "OBJECTIVE_STATE_CANCELLED", "OBJECTIVE_STATE_FINALIZED", "OBJECTIVE_STATE_TIMED_OUT"}) {
-						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: OBJECTIVE_STATE_UNSPECIFIED, OBJECTIVE_STATE_PENDING, OBJECTIVE_STATE_RUNNING, OBJECTIVE_STATE_WAITING, OBJECTIVE_STATE_FAILED, OBJECTIVE_STATE_CANCELLED, OBJECTIVE_STATE_FINALIZED, OBJECTIVE_STATE_TIMED_OUT)", cmd.String("state")), 2)
+					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"OBJECTIVE_STATE_UNSPECIFIED", "OBJECTIVE_STATE_PENDING", "OBJECTIVE_STATE_RUNNING", "OBJECTIVE_STATE_WAITING", "OBJECTIVE_STATE_FAILED", "OBJECTIVE_STATE_CANCELLED", "OBJECTIVE_STATE_FINALIZED", "OBJECTIVE_STATE_TIMED_OUT", "OBJECTIVE_STATE_INTERRUPTING"}) {
+						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: OBJECTIVE_STATE_UNSPECIFIED, OBJECTIVE_STATE_PENDING, OBJECTIVE_STATE_RUNNING, OBJECTIVE_STATE_WAITING, OBJECTIVE_STATE_FAILED, OBJECTIVE_STATE_CANCELLED, OBJECTIVE_STATE_FINALIZED, OBJECTIVE_STATE_TIMED_OUT, OBJECTIVE_STATE_INTERRUPTING)", cmd.String("state")), 2)
 					}
 					var converted commands.ObjectivesListConversion
 					if err := commands.ConvertObjectivesList(cmd, &converted); err != nil {
@@ -79,7 +79,7 @@ func objectivesCommand() *cli.Command {
 					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
 					&cli.StringFlag{Name: "external-id", Usage: "External ID for the operation (e.g., a workflow ID from an external system)."},
-					&cli.StringSliceFlag{Name: "system-prompt-data", Usage: "Required. Arbitrary data rendered into the selected variation's system_prompt_template (liquid) to produce the objective's system prompt. If the agent has a…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.StringSliceFlag{Name: "system-prompt-data", Usage: "Arbitrary data rendered into the selected variation's system_prompt_template (liquid) to produce the objective's system prompt. If the agent has a…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
 					&cli.StringFlag{Name: "first-user-message", Usage: "Optional explicit first user message for the LLM chat history. When not set, the selected variation's first_user_message_template is rendered with…."},
 					&cli.StringSliceFlag{Name: "secret", Usage: "Secrets that can be used in the headers for tool calls using the secret interpolation format. key=value,... over name, value (repeatable; or a document). NAME=VALUE is also accepted."},
 					&cli.StringSliceFlag{Name: "memory-cascade", Usage: "Memory layers/entries layered over the baseline cascade inherited from the selected variation — element-level rules over inherited styles, in CSS terms.…. key=value,... over memory-layer-id, memory-entry-id (repeatable; or a document)."},
@@ -441,6 +441,94 @@ func objectivesCommand() *cli.Command {
 				},
 			},
 			{
+				Name:                      "list-queued-actions",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "List objective queued actions",
+				ArgsUsage:                 "<objective-id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
+					&cli.StringFlag{Name: "state", Usage: "Only return actions in this state. When unset, actions in every state are returned. (one of: STATE_UNSPECIFIED, STATE_QUEUED, STATE_SENT, STATE_REMOVED, STATE_DISCARDED)"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<objective-id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<objective-id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					if cmd.IsSet("state") && !isOneOf(cmd.String("state"), []string{"STATE_UNSPECIFIED", "STATE_QUEUED", "STATE_SENT", "STATE_REMOVED", "STATE_DISCARDED"}) {
+						return cli.Exit(fmt.Sprintf("--state: invalid value %q (valid: STATE_UNSPECIFIED, STATE_QUEUED, STATE_SENT, STATE_REMOVED, STATE_DISCARDED)", cmd.String("state")), 2)
+					}
+					pos0 := cmd.Args().Get(0) // objective-id
+					var converted commands.ObjectivesListQueuedActionsConversion
+					if err := commands.ConvertObjectivesListQueuedActions(cmd, &converted); err != nil {
+						return err
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					page, err := client.Objectives().ListQueuedActions(ctx, pos0, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, true, map[string]any{"items": page.Items, "nextCursor": page.NextCursor})
+				},
+			},
+			{
+				Name:                      "remove-queued-action",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Remove a queued action",
+				ArgsUsage:                 "<objective-id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id"},
+					&cli.StringFlag{Name: "queued-action-id", Usage: "Required. The ID of the queued action to remove."},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<objective-id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<objective-id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
+					_missing := []string{}
+					if !cmd.IsSet("queued-action-id") {
+						_missing = append(_missing, "--queued-action-id")
+					}
+					if len(_missing) > 0 {
+						return cli.Exit("required flag(s) not set: "+strings.Join(_missing, ", "), 2)
+					}
+					pos0 := cmd.Args().Get(0) // objective-id
+					var converted commands.ObjectivesRemoveQueuedActionConversion
+					if err := commands.ConvertObjectivesRemoveQueuedAction(cmd, &converted); err != nil {
+						return err
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.Objectives().RemoveQueuedAction(ctx, pos0, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
 				Name:                      "list-tool-calls",
 				DisableSliceFlagSeparator: true,
 				Usage:                     "List objective tool calls",
@@ -452,7 +540,7 @@ func objectivesCommand() *cli.Command {
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
 					&cli.StringFlag{Name: "status", Usage: "Filter by tool call status (one of: TOOL_CALL_STATUS_UNSPECIFIED, TOOL_CALL_STATUS_AUTO_APPROVED, TOOL_CALL_STATUS_WAITING_FOR_APPROVAL, TOOL_CALL_STATUS_APPROVED, TOOL_CALL_STATUS_DENIED)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
-					&cli.StringFlag{Name: "execution-status", Usage: "Filter by tool call execution status. Useful for reverse-harness polling of bare tool calls waiting for externally supplied content… (one of: TOOL_CALL_EXECUTION_STATUS_UNSPECIFIED, TOOL_CALL_EXECUTION_STATUS_PENDING, TOOL_CALL_EXECUTION_STATUS_RUNNING, TOOL_CALL_EXECUTION_STATUS_COMPLETED, TOOL_CALL_EXECUTION_STATUS_ERRORED, TOOL_CALL_EXECUTION_STATUS_WAITING_FOR_CONTENT)"},
+					&cli.StringFlag{Name: "execution-status", Usage: "Filter by tool call execution status. Useful for reverse-harness polling of bare tool calls waiting for externally supplied content… (one of: TOOL_CALL_EXECUTION_STATUS_UNSPECIFIED, TOOL_CALL_EXECUTION_STATUS_PENDING, TOOL_CALL_EXECUTION_STATUS_RUNNING, TOOL_CALL_EXECUTION_STATUS_COMPLETED, TOOL_CALL_EXECUTION_STATUS_ERRORED, TOOL_CALL_EXECUTION_STATUS_WAITING_FOR_CONTENT, TOOL_CALL_EXECUTION_STATUS_INTERRUPTED)"},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -470,8 +558,8 @@ func objectivesCommand() *cli.Command {
 					if cmd.IsSet("status") && !isOneOf(cmd.String("status"), []string{"TOOL_CALL_STATUS_UNSPECIFIED", "TOOL_CALL_STATUS_AUTO_APPROVED", "TOOL_CALL_STATUS_WAITING_FOR_APPROVAL", "TOOL_CALL_STATUS_APPROVED", "TOOL_CALL_STATUS_DENIED"}) {
 						return cli.Exit(fmt.Sprintf("--status: invalid value %q (valid: TOOL_CALL_STATUS_UNSPECIFIED, TOOL_CALL_STATUS_AUTO_APPROVED, TOOL_CALL_STATUS_WAITING_FOR_APPROVAL, TOOL_CALL_STATUS_APPROVED, TOOL_CALL_STATUS_DENIED)", cmd.String("status")), 2)
 					}
-					if cmd.IsSet("execution-status") && !isOneOf(cmd.String("execution-status"), []string{"TOOL_CALL_EXECUTION_STATUS_UNSPECIFIED", "TOOL_CALL_EXECUTION_STATUS_PENDING", "TOOL_CALL_EXECUTION_STATUS_RUNNING", "TOOL_CALL_EXECUTION_STATUS_COMPLETED", "TOOL_CALL_EXECUTION_STATUS_ERRORED", "TOOL_CALL_EXECUTION_STATUS_WAITING_FOR_CONTENT"}) {
-						return cli.Exit(fmt.Sprintf("--execution-status: invalid value %q (valid: TOOL_CALL_EXECUTION_STATUS_UNSPECIFIED, TOOL_CALL_EXECUTION_STATUS_PENDING, TOOL_CALL_EXECUTION_STATUS_RUNNING, TOOL_CALL_EXECUTION_STATUS_COMPLETED, TOOL_CALL_EXECUTION_STATUS_ERRORED, TOOL_CALL_EXECUTION_STATUS_WAITING_FOR_CONTENT)", cmd.String("execution-status")), 2)
+					if cmd.IsSet("execution-status") && !isOneOf(cmd.String("execution-status"), []string{"TOOL_CALL_EXECUTION_STATUS_UNSPECIFIED", "TOOL_CALL_EXECUTION_STATUS_PENDING", "TOOL_CALL_EXECUTION_STATUS_RUNNING", "TOOL_CALL_EXECUTION_STATUS_COMPLETED", "TOOL_CALL_EXECUTION_STATUS_ERRORED", "TOOL_CALL_EXECUTION_STATUS_WAITING_FOR_CONTENT", "TOOL_CALL_EXECUTION_STATUS_INTERRUPTED"}) {
+						return cli.Exit(fmt.Sprintf("--execution-status: invalid value %q (valid: TOOL_CALL_EXECUTION_STATUS_UNSPECIFIED, TOOL_CALL_EXECUTION_STATUS_PENDING, TOOL_CALL_EXECUTION_STATUS_RUNNING, TOOL_CALL_EXECUTION_STATUS_COMPLETED, TOOL_CALL_EXECUTION_STATUS_ERRORED, TOOL_CALL_EXECUTION_STATUS_WAITING_FOR_CONTENT, TOOL_CALL_EXECUTION_STATUS_INTERRUPTED)", cmd.String("execution-status")), 2)
 					}
 					pos0 := cmd.Args().Get(0) // objective-id
 					var converted commands.ObjectivesListToolCallsConversion
@@ -792,10 +880,7 @@ func objectivesCommand() *cli.Command {
 					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
-						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
-					}
-					_columns := []displayColumn(nil)
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
 					_stdinInputs := []string{cmd.String("file"), cmd.String("compaction-config"), cmd.String("compaction-config-summarization"), cmd.String("compaction-config-summarization-instructions"), cmd.String("compaction-config-tool-result-clearing")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
@@ -827,8 +912,8 @@ func objectivesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
-					&cli.StringFlag{Name: "message", Usage: "Required. The message to continue an objective that has completed (or you are enqueing)."},
-					&cli.BoolFlag{Name: "enqueue", Usage: "When set to true, the message will be enqueued for when the agent loop is available to process it."},
+					&cli.StringFlag{Name: "message", Usage: "Required. The user message to send to the objective."},
+					&cli.BoolFlag{Name: "enqueue", Usage: "When false, the objective must be waiting and the message is sent immediately. When true, a waiting objective still receives the message immediately; an…."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -844,7 +929,10 @@ func objectivesCommand() *cli.Command {
 					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
-					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
+					}
+					_columns := []displayColumn(nil)
 					_stdinInputs := []string{cmd.String("file"), cmd.String("message")}
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
@@ -866,6 +954,123 @@ func objectivesCommand() *cli.Command {
 						return err
 					}
 					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
+				Name:                      "interrupt",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Interrupt an objective",
+				ArgsUsage:                 "<objective-id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<objective-id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<objective-id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					pos0 := cmd.Args().Get(0) // objective-id
+					var converted commands.ObjectivesInterruptConversion
+					if err := commands.ConvertObjectivesInterrupt(cmd, &converted); err != nil {
+						return err
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.Objectives().Interrupt(ctx, pos0, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
+				Name:                      "create-and-stream",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Create an objective and stream its events",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id"},
+					&cli.StringFlag{Name: "agent-id", Usage: "Required."},
+					&cli.StringFlag{Name: "variation-id", Usage: "Optional explicit variation selection. Overrides the agent's variation_selection_mode."},
+					&cli.StringFlag{Name: "metadata", Usage: "Required here, though Create objective leaves it optional: the external ID inside it is the idempotency key that makes a retry of this request resume the…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "external-id", Usage: "Required. External ID for the objective (e.g., a workflow ID from an external system), and this request's idempotency key. Required here, though Create objective leaves…."},
+					&cli.StringSliceFlag{Name: "system-prompt-data", Usage: "Arbitrary data rendered into the selected variation's system_prompt_template (liquid) to produce the objective's system prompt. If the agent has a…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.StringFlag{Name: "first-user-message", Usage: "Optional explicit first user message for the LLM chat history. When not set, the selected variation's first_user_message_template is rendered with…."},
+					&cli.StringSliceFlag{Name: "secret", Usage: "Secrets that can be used in the headers for tool calls using the secret interpolation format. key=value,... over name, value (repeatable; or a document). NAME=VALUE is also accepted."},
+					&cli.StringSliceFlag{Name: "memory-cascade", Usage: "Memory layers/entries layered over the baseline cascade inherited from the selected variation — element-level rules over inherited styles, in CSS terms.…. key=value,... over memory-layer-id, memory-entry-id (repeatable; or a document)."},
+					&cli.StringSliceFlag{Name: "first-user-message-data", Usage: "Arbitrary data rendered into the selected variation's first_user_message_template (liquid) to produce the first user message. Separate from…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
+					&cli.StringFlag{Name: "episodic-memory", Usage: "If the agent variation that is selected has episodic memory enabled, then this key is used to create/update a memory layer specific to the episodic memory. The…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "episodic-memory-key", Usage: "The caller-supplied episodic key. Objectives created with the same key (for the same agent) share one episodic memory layer."},
+					&cli.StringFlag{Name: "tenant", Usage: "Optional tenant assertion — the customer's org/company identifier for the end user this objective serves. Upserts the tenant record in the workspace and…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "tenant-id", Usage: "The tenant identifier in the customer's namespace (e.g. \"acme-corp\"). Stored as the tenant record's external_id; stable across requests."},
+					&cli.StringFlag{Name: "tenant-name", Usage: "Optional human-readable name for the tenant. Updates the tenant record's name on every assertion that provides it."},
+					&cli.StringFlag{Name: "subject", Usage: "Optional subject assertion — the person within the tenant this objective serves. Requires `tenant`; a subject asserted without a tenant is rejected with…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "subject-id", Usage: "The subject identifier in the customer's namespace (e.g. their user id). Stored as the subject record's external_id; unique within the tenant."},
+					&cli.StringFlag{Name: "subject-name", Usage: "Optional human-readable name for the subject. Updates the subject record's name on every assertion that provides it."},
+					&cli.StringSliceFlag{Name: "pinned-parameter", Usage: "Parameters forced onto this objective's tool calls. A pinned parameter is removed from the tool schema the LLM sees, and its value is always overwritten…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
+					&cli.StringFlag{Name: "last-event-id", Usage: "Resume the stream after this event id (an explicitly empty value clears the checkpoint)"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 0 {
+						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
+					}
+					_display := displayMode(cmd, "json")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					if _display != "json" {
+						return cli.Exit("streaming commands support only --display json (one JSON document per event)", 2)
+					}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("first-user-message"), cmd.String("episodic-memory"), cmd.String("episodic-memory-key"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("system-prompt-data")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("memory-cascade")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("first-user-message-data")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("pinned-parameter")...)
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					var converted commands.ObjectivesCreateAndStreamConversion
+					if err := commands.ConvertObjectivesCreateAndStream(cmd, &converted); err != nil {
+						return err
+					}
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					streamOpts := []sdk.RequestOption(nil)
+					if cmd.IsSet("last-event-id") {
+						streamOpts = append(streamOpts, sdk.WithLastEventID(cmd.String("last-event-id")))
+					}
+					stream, err := client.Objectives().CreateAndStream(ctx, &converted.Params, streamOpts...)
+					if err != nil {
+						return err
+					}
+					defer stream.Close()
+					for stream.Next() {
+						if err := printJSONLine(stream.Current()); err != nil {
+							return err
+						}
+					}
+					return stream.Err()
 				},
 			},
 		},

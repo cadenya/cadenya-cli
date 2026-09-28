@@ -382,7 +382,7 @@ cadenya ai-provider-keys update <id> [--workspace-id <value>] [--name <value>] [
 Create a model
 
 ```sh
-cadenya models create <ai-provider-key-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --provider <value> --family <value> --max-input-tokens <value> --max-output-tokens <value> --input-price-per-million-tokens <value> --output-price-per-million-tokens <value> --capability <doc>... --provider-model-id <value> [-f <doc>] [--dry-run]
+cadenya models create <ai-provider-key-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --provider <value> --family <value> --max-input-tokens <value> --max-output-tokens <value> --input-price-per-million-tokens <value> --output-price-per-million-tokens <value> [--cached-input-price-per-million-tokens <value>] --capability <doc>... --provider-model-id <value> [-f <doc>] [--dry-run]
 ```
 List models
 
@@ -397,7 +397,7 @@ cadenya models retrieve <id> [--workspace-id <value>]
 Update a model
 
 ```sh
-cadenya models update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--provider <value>] [--family <value>] [--max-input-tokens <value>] [--max-output-tokens <value>] [--input-price-per-million-tokens <value>] [--output-price-per-million-tokens <value>] [--capability <doc>]... [--provider-model-id <value>] [--pricing-override-input-price-per-million-tokens <value>] [--pricing-override-output-price-per-million-tokens <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
+cadenya models update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--provider <value>] [--family <value>] [--max-input-tokens <value>] [--max-output-tokens <value>] [--input-price-per-million-tokens <value>] [--output-price-per-million-tokens <value>] [--cached-input-price-per-million-tokens <value>] [--capability <doc>]... [--provider-model-id <value>] [--pricing-override-input-price-per-million-tokens <value>] [--pricing-override-output-price-per-million-tokens <value>] [--pricing-override-cached-input-price-per-million-tokens <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Disable a model
 
@@ -481,7 +481,7 @@ cadenya objectives list [--workspace-id <value>] [--limit <value>] [--cursor <va
 Create a new objective
 
 ```sh
-cadenya objectives create [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... [--external-id <value>] --system-prompt-data KEY=VALUE|<doc>... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [-f <doc>] [--dry-run]
+cadenya objectives create [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... [--external-id <value>] [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [-f <doc>] [--dry-run]
 ```
 Get an objective by ID
 
@@ -517,6 +517,16 @@ Submit feedback for an objective
 
 ```sh
 cadenya objectives create-feedback <objective-id> [--workspace-id <value>] [--label KEY=VALUE]... [--external-id <value>] [--data-score <value>] [--data-comment <value>] [-f <doc>] [--dry-run]
+```
+List objective queued actions
+
+```sh
+cadenya objectives list-queued-actions <objective-id> [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--state <value>]
+```
+Remove a queued action
+
+```sh
+cadenya objectives remove-queued-action <objective-id> [--workspace-id <value>] --queued-action-id <value>
 ```
 List objective tool calls
 
@@ -563,6 +573,16 @@ Continue an objective
 ```sh
 cadenya objectives continue <objective-id> [--workspace-id <value>] --message <value> [--enqueue[=true|false]] [-f <doc>] [--dry-run]
 ```
+Interrupt an objective
+
+```sh
+cadenya objectives interrupt <objective-id> [--workspace-id <value>]
+```
+Create an objective and stream its events
+
+```sh
+cadenya objectives create-and-stream [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... --external-id <value> [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [-f <doc>] [--dry-run] [--last-event-id <id>]
+```
 
 ## cadenya tool-search
 
@@ -605,7 +625,7 @@ cadenya tool-sets list [--workspace-id <value>] [--limit <value>] [--cursor <val
 Create a new tool set
 
 ```sh
-cadenya tool-sets create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] --adapter <mcp|http|openapi|bare> [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--overlay <doc>]... [-f <doc>] [--dry-run]
+cadenya tool-sets create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] --adapter <mcp|http|openapi|bare> [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--overlay <doc>]... [--secret k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 Get a tool set by ID
 
@@ -620,7 +640,7 @@ cadenya tool-sets delete <id> [--workspace-id <value>]
 Update a tool set
 
 ```sh
-cadenya tool-sets update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--adapter <mcp|http|openapi|bare>] [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--overlay <doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
+cadenya tool-sets update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--adapter <mcp|http|openapi|bare>] [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--overlay <doc>]... [--secret k=v,...|<doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Archive a tool set
 
