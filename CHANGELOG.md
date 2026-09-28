@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/cadenya/cadenya-cli/compare/v1.9.0...v1.10.0) (2026-09-28)
+
+
+### Features
+
+* maintain CLI and integrate workspace configuration ([a293a39](https://github.com/cadenya/cadenya-cli/commit/a293a39a77c745d2330587f3da331e0ce4d98ccf))
+
 ## [1.9.0](https://github.com/cadenya/cadenya-cli/compare/v1.8.0...v1.9.0) (2026-09-28)
 
 
