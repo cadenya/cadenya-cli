@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/cadenya/cadenya-cli/compare/v1.8.0...v1.9.0) (2026-09-28)
+
+
+### Features
+
+* objective interrupts and queued actions, default workspace in whoami ([c086adb](https://github.com/cadenya/cadenya-cli/commit/c086adb6d4da2bffba38c1879738b2f9bd184d68))
+
 ## [1.8.0](https://github.com/cadenya/cadenya-cli/compare/v1.7.0...v1.8.0) (2026-09-18)
 
 
