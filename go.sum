@@ -8,8 +8,8 @@ github.com/tmaxmax/go-sse v0.11.0 h1:nogmJM6rJUoOLoAwEKeQe5XlVpt9l7N82SS1jI7lWFg
 github.com/tmaxmax/go-sse v0.11.0/go.mod h1:u/2kZQR1tyngo1lKaNCj1mJmhXGZWS1Zs5yiSOD+Eg8=
 github.com/urfave/cli/v3 v3.13.0 h1:Dr6jqMfIyyFsRVn7Nz5mqLsMY+ZMpfh3a0aMs+umPVY=
 github.com/urfave/cli/v3 v3.13.0/go.mod h1:vXn6HxPNccJSzQr2QvwVncOKrgYGIHU0HY5h8B2nQj4=
-go.cadenya.com/cadenya-go v1.7.0 h1:a8GxalJ4GramDXMwjFIvPndhHDIR8N0mPSK2QRErEic=
-go.cadenya.com/cadenya-go v1.7.0/go.mod h1:MU9nKcKkgwpk2+5pSu8crfrUsDUY5beyUlWemEPy5L8=
+go.cadenya.com/cadenya-go v1.9.0 h1:5qDCNf+5QcqKm138Y7Z4l9UXGVVHfSFM/amcThWYO2E=
+go.cadenya.com/cadenya-go v1.9.0/go.mod h1:MU9nKcKkgwpk2+5pSu8crfrUsDUY5beyUlWemEPy5L8=
 go.yaml.in/yaml/v2 v2.4.2 h1:DzmwEr2rDGHl7lsFgAHxmNz/1NlQ7xLIrlN2h5d1eGI=
 go.yaml.in/yaml/v2 v2.4.2/go.mod h1:081UH+NErpNdqlCXm3TtEran0rJZGxAYx9hb/ELlsPU=
 go.yaml.in/yaml/v3 v3.0.5 h1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=

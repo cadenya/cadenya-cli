@@ -78,6 +78,7 @@ func main() {
 			objectivesCommand(),
 			toolSearchCommand(),
 			tenantsCommand(),
+			trustedEndpointsCommand(),
 			toolSetsCommand(),
 			uploadsCommand(),
 			widgetSessionsCommand(),

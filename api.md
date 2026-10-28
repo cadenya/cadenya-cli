@@ -22,26 +22,6 @@ cadenya accounts rotate-webhook-signing-key
 
 ## cadenya api-keys
 
-Get the global API key
-
-```sh
-cadenya api-keys retrieve-global
-```
-Disable the global API key
-
-```sh
-cadenya api-keys disable-global
-```
-Enable the global API key
-
-```sh
-cadenya api-keys enable-global
-```
-Rotate the global API key
-
-```sh
-cadenya api-keys rotate-global
-```
 List API keys
 
 ```sh
@@ -50,37 +30,52 @@ cadenya api-keys list [--workspace-id <value>] [--limit <value>] [--cursor <valu
 Create a new API key
 
 ```sh
-cadenya api-keys create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--permission <value>]... [-f <doc>] [--dry-run]
+cadenya api-keys create --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--permission <value>]... --all-workspaces[=true|false] --workspace-assignment k=v,...|<doc>... [-f <doc>] [--dry-run]
 ```
 Get an API key by ID
 
 ```sh
-cadenya api-keys retrieve <id> [--workspace-id <value>]
+cadenya api-keys retrieve <id>
 ```
 Delete an API key
 
 ```sh
-cadenya api-keys delete <id> [--workspace-id <value>]
+cadenya api-keys delete <id>
 ```
 Update an API key
 
 ```sh
-cadenya api-keys update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--permission <value>]... [--update-mask <value>] [-f <doc>] [--dry-run]
+cadenya api-keys update <id> [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--permission <value>]... [--all-workspaces[=true|false]] [--workspace-assignment k=v,...|<doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
+```
+Assign a workspace to an API key
+
+```sh
+cadenya api-keys add-workspace <id> --workspace-id <value> [-f <doc>] [--dry-run]
 ```
 Disable an API key
 
 ```sh
-cadenya api-keys disable <id> [--workspace-id <value>]
+cadenya api-keys disable <id>
 ```
 Enable an API key
 
 ```sh
-cadenya api-keys enable <id> [--workspace-id <value>]
+cadenya api-keys enable <id>
+```
+Remove a workspace from an API key
+
+```sh
+cadenya api-keys remove-workspace <id> --workspace-id <value> [-f <doc>] [--dry-run]
+```
+Reveal an API key's token
+
+```sh
+cadenya api-keys reveal <id>
 ```
 Rotate an API key
 
 ```sh
-cadenya api-keys rotate <id> [--workspace-id <value>]
+cadenya api-keys rotate <id>
 ```
 
 ## cadenya workspace-admin
@@ -129,6 +124,34 @@ Remove a member from a workspace
 
 ```sh
 cadenya workspace-admin remove-member <profile-id> [--workspace-id <value>]
+```
+
+## cadenya trusted-endpoints
+
+List trusted endpoints
+
+```sh
+cadenya trusted-endpoints list [--limit <value>] [--cursor <value>] [--labels <value>]
+```
+Create a trusted endpoint
+
+```sh
+cadenya trusted-endpoints create --name <value> [--external-id <value>] [--label KEY=VALUE]... --host <value> [-f <doc>] [--dry-run]
+```
+Get a trusted endpoint by ID
+
+```sh
+cadenya trusted-endpoints retrieve <id>
+```
+Delete a trusted endpoint
+
+```sh
+cadenya trusted-endpoints delete <id>
+```
+Verify a URL against the trusted endpoints
+
+```sh
+cadenya trusted-endpoints verify --url <value> [-f <doc>] [--dry-run]
 ```
 
 ## cadenya profiles
@@ -205,7 +228,7 @@ cadenya agents list [--workspace-id <value>] [--limit <value>] [--cursor <value>
 Create a new agent
 
 ```sh
-cadenya agents create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] [--variation-selection-mode <random|weighted>] [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--default-variation-name <value>] [--default-variation-external-id <value>] [--default-variation-label KEY=VALUE]... [--default-variation-system-prompt-template <value>] [--default-variation-discovery-max-tools <value>] [--default-variation-discovery-hint <value>]... [--default-variation-constraints-max-tool-calls <value>] [--default-variation-constraints-max-sub-objectives <value>] [--default-variation-constraints-inactivity-timeout <value>] [--default-variation-description <value>] [--default-variation-model-id <value>] [--default-variation-model-temperature <value>] [--default-variation-model-top-p <value>] [--default-variation-model-top-k <value>] [--default-variation-model-stop-sequence <value>]... [--default-variation-model-max-output-tokens <value>] [--default-variation-model-reasoning-effort <none|low|medium|high>] [--default-variation-model-caching-enabled[=true|false]] [--default-variation-compaction-trigger-threshold <value>] [--default-variation-compaction-summarization-instructions <value>] [--default-variation-compaction-tool-result-clearing-preserve-recent-results <value>] [--default-variation-first-user-message-template <value>] [--default-variation-assignment <doc>]... [--default-variation-memory-layer-assignment k=v,...|<doc>]... [-f <doc>] [--dry-run]
+cadenya agents create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] [--variation-selection-mode <random|weighted>] [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--always-include-subject-memories[=true|false]] [--default-variation-name <value>] [--default-variation-external-id <value>] [--default-variation-label KEY=VALUE]... [--default-variation-system-prompt-template <value>] [--default-variation-discovery-max-tools <value>] [--default-variation-discovery-hint <value>]... [--default-variation-constraints-max-tool-calls <value>] [--default-variation-constraints-max-sub-objectives <value>] [--default-variation-constraints-inactivity-timeout <value>] [--default-variation-description <value>] [--default-variation-model-id <value>] [--default-variation-model-temperature <value>] [--default-variation-model-top-p <value>] [--default-variation-model-top-k <value>] [--default-variation-model-stop-sequence <value>]... [--default-variation-model-max-output-tokens <value>] [--default-variation-model-reasoning-effort <none|low|medium|high>] [--default-variation-model-caching-enabled[=true|false]] [--default-variation-model-streaming-enabled[=true|false]] [--default-variation-compaction-trigger-threshold <value>] [--default-variation-compaction-summarization-instructions <value>] [--default-variation-compaction-tool-result-clearing-preserve-recent-results <value>] [--default-variation-first-user-message-template <value>] [--default-variation-assignment <doc>]... [--default-variation-memory-layer-assignment k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 List feedback for an agent
 
@@ -230,7 +253,7 @@ cadenya agents delete <id> [--workspace-id <value>]
 Update an agent
 
 ```sh
-cadenya agents update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] [--variation-selection-mode <random|weighted>] [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
+cadenya agents update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--webhook-events-url <value>] [--variation-selection-mode <random|weighted>] [--system-prompt-data-schema KEY=VALUE|<doc>]... [--output-definition KEY=VALUE|<doc>]... [--enable-episodic-memory[=true|false]] [--episodic-memory-ttl <value>] [--always-include-subject-memories[=true|false]] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Archive an agent
 
@@ -306,7 +329,7 @@ cadenya agents variations list <agent-id> [--workspace-id <value>] [--limit <val
 Create a new variation
 
 ```sh
-cadenya agents variations create <agent-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [--assignment <doc>]... [--memory-layer-assignment k=v,...|<doc>]... [-f <doc>] [--dry-run]
+cadenya agents variations create <agent-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--model-streaming-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [--assignment <doc>]... [--memory-layer-assignment k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 Get a variation by ID
 
@@ -321,7 +344,7 @@ cadenya agents variations delete <agent-id> <id> [--workspace-id <value>]
 Update a variation
 
 ```sh
-cadenya agents variations update <agent-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [--assignment <doc>]... [--memory-layer-assignment k=v,...|<doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
+cadenya agents variations update <agent-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--system-prompt-template <value>] [--discovery-max-tools <value>] [--discovery-hint <value>]... [--constraints-max-tool-calls <value>] [--constraints-max-sub-objectives <value>] [--constraints-inactivity-timeout <value>] [--description <value>] [--model-id <value>] [--model-temperature <value>] [--model-top-p <value>] [--model-top-k <value>] [--model-stop-sequence <value>]... [--model-max-output-tokens <value>] [--model-reasoning-effort <none|low|medium|high>] [--model-caching-enabled[=true|false]] [--model-streaming-enabled[=true|false]] [--compaction-trigger-threshold <value>] [--compaction-summarization-instructions <value>] [--compaction-tool-result-clearing-preserve-recent-results <value>] [--first-user-message-template <value>] [--assignment <doc>]... [--memory-layer-assignment k=v,...|<doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Add an assignment to a variation
 
@@ -420,12 +443,12 @@ cadenya models swap-on-variations [--workspace-id <value>] [--model-swap k=v,...
 List memory layers
 
 ```sh
-cadenya memory-layers list [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--prefix <value>] [--query <value>] [--type <value>] [--agent-id <value>] [--episodic-key-prefix <value>] [--labels <value>] [--sort-order <value>] [--include-info[=true|false]]
+cadenya memory-layers list [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--prefix <value>] [--query <value>] [--type <value>] [--agent-id <value>] [--episodic-key-prefix <value>] [--labels <value>] [--tenant-id <value>] [--subject-id <value>] [--sort-order <value>] [--include-info[=true|false]]
 ```
 Create a new memory layer
 
 ```sh
-cadenya memory-layers create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --type <episodic|skills> [--description <value>] [-f <doc>] [--dry-run]
+cadenya memory-layers create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --type <episodic|skills> [--description <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [-f <doc>] [--dry-run]
 ```
 Get a memory layer by ID
 
@@ -481,7 +504,7 @@ cadenya objectives list [--workspace-id <value>] [--limit <value>] [--cursor <va
 Create a new objective
 
 ```sh
-cadenya objectives create [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... [--external-id <value>] [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [-f <doc>] [--dry-run]
+cadenya objectives create [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... [--external-id <value>] [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [--client-tools-definition <doc>]... [-f <doc>] [--dry-run]
 ```
 Get an objective by ID
 
@@ -506,7 +529,7 @@ cadenya objectives list-events <objective-id> [--workspace-id <value>] [--limit 
 Stream objective events
 
 ```sh
-cadenya objectives stream-events <objective-id> [--workspace-id <value>] [--last-event-id <id>]
+cadenya objectives stream-events <objective-id> [--workspace-id <value>] [--include-deltas[=true|false]] [--last-event-id <id>]
 ```
 List feedback for an objective
 
@@ -581,7 +604,7 @@ cadenya objectives interrupt <objective-id> [--workspace-id <value>]
 Create an objective and stream its events
 
 ```sh
-cadenya objectives create-and-stream [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... --external-id <value> [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [-f <doc>] [--dry-run] [--last-event-id <id>]
+cadenya objectives create-and-stream [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... --external-id <value> [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [--client-tools-definition <doc>]... [--include-deltas[=true|false]] [-f <doc>] [--dry-run] [--last-event-id <id>]
 ```
 
 ## cadenya tool-search
