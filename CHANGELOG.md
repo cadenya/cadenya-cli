@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/cadenya/cadenya-cli/compare/v1.10.0...v1.11.0) (2026-10-28)
+
+
+### Features
+
+* client tools, trusted endpoints, account API keys and streaming deltas ([#66](https://github.com/cadenya/cadenya-cli/issues/66)) ([068b9bb](https://github.com/cadenya/cadenya-cli/commit/068b9bb312f1229a4b76eaa723b3aee913637a3d))
+
+
+### Chores
+
+* **chocolatey:** Add a copyright element to the nuspec ([#65](https://github.com/cadenya/cadenya-cli/issues/65)) ([c6b79e3](https://github.com/cadenya/cadenya-cli/commit/c6b79e38c1dee2f75d358c3ea2bb8e77c25c048e))
+
 ## [1.10.0](https://github.com/cadenya/cadenya-cli/compare/v1.9.0...v1.10.0) (2026-09-28)
 
 
