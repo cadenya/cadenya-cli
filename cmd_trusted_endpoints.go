@@ -1,0 +1,209 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/urfave/cli/v3"
+
+	commands "go.cadenya.com/cadenya-cli/internal/commands"
+)
+
+func trustedEndpointsCommand() *cli.Command {
+	return &cli.Command{
+		Name:                      "trusted-endpoints",
+		DisableSliceFlagSeparator: true,
+		Commands: []*cli.Command{
+			{
+				Name:                      "list",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "List trusted endpoints",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
+					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
+					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 0 {
+						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					var converted commands.TrustedEndpointsListConversion
+					if err := commands.ConvertTrustedEndpointsList(cmd, &converted); err != nil {
+						return err
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					page, err := client.TrustedEndpoints().List(ctx, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, true, map[string]any{"items": page.Items, "nextCursor": page.NextCursor})
+				},
+			},
+			{
+				Name:                      "create",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Create a trusted endpoint",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "metadata", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "name", Usage: "Required. Human-readable name for the resource (e.g., \"Production API Key\", \"Staging Workspace\")."},
+					&cli.StringFlag{Name: "external-id", Usage: "External ID for the resource (e.g., a workflow ID from an external system)."},
+					&cli.StringSliceFlag{Name: "label", Usage: "Key-value pairs for categorization and filtering. Values are 0-63 alphanumeric characters with \"-\", \"_\", or \".\" allowed between; keys follow the same shape and…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "host", Usage: "Required. The trusted host, with an optional port (default 443). Either an exact host such as \"api.stripe.com\", or a wildcard covering exactly one label, such as…."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 0 {
+						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("host")}
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					var converted commands.TrustedEndpointsCreateConversion
+					if err := commands.ConvertTrustedEndpointsCreate(cmd, &converted); err != nil {
+						return err
+					}
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.TrustedEndpoints().Create(ctx, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
+				Name:                      "retrieve",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Get a trusted endpoint by ID",
+				ArgsUsage:                 "<id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
+					pos0 := cmd.Args().Get(0) // id
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.TrustedEndpoints().Retrieve(ctx, pos0)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
+				Name:                      "delete",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Delete a trusted endpoint",
+				ArgsUsage:                 "<id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "json")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("this command has no displayable response; use --display json", 2)
+					}
+					pos0 := cmd.Args().Get(0) // id
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					return client.TrustedEndpoints().Delete(ctx, pos0)
+				},
+			},
+			{
+				Name:                      "verify",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Verify a URL against the trusted endpoints",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "url", Usage: "Required. The URL a tool set would send requests to, such as an MCP server URL or an OpenAPI specification URL. A bare host is also accepted. Only its host and port are…."},
+					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
+					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
+					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 0 {
+						return cli.Exit(fmt.Sprintf("unexpected positional arguments: %v", cmd.Args().Slice()), 2)
+					}
+					_display := displayMode(cmd, "table")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					if _display != "json" && _display != "yaml" && !cmd.Bool("dry-run") {
+						return cli.Exit("no display columns apply to this command; use --display json or yaml", 2)
+					}
+					_columns := []displayColumn(nil)
+					_stdinInputs := []string{cmd.String("file"), cmd.String("url")}
+					if err := stdinBudget(_stdinInputs); err != nil {
+						return cli.Exit(err.Error(), 2)
+					}
+					var converted commands.TrustedEndpointsVerifyConversion
+					if err := commands.ConvertTrustedEndpointsVerify(cmd, &converted); err != nil {
+						return err
+					}
+					if cmd.Bool("dry-run") {
+						return printDocument(_display, converted.Body)
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					out, err := client.TrustedEndpoints().Verify(ctx, &converted.Params)
+					if err != nil {
+						return err
+					}
+					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+		},
+	}
+}

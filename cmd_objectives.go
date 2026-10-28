@@ -84,7 +84,7 @@ func objectivesCommand() *cli.Command {
 					&cli.StringSliceFlag{Name: "memory-cascade", Usage: "Memory layers/entries layered over the baseline cascade inherited from the selected variation — element-level rules over inherited styles, in CSS terms.…. key=value,... over memory-layer-id, memory-entry-id (repeatable; or a document)."},
 					&cli.StringSliceFlag{Name: "first-user-message-data", Usage: "Arbitrary data rendered into the selected variation's first_user_message_template (liquid) to produce the first user message. Separate from…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
 					&cli.StringFlag{Name: "episodic-memory", Usage: "If the agent variation that is selected has episodic memory enabled, then this key is used to create/update a memory layer specific to the episodic memory. The…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
-					&cli.StringFlag{Name: "episodic-memory-key", Usage: "The caller-supplied episodic key. Objectives created with the same key (for the same agent) share one episodic memory layer."},
+					&cli.StringFlag{Name: "episodic-memory-key", Usage: "The caller-supplied episodic key. Objectives created with the same key (for the same agent, tenant and subject) share one episodic memory layer. Empty on a…."},
 					&cli.StringFlag{Name: "tenant", Usage: "Optional tenant assertion — the customer's org/company identifier for the end user this objective serves. Upserts the tenant record in the workspace and…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.StringFlag{Name: "tenant-id", Usage: "The tenant identifier in the customer's namespace (e.g. \"acme-corp\"). Stored as the tenant record's external_id; stable across requests."},
 					&cli.StringFlag{Name: "tenant-name", Usage: "Optional human-readable name for the tenant. Updates the tenant record's name on every assertion that provides it."},
@@ -92,6 +92,8 @@ func objectivesCommand() *cli.Command {
 					&cli.StringFlag{Name: "subject-id", Usage: "The subject identifier in the customer's namespace (e.g. their user id). Stored as the subject record's external_id; unique within the tenant."},
 					&cli.StringFlag{Name: "subject-name", Usage: "Optional human-readable name for the subject. Updates the subject record's name on every assertion that provides it."},
 					&cli.StringSliceFlag{Name: "pinned-parameter", Usage: "Parameters forced onto this objective's tool calls. A pinned parameter is removed from the tool schema the LLM sees, and its value is always overwritten…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "client-tools", Usage: "Tools the caller defines and executes for this objective. Each definition is upserted into the agent's client tools tool set, and only the definitions listed…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringSliceFlag{Name: "client-tools-definition", Usage: "The tool definitions. Names must be unique within the list. One YAML/JSON document per occurrence (literal, @path, or -)."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -105,13 +107,14 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("first-user-message"), cmd.String("episodic-memory"), cmd.String("episodic-memory-key"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("first-user-message"), cmd.String("episodic-memory"), cmd.String("episodic-memory-key"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name"), cmd.String("client-tools")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("system-prompt-data")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("memory-cascade")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("first-user-message-data")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("pinned-parameter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("client-tools-definition")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -261,10 +264,10 @@ func objectivesCommand() *cli.Command {
 					&cli.StringFlag{Name: "workspace-id"},
 					&cli.Int32Flag{Name: "limit", Usage: "Maximum number of results to return"},
 					&cli.StringFlag{Name: "cursor", Usage: "Pagination cursor from previous response"},
-					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)"},
+					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by event sequence)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
 					&cli.StringFlag{Name: "window-id", Usage: "Optional context window ID to filter events by"},
-					&cli.StringFlag{Name: "since-event-id", Usage: "Optional string to fetch events since an ID"},
+					&cli.StringFlag{Name: "since-event-id", Usage: "Optional event ID to list from. Returns the events after it in sequence order (before it when sort_order is desc)."},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -303,6 +306,7 @@ func objectivesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
 					&cli.StringFlag{Name: "workspace-id"},
+					&cli.BoolFlag{Name: "include-deltas", Usage: "Also stream transient assistantMessageDelta and reasoningDelta events: text fragments as the model generates them, ahead of the durable assistantMessage and…"},
 					&cli.StringFlag{Name: "last-event-id", Usage: "Resume the stream after this event id (an explicitly empty value clears the checkpoint)"},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -1010,7 +1014,7 @@ func objectivesCommand() *cli.Command {
 					&cli.StringSliceFlag{Name: "memory-cascade", Usage: "Memory layers/entries layered over the baseline cascade inherited from the selected variation — element-level rules over inherited styles, in CSS terms.…. key=value,... over memory-layer-id, memory-entry-id (repeatable; or a document)."},
 					&cli.StringSliceFlag{Name: "first-user-message-data", Usage: "Arbitrary data rendered into the selected variation's first_user_message_template (liquid) to produce the first user message. Separate from…. KEY=VALUE, KEY:=JSON, or a YAML/JSON document (repeatable)."},
 					&cli.StringFlag{Name: "episodic-memory", Usage: "If the agent variation that is selected has episodic memory enabled, then this key is used to create/update a memory layer specific to the episodic memory. The…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
-					&cli.StringFlag{Name: "episodic-memory-key", Usage: "The caller-supplied episodic key. Objectives created with the same key (for the same agent) share one episodic memory layer."},
+					&cli.StringFlag{Name: "episodic-memory-key", Usage: "The caller-supplied episodic key. Objectives created with the same key (for the same agent, tenant and subject) share one episodic memory layer. Empty on a…."},
 					&cli.StringFlag{Name: "tenant", Usage: "Optional tenant assertion — the customer's org/company identifier for the end user this objective serves. Upserts the tenant record in the workspace and…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.StringFlag{Name: "tenant-id", Usage: "The tenant identifier in the customer's namespace (e.g. \"acme-corp\"). Stored as the tenant record's external_id; stable across requests."},
 					&cli.StringFlag{Name: "tenant-name", Usage: "Optional human-readable name for the tenant. Updates the tenant record's name on every assertion that provides it."},
@@ -1018,6 +1022,9 @@ func objectivesCommand() *cli.Command {
 					&cli.StringFlag{Name: "subject-id", Usage: "The subject identifier in the customer's namespace (e.g. their user id). Stored as the subject record's external_id; unique within the tenant."},
 					&cli.StringFlag{Name: "subject-name", Usage: "Optional human-readable name for the subject. Updates the subject record's name on every assertion that provides it."},
 					&cli.StringSliceFlag{Name: "pinned-parameter", Usage: "Parameters forced onto this objective's tool calls. A pinned parameter is removed from the tool schema the LLM sees, and its value is always overwritten…. KEY=VALUE (repeatable; or a document)."},
+					&cli.StringFlag{Name: "client-tools", Usage: "Tools the caller defines and executes for this objective. Each definition is upserted into the agent's client tools tool set, and only the definitions listed…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringSliceFlag{Name: "client-tools-definition", Usage: "The tool definitions. Names must be unique within the list. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.BoolFlag{Name: "include-deltas", Usage: "Also stream transient assistantMessageDelta and reasoningDelta events: text fragments as the model generates them, ahead of the durable assistantMessage and…."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -1034,13 +1041,14 @@ func objectivesCommand() *cli.Command {
 					if _display != "json" {
 						return cli.Exit("streaming commands support only --display json (one JSON document per event)", 2)
 					}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("first-user-message"), cmd.String("episodic-memory"), cmd.String("episodic-memory-key"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("first-user-message"), cmd.String("episodic-memory"), cmd.String("episodic-memory-key"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name"), cmd.String("client-tools")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("system-prompt-data")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("memory-cascade")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("first-user-message-data")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("pinned-parameter")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("client-tools-definition")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}

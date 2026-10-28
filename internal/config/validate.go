@@ -47,7 +47,7 @@ func validateSpec(spec any) error {
 		if (s.Adapter.Bare != nil && s.Adapter.Bare.Bare == nil) || (s.Adapter.HTTP != nil && s.Adapter.HTTP.HTTP == nil) || (s.Adapter.MCP != nil && s.Adapter.MCP.MCP == nil) || (s.Adapter.OpenAPI != nil && s.Adapter.OpenAPI.OpenAPI == nil) {
 			return fmt.Errorf("spec.adapter requires its adapter configuration object")
 		}
-	case *cadenya.ToolSpec:
+	case *cadenya.ToolSpecParam:
 		if s.Parameters == nil {
 			return fmt.Errorf("spec.parameters is required (use {} for no parameters)")
 		}

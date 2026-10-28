@@ -88,7 +88,7 @@ func Load(dir, bundleKey string) (*Bundle, error) {
 				}
 				if group.child == Tool {
 					adapter := parent.Spec.(*cadenya.ToolSetSpec).Adapter
-					cfg := r.Spec.(*cadenya.ToolSpec).Config
+					cfg := r.Spec.(*cadenya.ToolSpecParam).Config
 					if adapter.Bare == nil && adapter.HTTP == nil {
 						return nil, fmt.Errorf("%s: individual tools require a bare or http tool set", r.File)
 					}
@@ -216,7 +216,7 @@ func loadResource(path string, kind Kind, parent, bundleKey string) (*Resource, 
 	case ToolSet:
 		r.Spec = &cadenya.ToolSetSpec{}
 	case Tool:
-		r.Spec = &cadenya.ToolSpec{}
+		r.Spec = &cadenya.ToolSpecParam{}
 	case MemoryLayer:
 		r.Spec = &cadenya.MemoryLayerSpecParam{}
 	case MemoryEntry:

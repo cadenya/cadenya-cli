@@ -6,7 +6,7 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
-const bodySchemaMemoryLayersCreate = "{\"$defs\":{\"CreateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"MemoryLayerSpec\":{\"properties\":{\"description\":{\"description\":\"Human-readable description of the layer's purpose. Encouraged for\\n user-created layers; system-managed layers may have a generated description.\",\"type\":\"string\"},\"type\":{\"$ref\":\"MemoryLayerSpecType\"}},\"required\":[\"type\"],\"type\":\"object\"},\"MemoryLayerSpecType\":{\"enum\":[\"MEMORY_LAYER_TYPE_EPISODIC\",\"MEMORY_LAYER_TYPE_SKILLS\"],\"enumShort\":{\"episodic\":\"MEMORY_LAYER_TYPE_EPISODIC\",\"skills\":\"MEMORY_LAYER_TYPE_SKILLS\"},\"type\":\"string\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateResourceMetadata\"},\"spec\":{\"$ref\":\"MemoryLayerSpec\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"}"
+const bodySchemaMemoryLayersCreate = "{\"$defs\":{\"CreateResourceMetadata\":{\"properties\":{\"externalId\":{\"description\":\"External ID for the resource (e.g., a workflow ID from an external system)\",\"type\":\"string\"},\"labels\":{\"additionalProperties\":{\"type\":\"string\"},\"description\":\"Key-value pairs for categorization and filtering. Values are 0-63\\n alphanumeric characters with \\\"-\\\", \\\"_\\\", or \\\".\\\" allowed between; keys\\n follow the same shape and additionally accept an optional DNS-subdomain\\n prefix (e.g. \\\"cadenya.com/\\\") of at most 253 characters.\\n Examples: {\\\"environment\\\": \\\"production\\\", \\\"team\\\": \\\"platform\\\", \\\"version\\\": \\\"v2\\\"}\",\"type\":\"object\"},\"name\":{\"description\":\"Human-readable name for the resource (e.g., \\\"Customer Support Agent\\\", \\\"Email Tool\\\")\",\"type\":\"string\"}},\"required\":[\"name\"],\"type\":\"object\"},\"MemoryLayerSpec\":{\"properties\":{\"description\":{\"description\":\"Human-readable description of the layer's purpose. Encouraged for\\n user-created layers; system-managed layers may have a generated description.\",\"type\":\"string\"},\"type\":{\"$ref\":\"MemoryLayerSpecType\"}},\"required\":[\"type\"],\"type\":\"object\"},\"MemoryLayerSpecType\":{\"enum\":[\"MEMORY_LAYER_TYPE_EPISODIC\",\"MEMORY_LAYER_TYPE_SKILLS\"],\"enumShort\":{\"episodic\":\"MEMORY_LAYER_TYPE_EPISODIC\",\"skills\":\"MEMORY_LAYER_TYPE_SKILLS\"},\"type\":\"string\"},\"SubjectAssertion\":{\"properties\":{\"id\":{\"description\":\"The subject identifier in the customer's namespace (e.g. their user id).\\n Stored as the subject record's external_id; unique within the tenant.\",\"type\":\"string\"},\"name\":{\"description\":\"Optional human-readable name for the subject. Updates the subject\\n record's name on every assertion that provides it.\",\"type\":\"string\"}},\"required\":[\"id\"],\"type\":\"object\"},\"TenantAssertion\":{\"properties\":{\"id\":{\"description\":\"The tenant identifier in the customer's namespace (e.g. \\\"acme-corp\\\").\\n Stored as the tenant record's external_id; stable across requests.\",\"type\":\"string\"},\"name\":{\"description\":\"Optional human-readable name for the tenant. Updates the tenant record's\\n name on every assertion that provides it.\",\"type\":\"string\"}},\"required\":[\"id\"],\"type\":\"object\"}},\"properties\":{\"metadata\":{\"$ref\":\"CreateResourceMetadata\"},\"spec\":{\"$ref\":\"MemoryLayerSpec\"},\"subject\":{\"$ref\":\"SubjectAssertion\"},\"tenant\":{\"$ref\":\"TenantAssertion\"}},\"required\":[\"metadata\",\"spec\"],\"type\":\"object\"}"
 
 // MemoryLayersCreateConversion is the typed request produced from one urfave command.
 type MemoryLayersCreateConversion struct {
@@ -36,6 +36,16 @@ func ConvertMemoryLayersCreate(cmd *cli.Command, out *MemoryLayersCreateConversi
 	}
 	if cmd.IsSet("spec") {
 		if err := _body.applyDoc("spec", []string{"spec"}, cmd.String("spec"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("tenant") {
+		if err := _body.applyDoc("tenant", []string{"tenant"}, cmd.String("tenant"), _schema, _strict); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("subject") {
+		if err := _body.applyDoc("subject", []string{"subject"}, cmd.String("subject"), _schema, _strict); err != nil {
 			return cli.Exit(err.Error(), 2)
 		}
 	}
@@ -80,7 +90,43 @@ func ConvertMemoryLayersCreate(cmd *cli.Command, out *MemoryLayersCreateConversi
 			return cli.Exit(err.Error(), 2)
 		}
 	}
-	if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.type": "--type", "spec.description": "--description"}, _strict); err != nil {
+	if cmd.IsSet("tenant-id") {
+		_v, err := stringArg("tenant-id", cmd.String("tenant-id"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("tenant-id", []string{"tenant", "id"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("tenant-name") {
+		_v, err := stringArg("tenant-name", cmd.String("tenant-name"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("tenant-name", []string{"tenant", "name"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("subject-id") {
+		_v, err := stringArg("subject-id", cmd.String("subject-id"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("subject-id", []string{"subject", "id"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if cmd.IsSet("subject-name") {
+		_v, err := stringArg("subject-name", cmd.String("subject-name"))
+		if err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+		if err := _body.set("subject-name", []string{"subject", "name"}, _v); err != nil {
+			return cli.Exit(err.Error(), 2)
+		}
+	}
+	if err := _body.finish(_schema, map[string]string{"metadata": "--metadata", "metadata.name": "--name", "metadata.externalId": "--external-id", "metadata.labels": "--label", "spec": "--spec", "spec.type": "--type", "spec.description": "--description", "tenant": "--tenant", "tenant.id": "--tenant-id", "tenant.name": "--tenant-name", "subject": "--subject", "subject.id": "--subject-id", "subject.name": "--subject-name"}, _strict); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}
 	_ = _rawBody

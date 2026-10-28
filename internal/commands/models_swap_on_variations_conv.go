@@ -6,7 +6,7 @@ import (
 	sdk "go.cadenya.com/cadenya-go"
 )
 
-const bodySchemaModelsSwapOnVariations = "{\"$defs\":{\"SwapModelOnVariationsRequest_ModelSwap\":{\"properties\":{\"currentModelId\":{\"description\":\"The model variations are currently on. Accepts an id or \\\"external_id:\\\" slug.\",\"type\":\"string\"},\"disableCurrentAfterSwap\":{\"description\":\"Whether to disable the current model after the swap.\",\"type\":\"boolean\"},\"nextModelId\":{\"description\":\"The model to move variations to. Accepts an id or \\\"external_id:\\\" slug.\",\"type\":\"string\"}},\"type\":\"object\"}},\"properties\":{\"modelSwaps\":{\"items\":{\"$ref\":\"SwapModelOnVariationsRequest_ModelSwap\"},\"type\":\"array\"}},\"type\":\"object\"}"
+const bodySchemaModelsSwapOnVariations = "{\"$defs\":{\"SwapModelOnVariationsRequest_ModelSwap\":{\"properties\":{\"currentModelId\":{\"description\":\"The model variations are currently on. Accepts an id or \\\"external_id:\\\" slug.\",\"type\":\"string\"},\"disableCurrentAfterSwap\":{\"description\":\"Whether to disable the current model after the swap. Disabling a model\\n requires the models:manage scope in addition to agents:manage; a request\\n that sets this without it is denied before any swap starts.\",\"type\":\"boolean\"},\"nextModelId\":{\"description\":\"The model to move variations to. Accepts an id or \\\"external_id:\\\" slug.\",\"type\":\"string\"}},\"type\":\"object\"}},\"properties\":{\"modelSwaps\":{\"items\":{\"$ref\":\"SwapModelOnVariationsRequest_ModelSwap\"},\"type\":\"array\"}},\"type\":\"object\"}"
 
 // ModelsSwapOnVariationsConversion is the typed request produced from one urfave command.
 type ModelsSwapOnVariationsConversion struct {

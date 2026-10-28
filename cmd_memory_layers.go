@@ -30,6 +30,8 @@ func memoryLayersCommand() *cli.Command {
 					&cli.StringFlag{Name: "agent-id", Usage: "Filter to episodic layers belonging to this agent."},
 					&cli.StringFlag{Name: "episodic-key-prefix", Usage: "Filter to episodic layers whose episodic key starts with this prefix (e.g. \"customer/\" matches \"customer/42\" and \"customer/43\"). Useful for namespaced keys,…"},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
+					&cli.StringFlag{Name: "tenant-id", Usage: "Filter to episodic layers scoped to a tenant. Accepts the canonical `tenant_…` form or the `external_id:<value>` form."},
+					&cli.StringFlag{Name: "subject-id", Usage: "Filter to episodic layers scoped to a subject. Accepts the canonical `subj_…` form or the `external_id:<value>` form; the external_id form is scoped within a…"},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
 				},
@@ -74,6 +76,12 @@ func memoryLayersCommand() *cli.Command {
 					&cli.StringFlag{Name: "spec", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.StringFlag{Name: "type", Usage: "Required. One of: episodic, skills."},
 					&cli.StringFlag{Name: "description", Usage: "Human-readable description of the layer's purpose. Encouraged for user-created layers; system-managed layers may have a generated description."},
+					&cli.StringFlag{Name: "tenant", Usage: "Optional tenant assertion: the customer's org or company identifier for the end users this layer serves. Upserts the tenant record, the same way as on…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "tenant-id", Usage: "The tenant identifier in the customer's namespace (e.g. \"acme-corp\"). Stored as the tenant record's external_id; stable across requests."},
+					&cli.StringFlag{Name: "tenant-name", Usage: "Optional human-readable name for the tenant. Updates the tenant record's name on every assertion that provides it."},
+					&cli.StringFlag{Name: "subject", Usage: "Optional subject assertion: the person within the tenant this layer serves. Requires `tenant`. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringFlag{Name: "subject-id", Usage: "The subject identifier in the customer's namespace (e.g. their user id). Stored as the subject record's external_id; unique within the tenant."},
+					&cli.StringFlag{Name: "subject-name", Usage: "Optional human-readable name for the subject. Updates the subject record's name on every assertion that provides it."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -87,7 +95,7 @@ func memoryLayersCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)

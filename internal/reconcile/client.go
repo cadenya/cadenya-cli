@@ -250,7 +250,7 @@ func upsert(ctx context.Context, c *cadenya.Client, r *config.Resource, existing
 				return c.ToolSets().Update(ctx, id, &cadenya.ToolSetUpdateParams{Metadata: update, Spec: spec, UpdateMask: &r.Mask})
 			},
 			func(v *cadenya.ToolSet) *cadenya.ResourceMetadata { return v.Metadata })
-	case *cadenya.ToolSpec:
+	case *cadenya.ToolSpecParam:
 		metadata, err = save(existing == nil,
 			func() (*cadenya.Tool, error) {
 				return c.ToolSets().Tools().Create(ctx, parent, &cadenya.ToolCreateParams{Metadata: create, Spec: spec})

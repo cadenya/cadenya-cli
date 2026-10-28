@@ -18,6 +18,9 @@ func ConvertObjectivesStreamEvents(cmd *cli.Command, out *ObjectivesStreamEvents
 	if cmd.IsSet("workspace-id") {
 		values["workspaceId"] = cmd.String("workspace-id")
 	}
+	if cmd.IsSet("include-deltas") {
+		values["includeDeltas"] = cmd.Bool("include-deltas")
+	}
 	if err := decodeParams(values, &out.Params); err != nil {
 		return cli.Exit(err.Error(), 2)
 	}

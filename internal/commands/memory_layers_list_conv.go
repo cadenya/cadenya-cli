@@ -42,6 +42,12 @@ func ConvertMemoryLayersList(cmd *cli.Command, out *MemoryLayersListConversion) 
 	if cmd.IsSet("labels") {
 		values["labels"] = cmd.String("labels")
 	}
+	if cmd.IsSet("tenant-id") {
+		values["tenantId"] = cmd.String("tenant-id")
+	}
+	if cmd.IsSet("subject-id") {
+		values["subjectId"] = cmd.String("subject-id")
+	}
 	if cmd.IsSet("sort-order") {
 		values["sortOrder"] = cmd.String("sort-order")
 	}
