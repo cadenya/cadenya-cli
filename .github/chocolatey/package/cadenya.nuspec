@@ -7,6 +7,7 @@
     <title>Cadenya CLI</title>
     <authors>Cadenya</authors>
     <owners>Cadenya</owners>
+    <copyright>Copyright 2026 Cadenya</copyright>
     <projectUrl>https://cadenya.com</projectUrl>
     <projectSourceUrl>https://github.com/cadenya/cadenya-cli</projectSourceUrl>
     <packageSourceUrl>https://github.com/cadenya/cadenya-cli/tree/main/.github/chocolatey</packageSourceUrl>
