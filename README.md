@@ -27,7 +27,7 @@ CLI releases are made directly from this repository. The Go SDK is a pinned libr
 
 ## Configuration
 
-- `CADENYA_API_KEY` — API key (or `--api-key`; without either, the stored login from `cadenya auth login` is used)
+- `CADENYA_API_KEY` — API key (or `--api-key`; without either, the stored login from `cadenya auth login` is used, then `./.cadenya/temporary.json`)
 - `CADENYA_WORKSPACE_ID` — default workspace-id for commands that take one (or `cadenya config set workspace-id`)
 - `--base-url` / `CADENYA_BASE_URL` — override the API endpoint
 - `--debug` / `CADENYA_DEBUG` — dump every HTTP exchange (redacted credentials) to stderr
@@ -47,12 +47,33 @@ instead), and stores the resulting credential in `~/.cadenya/credentials`
 (mode 0600) once you approve. The credential is never printed.
 
 Resolution order for every command: `--api-key` flag, then the environment,
-then the stored login. `auth status` names the source in effect.
+then the stored login, then a temporary workspace in the current directory.
+`auth status` names the source in effect.
 `--profile <name>` selects an alternate credentials
 profile for any command, including `auth login` itself; stored defaults
 (`config set`) follow the same profile. For testing against
 a preview deployment, `CADENYA_AUTH_BASE_URL` rebases both auth endpoints onto a
 different origin (paths are kept).
+
+## Without an account
+
+```sh
+cadenya workspaces create --temporary      # temporary workspace, no signup
+cadenya workspaces claim-status --wait     # block until it is claimed or expires
+cadenya auth login                         # claim it and log in in one step
+```
+
+`workspaces create --temporary` creates a workspace and API key without an
+account and prints a claim URL (to stderr; `--display json` returns one
+envelope on stdout). The key is stored in `./.cadenya/temporary.json` (mode
+0600, added to `.gitignore`), and commands run from that directory use it when
+no other credential is configured; an account credential outranks it, with a
+warning. An unclaimed workspace is deleted when it expires (24 hours by
+default, `--expire-after` to shorten). Claiming revokes the temporary key, and
+`auth login` run in the same directory sends the claim token with the login so
+one step claims the workspace and stores a credential. `--temporary` is
+refused when a credential is configured and in CI. `--instructions` prints the
+guide for coding agents.
 
 ## Stored defaults
 

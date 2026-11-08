@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -47,6 +48,18 @@ func main() {
 		}
 		return
 	}
+	root := newRootCommand()
+	if err := root.Run(ctx, os.Args); err != nil {
+		// An interrupted command (Ctrl-C mid-stream) is not an API failure:
+		// exit 130 (128+SIGINT) with no error line, the shell convention.
+		if ctx.Err() != nil {
+			os.Exit(130)
+		}
+		os.Exit(reportError(os.Stderr, err))
+	}
+}
+
+func newRootCommand() *cli.Command {
 	root := &cli.Command{
 		Name:    "cadenya",
 		Usage:   "Command-line interface for the Cadenya API",
@@ -55,7 +68,7 @@ func main() {
 		DisableSliceFlagSeparator: true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "display", Usage: "Output mode for ordinary commands (one of: json, yaml, table, extended); command-local --display overrides"},
-			&cli.StringFlag{Name: "api-key", Sources: cli.EnvVars("CADENYA_API_KEY"), Usage: "API key (default: $CADENYA_API_KEY, then the stored login)"},
+			&cli.StringFlag{Name: "api-key", Sources: cli.EnvVars("CADENYA_API_KEY"), Usage: "API key (default: $CADENYA_API_KEY, then the stored login, then .cadenya/temporary.json)"},
 			&cli.StringFlag{Name: "profile", Value: "default", Usage: "Stored-credentials profile"},
 			&cli.StringFlag{Name: "base-url", Sources: cli.EnvVars("CADENYA_BASE_URL"), Usage: "API base URL"},
 			&cli.BoolFlag{Name: "debug", Sources: cli.EnvVars("CADENYA_DEBUG"), Usage: "Dump every HTTP exchange (redacted credentials) to stderr"},
@@ -69,7 +82,7 @@ func main() {
 			aPIKeysCommand(),
 			workspaceAdminCommand(),
 			profilesCommand(),
-			workspacesCommand(),
+			withTemporaryWorkspaceCommands(workspacesCommand()),
 			agentPoolsCommand(),
 			agentsCommand(),
 			aIProviderKeysCommand(),
@@ -88,23 +101,27 @@ func main() {
 	}
 	// Top-level alias ([lang.cli.aliases]), validated at generation.
 	addAlias(root, "whoami", "profiles", "whoami")
-	if err := root.Run(ctx, os.Args); err != nil {
-		// An interrupted command (Ctrl-C mid-stream) is not an API failure:
-		// exit 130 (128+SIGINT) with no error line, the shell convention.
-		if ctx.Err() != nil {
-			os.Exit(130)
-		}
-		fmt.Fprintln(os.Stderr, "error:", err)
-		// A structured API error often carries the actionable part (e.g.
-		// field violations for "validation failed") in details — show it.
-		var apiErr *sdk.APIError
-		if errors.As(err, &apiErr) && len(apiErr.Details) > 0 {
-			if pretty, jsonErr := json.MarshalIndent(apiErr.Details, "", "  "); jsonErr == nil {
-				fmt.Fprintf(os.Stderr, "details:\n%s\n", pretty)
-			}
-		}
-		os.Exit(configcommand.ExitCode(err, ctx.Err() != nil))
+	return root
+}
+
+// reportError prints a failed command's error and returns the process exit
+// code. Temporary-workspace errors get their own guidance first: a claimed
+// workspace's revoked key cleans up the local file and exits
+// exitTemporaryWorkspaceClaimed.
+func reportError(w io.Writer, err error) int {
+	if code, handled := reportTemporaryWorkspaceError(w, err); handled {
+		return code
 	}
+	fmt.Fprintln(w, "error:", err)
+	// A structured API error often carries the actionable part (e.g.
+	// field violations for "validation failed") in details — show it.
+	var apiErr *sdk.APIError
+	if errors.As(err, &apiErr) && len(apiErr.Details) > 0 {
+		if pretty, jsonErr := json.MarshalIndent(apiErr.Details, "", "  "); jsonErr == nil {
+			fmt.Fprintf(w, "details:\n%s\n", pretty)
+		}
+	}
+	return configcommand.ExitCode(err, false)
 }
 
 func newClient(cmd *cli.Command) (*sdk.Client, error) {
@@ -129,18 +146,51 @@ func newClient(cmd *cli.Command) (*sdk.Client, error) {
 			opts = append(opts, sdk.WithWorkspaceID(v))
 		}
 	}
-	// Stored-login fallback: lowest precedence, after the --api-key
-	// flag and the environment. An explicit source always wins.
-	if !cmd.Root().IsSet("api-key") && os.Getenv("CADENYA_API_KEY") == "" {
-		if prof := storedProfile(cmd); prof != nil {
-			opts = append(opts, sdk.WithAPIKey(prof.Credential))
-			// Exactly one authorized workspace: its id becomes the
-			// default workspace-id, unless the flag, env, or a stored
-			// `config set` default supplied one.
-			if len(prof.Workspaces) == 1 && !cmd.Root().IsSet("workspace-id") && os.Getenv("CADENYA_WORKSPACE_ID") == "" && storedConfigValue(cmd, "workspace-id") == "" {
-				opts = append(opts, sdk.WithWorkspaceID(prof.Workspaces[0].ID))
-			}
+	// Stored-login fallback, after the --api-key flag and the environment.
+	// An explicit source always wins.
+	explicitKey := cmd.Root().IsSet("api-key") || os.Getenv("CADENYA_API_KEY") != ""
+	prof := (*credProfile)(nil)
+	if !explicitKey {
+		prof = storedProfile(cmd)
+	}
+	if prof != nil {
+		opts = append(opts, sdk.WithAPIKey(prof.Credential))
+		// Exactly one authorized workspace: its id becomes the
+		// default workspace-id, unless the flag, env, or a stored
+		// `config set` default supplied one.
+		if len(prof.Workspaces) == 1 && !workspaceIDConfigured(cmd) {
+			opts = append(opts, sdk.WithWorkspaceID(prof.Workspaces[0].ID))
 		}
 	}
+	// This directory's temporary workspace is the last resort. When an
+	// account credential outranks it, say so: the user may expect the
+	// temporary workspace.
+	if tw := liveTemporaryWorkspace(); tw != nil {
+		if explicitKey || prof != nil {
+			fmt.Fprintf(cmd.Root().ErrWriter, "warning: using %s; ignoring the temporary workspace %s in .cadenya/temporary.json.\n", credentialSource(cmd), tw.WorkspaceID)
+		} else {
+			opts = append(opts, sdk.WithAPIKey(tw.APIKey))
+			if !workspaceIDConfigured(cmd) {
+				opts = append(opts, sdk.WithWorkspaceID(tw.WorkspaceID))
+			}
+			if !cmd.Root().IsSet("base-url") && tw.BaseURL != "" {
+				opts = append(opts, sdk.WithBaseURL(tw.BaseURL))
+			}
+			return sdk.NewClient(opts...)
+		}
+	}
+	if !explicitKey && prof == nil {
+		msg := "missing credentials: pass --api-key, set CADENYA_API_KEY, or run `cadenya auth login`"
+		if !inCI() {
+			msg += "\n" + temporaryCreateHint
+		}
+		return nil, errors.New(msg)
+	}
 	return sdk.NewClient(opts...)
+}
+
+// workspaceIDConfigured reports a workspace-id from the flag, the
+// environment or a stored `config set` default.
+func workspaceIDConfigured(cmd *cli.Command) bool {
+	return cmd.Root().IsSet("workspace-id") || os.Getenv("CADENYA_WORKSPACE_ID") != "" || storedConfigValue(cmd, "workspace-id") != ""
 }

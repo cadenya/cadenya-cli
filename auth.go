@@ -129,7 +129,8 @@ func activeProfile(cmd *cli.Command) string {
 
 // credentialSource names the credential ordinary commands will use, in
 // precedence order: --api-key flag, then the environment, then the stored
-// login. MIRRORS newClient — keep the two in sync, or status lies.
+// login, then this directory's temporary workspace. MIRRORS newClient —
+// keep the two in sync, or status lies.
 func credentialSource(cmd *cli.Command) string {
 	if cmd.Root().IsSet("api-key") {
 		return "--api-key flag"
@@ -142,6 +143,9 @@ func credentialSource(cmd *cli.Command) string {
 	}
 	if storedProfile(cmd) != nil {
 		return fmt.Sprintf("stored login (profile %q)", activeProfile(cmd))
+	}
+	if tw := liveTemporaryWorkspace(); tw != nil {
+		return fmt.Sprintf("temporary workspace %s (.cadenya/temporary.json)", tw.WorkspaceID)
 	}
 	return "none — set $CADENYA_API_KEY or run `cadenya auth login`"
 }
@@ -238,8 +242,22 @@ func authCommand() *cli.Command {
 	}
 }
 
+// authDefaultPollInterval is the token poll interval when the device
+// authorization response names none.
+var authDefaultPollInterval = 5 * time.Second
+
 func authLogin(ctx context.Context, cmd *cli.Command) error {
+	out := cmd.Root().Writer
 	form := url.Values{"client_id": {authClientID}}
+	// A temporary workspace in this directory is claimed by this login: the
+	// claim token rides along with the device authorization, and the
+	// approval page claims the workspace before issuing the credential.
+	claiming := liveTemporaryWorkspace()
+	if claiming != nil && claiming.ClaimToken != "" {
+		form.Set("claim_token", claiming.ClaimToken)
+	} else {
+		claiming = nil
+	}
 	if host, err := os.Hostname(); err == nil {
 		name := host
 		if u := os.Getenv("USER"); u != "" {
@@ -263,16 +281,19 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 	// The one-time code prints BEFORE the browser opens so the user can
 	// visually match it against the approval page. The device_code (the
 	// poll secret) is never displayed.
-	fmt.Printf("Your one-time code: %s\n", grant.UserCode)
-	fmt.Printf("Approve this login in your browser: %s\n", verification)
+	fmt.Fprintf(out, "Your one-time code: %s\n", grant.UserCode)
+	fmt.Fprintf(out, "Approve this login in your browser: %s\n", verification)
+	if claiming != nil {
+		fmt.Fprintf(out, "Approving this login also claims the temporary workspace %s in .cadenya/temporary.json.\n", claiming.WorkspaceID)
+	}
 	if !cmd.Bool("no-browser") {
 		openBrowser(verification)
 	}
-	fmt.Println("Waiting for approval...")
+	fmt.Fprintln(out, "Waiting for approval...")
 
 	interval := time.Duration(grant.Interval) * time.Second
 	if interval <= 0 {
-		interval = 5 * time.Second
+		interval = authDefaultPollInterval
 	}
 	expires := time.Duration(grant.ExpiresIn) * time.Second
 	if expires <= 0 {
@@ -318,11 +339,14 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 				return err
 			}
 			path, _ := credentialsPath()
-			fmt.Printf("Logged in. Credential saved to %s (profile %q).\n", path, profile)
+			fmt.Fprintf(out, "Logged in. Credential saved to %s (profile %q).\n", path, profile)
 			// The freshest login is worthless while an ambient key outranks
 			// it — say so NOW, not in a 403 an hour later.
 			if os.Getenv("CADENYA_API_KEY") != "" {
-				fmt.Println("Note: CADENYA_API_KEY is set in this environment and takes precedence over the stored login for API commands. Unset it to use this login.")
+				fmt.Fprintln(out, "Note: CADENYA_API_KEY is set in this environment and takes precedence over the stored login for API commands. Unset it to use this login.")
+			}
+			if claiming != nil {
+				reportLoginClaim(ctx, cmd, out, claiming)
 			}
 			return nil
 		case token.Error == "authorization_pending":
@@ -340,6 +364,25 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 	}
 }
 
+// reportLoginClaim confirms whether a login claimed this directory's
+// temporary workspace by asking the API with the temporary key, which the
+// claim revokes. The login has succeeded either way.
+func reportLoginClaim(ctx context.Context, cmd *cli.Command, out io.Writer, tw *temporaryWorkspace) {
+	status, err := claimStatusOnce(ctx, temporaryAPIBaseURL(cmd, tw), tw)
+	switch {
+	case err != nil:
+		fmt.Fprintf(out, "Could not confirm whether the temporary workspace %s was claimed (%v). Run `cadenya workspaces claim-status`.\n", tw.WorkspaceID, err)
+	case status.State == stateClaimed:
+		_ = removeTemporaryWorkspace()
+		fmt.Fprintf(out, "Claimed temporary workspace %s. It no longer expires; removed .cadenya/temporary.json.\n", tw.WorkspaceID)
+	case status.State == statePending:
+		fmt.Fprintf(out, "The claim of temporary workspace %s is finishing. Run `cadenya workspaces claim-status --wait`.\n", tw.WorkspaceID)
+	default:
+		fmt.Fprintf(out, "The temporary workspace %s was not claimed and still expires at %s. Only a person without a Cadenya account can claim it; with an existing account, create a workspace in it instead.\n",
+			tw.WorkspaceID, tw.ExpiresAt.Local().Format("Mon Jan 2 15:04 MST"))
+	}
+}
+
 func authLogout(_ context.Context, cmd *cli.Command) error {
 	profiles, err := loadCredentials()
 	if err != nil {
@@ -347,14 +390,14 @@ func authLogout(_ context.Context, cmd *cli.Command) error {
 	}
 	profile := activeProfile(cmd)
 	if _, ok := profiles[profile]; !ok {
-		fmt.Printf("No stored credential for profile %q.\n", profile)
+		fmt.Fprintf(cmd.Root().Writer, "No stored credential for profile %q.\n", profile)
 		return nil
 	}
 	delete(profiles, profile)
 	if err := saveCredentials(profiles); err != nil {
 		return err
 	}
-	fmt.Printf("Logged out profile %q.\n", profile)
+	fmt.Fprintf(cmd.Root().Writer, "Logged out profile %q.\n", profile)
 	return nil
 }
 
@@ -362,14 +405,14 @@ func authStatus(_ context.Context, cmd *cli.Command) error {
 	profile := activeProfile(cmd)
 	prof := storedProfile(cmd)
 	if prof == nil {
-		fmt.Printf("Profile %q: not logged in. Run `cadenya auth login`.\n", profile)
+		fmt.Fprintf(cmd.Root().Writer, "Profile %q: not logged in. Run `cadenya auth login`.\n", profile)
 	} else {
-		fmt.Printf("Profile %q: logged in.\n", profile)
+		fmt.Fprintf(cmd.Root().Writer, "Profile %q: logged in.\n", profile)
 		for _, ws := range prof.Workspaces {
-			fmt.Printf("  workspace: %s\n", ws.ID)
+			fmt.Fprintf(cmd.Root().Writer, "  workspace: %s\n", ws.ID)
 		}
 	}
 	// The line that answers "which key are my commands actually using?"
-	fmt.Printf("Credential source: %s.\n", credentialSource(cmd))
+	fmt.Fprintf(cmd.Root().Writer, "Credential source: %s.\n", credentialSource(cmd))
 	return nil
 }
