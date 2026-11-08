@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -37,8 +38,11 @@ func addAlias(root *cli.Command, name string, path ...string) {
 }
 
 // printJSON writes v to stdout as indented JSON (single-response commands).
-func printJSON(v any) error {
-	enc := json.NewEncoder(os.Stdout)
+func printJSON(v any) error { return writeJSON(os.Stdout, v) }
+
+// writeJSON writes v to w as indented JSON.
+func writeJSON(w io.Writer, v any) error {
+	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
 }
@@ -223,7 +227,10 @@ func stdinBudget(raws []string) error {
 }
 
 // printYAML writes v as a YAML document.
-func printYAML(v any) error {
+func printYAML(v any) error { return writeYAML(os.Stdout, v) }
+
+// writeYAML writes v to w as a YAML document.
+func writeYAML(w io.Writer, v any) error {
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -232,7 +239,7 @@ func printYAML(v any) error {
 	if err != nil {
 		return err
 	}
-	_, err = os.Stdout.Write(out)
+	_, err = w.Write(out)
 	return err
 }
 

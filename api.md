@@ -169,6 +169,45 @@ List workspaces
 ```sh
 cadenya workspaces list [--limit <value>] [--cursor <value>] [--sort-order <value>] [--include-info[=true|false]] [--labels <value>]
 ```
+Create a temporary workspace without an account (alias: `new`)
+
+```sh
+cadenya workspaces create --temporary [--name <value>] [--expire-after <duration>] [--fresh] [--new-base-url <value>] [--display json]
+cadenya workspaces create --instructions
+```
+
+Posts to the provisioning host (`https://new.cadenya.com`; `https://new.cadenya.dev` when `--base-url` is `https://api.cadenya.dev`; override with `--new-base-url` or `CADENYA_NEW_BASE_URL`). The credential is written to `./.cadenya/temporary.json` (mode 0600) and `.cadenya/temporary.json` is added to `.gitignore`. A live file in the directory for the same API is reused (`reused: true`, expiry unchanged, `.gitignore` re-checked) unless `--fresh` is passed. The `.gitignore` check uses `git check-ignore` when git is available. Refused when `--api-key`, `CADENYA_API_KEY` or a stored login is present, and when `CI` is set. `--expire-after` takes 1h to 24h. `--instructions` prints the agent guide and creates nothing. The claim notice goes to stderr. `--display json` prints one envelope:
+
+```json
+{
+  "status": "created",
+  "workspaceId": "workspace_01HXKD2E5NQM3T9AYWCF133E3Q",
+  "claimUrl": "https://app.cadenya.com/claim/...",
+  "expiresAt": "2026-11-09T15:04:05Z",
+  "apiKey": "...",
+  "reused": false,
+  "nextStep": "A sentence to relay to the user.",
+  "next": [
+    {"command": "cadenya workspaces claim-status --display json", "when": "to check whether the workspace has been claimed"},
+    {"command": "cadenya workspaces claim-status --wait", "when": "to wait until the user claims the workspace or it expires"},
+    {"command": "cadenya auth login", "when": "the user wants to claim the workspace and log in in one step"}
+  ]
+}
+```
+
+`status` is `created` or `reused`. A rate-limited create (HTTP 429) prints the wait time and exits 1 without retrying.
+
+Show whether this directory's temporary workspace has been claimed
+
+```sh
+cadenya workspaces claim-status [--wait] [--display json]
+```
+
+Calls `GET /v1/workspaces/{workspace_id}/temporary` with the temporary key. `--display json` prints `{workspaceId, state, expiresAt, claimedAt, pollInterval}`; `state` is `STATE_UNCLAIMED`, `STATE_PENDING`, `STATE_CLAIMED` or `STATE_EXPIRED`. `--wait` polls at `pollInterval` (clamped to 1s to 60s, never past the expiry) until `STATE_CLAIMED` or `STATE_EXPIRED`; network errors, 429 and 5xx answers are retried with backoff, and other 4xx answers end the wait. `STATE_EXPIRED` exits 4. Once claimed, `.cadenya/temporary.json` is removed.
+
+Any command answered with `TEMPORARY_WORKSPACE_CLAIMED` prints how to get a new credential and exits 3. It removes `.cadenya/temporary.json` only when the request used that file or the error names its workspace. `REQUIRES_CLAIM` prints the claim URL from the file.
+
+`.cadenya/temporary.json` is ignored, with a warning, unless it is a regular file (not a symlink) in a real `.cadenya` directory, owned by you with mode 0600 (Unix), its `baseUrl` is empty or `https://api.cadenya.dev`, and its `claimUrl` is an https link on `app.cadenya.com` or `app.cadenya.dev`. A committed or planted file therefore never redirects requests. `cadenya config validate/plan/apply` use the temporary credential, its workspace and its base URL like other commands.
 
 ## cadenya agent-pools
 

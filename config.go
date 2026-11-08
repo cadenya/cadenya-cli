@@ -219,11 +219,25 @@ func configCommand() *cli.Command {
 			if profile := storedProfile(cmd); profile != nil {
 				return profile.Credential
 			}
+			if tw := temporaryCredential(cmd); tw != nil {
+				return tw.APIKey
+			}
 			return ""
 		},
 		WorkspaceID: func(cmd *cli.Command) string {
+			// The temporary key reaches only its own workspace, so a stored
+			// default does not apply; the flag and env are read before this.
+			if tw := temporaryCredential(cmd); tw != nil {
+				return tw.WorkspaceID
+			}
 			value, _ := effectiveConfigValue(cmd, "workspace-id")
 			return value
+		},
+		BaseURL: func(cmd *cli.Command) string {
+			if tw := temporaryCredential(cmd); tw != nil {
+				return tw.BaseURL
+			}
+			return ""
 		},
 	})
 	for _, flag := range bundle.Flags {

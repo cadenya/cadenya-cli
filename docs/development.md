@@ -25,6 +25,7 @@ The build ends with a `go mod tidy` error because the reference has no SDK versi
 
 Edits a reference build does not reproduce:
 
+* `workspaces create --temporary` and `workspaces claim-status` are hand-written in `workspaces_temporary.go` and `temporary.go`, and `main.go` attaches them to the generated `workspaces` group. The create call goes to the provisioning host, which has no SDK target, and claim status is called over HTTP until the Go SDK has it. `newClient` falls back to `./.cadenya/temporary.json` after the stored login.
 * `APIKeySpec` lists `allWorkspaces` and `workspaceAssignments` as required so SDK responses are non-nullable. A request needs only one of them, so the body schemas in `api_keys_create_conv.go` and `api_keys_update_conv.go` carry an empty `required` list for that spec; the API rejects a create that sets neither.
 
 ## Releasing
