@@ -50,7 +50,7 @@ const (
 // temporaryInstructionsURL serves the agent guide printed by
 // `workspaces create --instructions`. Fetched at run time so the guide can
 // change without a CLI release.
-var temporaryInstructionsURL = "https://docs.cadenya.com/llms/start-without-account.txt"
+var temporaryInstructionsURL = "https://cadenya.com/docs/.well-known/skills/start-without-account/SKILL.md"
 
 // temporaryHTTPClient carries every hand-written temporary-workspace call.
 var temporaryHTTPClient = &http.Client{Timeout: 30 * time.Second}
