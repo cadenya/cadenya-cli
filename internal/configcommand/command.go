@@ -18,6 +18,9 @@ import (
 type Defaults struct {
 	APIKey      func(*cli.Command) string
 	WorkspaceID func(*cli.Command) string
+	// BaseURL supplies an API origin when neither the flag, the environment
+	// nor cadenya.yaml names one.
+	BaseURL func(*cli.Command) string
 }
 
 // New constructs a fresh command, including fresh flag state, for each invocation.
@@ -111,6 +114,9 @@ func settings(cmd *cli.Command, defaults Defaults) (config.Settings, error) {
 	}
 	if s.ResourceDir == "" {
 		s.ResourceDir = ".cadenya"
+	}
+	if s.BaseURL == "" && defaults.BaseURL != nil {
+		s.BaseURL = defaults.BaseURL(cmd)
 	}
 	if s.BaseURL == "" {
 		s.BaseURL = "https://api.cadenya.com"

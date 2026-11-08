@@ -6,7 +6,6 @@ package main
 // claim status, goes to the normal API with the temporary key.
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -16,7 +15,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -39,6 +37,10 @@ const (
 	// made with the key of a temporary workspace that has been claimed.
 	exitTemporaryWorkspaceClaimed = 3
 
+	// exitTemporaryWorkspaceExpired is the exit code of claim-status when
+	// the workspace expired unclaimed.
+	exitTemporaryWorkspaceExpired = 4
+
 	reasonTemporaryWorkspaceClaimed = "TEMPORARY_WORKSPACE_CLAIMED"
 	reasonRequiresClaim             = "REQUIRES_CLAIM"
 
@@ -53,151 +55,6 @@ var temporaryInstructionsURL = "https://docs.cadenya.com/llms/start-without-acco
 // temporaryHTTPClient carries every hand-written temporary-workspace call.
 var temporaryHTTPClient = &http.Client{Timeout: 30 * time.Second}
 
-// temporaryWorkspace is the content of .cadenya/temporary.json.
-type temporaryWorkspace struct {
-	WorkspaceID string    `json:"workspaceId"`
-	AccountID   string    `json:"accountId,omitempty"`
-	APIKey      string    `json:"apiKey"`
-	ClaimURL    string    `json:"claimUrl"`
-	ClaimToken  string    `json:"claimToken"`
-	ExpiresAt   time.Time `json:"expiresAt"`
-	NextStep    string    `json:"nextStep,omitempty"`
-	// BaseURL is the API base URL the workspace lives behind, recorded when
-	// it is not the production default so a staging workspace keeps working
-	// without repeating --base-url.
-	BaseURL string `json:"baseUrl,omitempty"`
-}
-
-func (t *temporaryWorkspace) live(now time.Time) bool {
-	return t.APIKey != "" && now.Before(t.ExpiresAt)
-}
-
-func temporaryFilePath() (string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(wd, temporaryDir, temporaryFileName), nil
-}
-
-// readTemporaryWorkspace loads this directory's temporary workspace file,
-// live or not. A missing file is (nil, nil).
-func readTemporaryWorkspace() (*temporaryWorkspace, error) {
-	path, err := temporaryFilePath()
-	if err != nil {
-		return nil, err
-	}
-	data, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	var tw temporaryWorkspace
-	if err := json.Unmarshal(data, &tw); err != nil {
-		return nil, fmt.Errorf("parsing %s: %w", filepath.Join(temporaryDir, temporaryFileName), err)
-	}
-	return &tw, nil
-}
-
-// liveTemporaryWorkspace returns this directory's unexpired temporary
-// workspace, or nil. Best effort, like storedProfile: an unreadable file
-// means "none" in the middle of an unrelated command.
-func liveTemporaryWorkspace() *temporaryWorkspace {
-	tw, err := readTemporaryWorkspace()
-	if err != nil || tw == nil || !tw.live(time.Now()) {
-		return nil
-	}
-	return tw
-}
-
-func removeTemporaryWorkspace() error {
-	path, err := temporaryFilePath()
-	if err != nil {
-		return err
-	}
-	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	}
-	return nil
-}
-
-// writeTemporaryWorkspace stores the file at 0600 from the first byte: a
-// private temp file renamed over the destination, as for the credentials
-// file.
-func writeTemporaryWorkspace(tw *temporaryWorkspace) error {
-	path, err := temporaryFilePath()
-	if err != nil {
-		return err
-	}
-	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return err
-	}
-	data, err := json.MarshalIndent(tw, "", "  ")
-	if err != nil {
-		return err
-	}
-	tmp, err := os.CreateTemp(dir, ".temporary-*")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tmp.Name())
-	if err := tmp.Chmod(0o600); err != nil {
-		tmp.Close()
-		return err
-	}
-	if _, err := tmp.Write(append(data, '\n')); err != nil {
-		tmp.Close()
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		return err
-	}
-	return os.Rename(tmp.Name(), path)
-}
-
-// gitignoreEntry is what ensureGitignored adds. Only the credential file:
-// configuration bundles keep committed resources in .cadenya/.
-const gitignoreEntry = ".cadenya/temporary.json"
-
-// ensureGitignored adds .cadenya/temporary.json to the working directory's
-// .gitignore, creating the file if needed. It returns a sentence describing
-// the change, or "" when the file was already ignored.
-func ensureGitignored() (string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	path := filepath.Join(wd, ".gitignore")
-	data, err := os.ReadFile(path)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return "", err
-	}
-	exists := err == nil
-	scanner := bufio.NewScanner(bytes.NewReader(data))
-	for scanner.Scan() {
-		switch strings.TrimSpace(scanner.Text()) {
-		case ".cadenya", ".cadenya/", "/.cadenya", "/.cadenya/", ".cadenya/*", "/.cadenya/*", gitignoreEntry, "/" + gitignoreEntry:
-			return "", nil
-		}
-	}
-	var buf bytes.Buffer
-	buf.Write(data)
-	if len(data) > 0 && data[len(data)-1] != '\n' {
-		buf.WriteByte('\n')
-	}
-	buf.WriteString(gitignoreEntry + "\n")
-	if err := os.WriteFile(path, buf.Bytes(), 0o644); err != nil {
-		return "", err
-	}
-	if exists {
-		return "Added " + gitignoreEntry + " to .gitignore.", nil
-	}
-	return "Created .gitignore with " + gitignoreEntry + ".", nil
-}
-
 // inCI reports a CI environment the way most CLIs do: CI set to anything
 // other than an explicit false.
 func inCI() bool {
@@ -209,7 +66,9 @@ func inCI() bool {
 // run. Detection only tags the create request; it never changes behavior.
 var codingAgentEnv = []string{"CLAUDECODE", "CURSOR_AGENT", "GEMINI_CLI", "AI_AGENT", "OPENCODE", "AMP_AGENT"}
 
-var codingAgentEnvPrefixes = []string{"CODEX_"}
+// codingAgentEnvPrefixes matches Codex sandbox variables (CODEX_SANDBOX,
+// CODEX_SANDBOX_NETWORK_DISABLED) without catching unrelated CODEX_ names.
+var codingAgentEnvPrefixes = []string{"CODEX_SANDBOX"}
 
 func codingAgentDetected() bool {
 	for _, name := range codingAgentEnv {
@@ -249,9 +108,9 @@ func newBaseURL(cmd *cli.Command) string {
 	return defaultNewBaseURL
 }
 
-// apiBaseURLForNew is the API base URL to record for a workspace created on
-// the given provisioning host: the explicit --base-url, the staging API for
-// the staging host, and "" (the production default) otherwise.
+// apiBaseURLForNew is the API base URL a workspace created on the given
+// provisioning host lives behind: the explicit --base-url, the staging API
+// for the staging host, and "" (the production default) otherwise.
 func apiBaseURLForNew(cmd *cli.Command, newBase string) string {
 	if cmd.Root().IsSet("base-url") {
 		return strings.TrimRight(cmd.Root().String("base-url"), "/")
@@ -334,16 +193,7 @@ func createTemporaryWorkspace(ctx context.Context, base string, body createTempo
 	}
 	switch {
 	case resp.StatusCode == http.StatusTooManyRequests:
-		var edge struct {
-			Error struct {
-				Message string `json:"message"`
-			} `json:"error"`
-		}
-		_ = json.Unmarshal(data, &edge)
-		message := edge.Error.Message
-		if message == "" {
-			message = statusError(resp.StatusCode, data).Message
-		}
+		message := statusError(resp.StatusCode, data).Message
 		return nil, &rateLimitedError{retryAfter: parseRetryAfter(resp.Header.Get("Retry-After")), message: message}
 	case resp.StatusCode == http.StatusServiceUnavailable:
 		return nil, errTemporaryUnavailable
@@ -354,14 +204,18 @@ func createTemporaryWorkspace(ctx context.Context, base string, body createTempo
 	if err := json.Unmarshal(data, &out); err != nil {
 		return nil, fmt.Errorf("%s answered HTTP %d with an unreadable body", base, resp.StatusCode)
 	}
-	if out.WorkspaceID == "" || out.APIKey == "" || out.ClaimURL == "" {
-		return nil, fmt.Errorf("%s answered without a workspace, API key or claim URL", base)
+	if out.WorkspaceID == "" || out.APIKey == "" || out.ClaimURL == "" || out.ExpiresAt.IsZero() {
+		return nil, fmt.Errorf("%s answered without a workspace, API key, claim URL or expiry", base)
+	}
+	if err := checkClaimURL(out.ClaimURL); err != nil {
+		return nil, fmt.Errorf("%s answered with an untrusted claim URL: %w", base, err)
 	}
 	return &out, nil
 }
 
-// statusError decodes a google.rpc.Status body into the SDK's error type,
-// so reporting treats hand-written calls like SDK calls.
+// statusError decodes an error body into the SDK's error type, so reporting
+// treats hand-written calls like SDK calls. It reads google.rpc.Status, and
+// the edge worker's {"error":{"code","message"}} when that has no message.
 func statusError(code int, data []byte) *sdk.APIError {
 	apiErr := &sdk.APIError{StatusCode: code}
 	var status struct {
@@ -373,6 +227,16 @@ func statusError(code int, data []byte) *sdk.APIError {
 		apiErr.Code = status.Code
 		apiErr.Message = status.Message
 		apiErr.Details = status.Details
+	}
+	if apiErr.Message == "" {
+		var edge struct {
+			Error struct {
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+		if json.Unmarshal(data, &edge) == nil {
+			apiErr.Message = edge.Error.Message
+		}
 	}
 	return apiErr
 }
@@ -439,9 +303,16 @@ func fetchTemporaryStatus(ctx context.Context, base string, tw *temporaryWorkspa
 
 // errorInfoReason returns the google.rpc.ErrorInfo reason of an API error.
 func errorInfoReason(err error) (string, *sdk.APIError) {
+	reason, _, apiErr := errorInfo(err)
+	return reason, apiErr
+}
+
+// errorInfo returns the reason and metadata of an API error's
+// google.rpc.ErrorInfo detail.
+func errorInfo(err error) (string, map[string]any, *sdk.APIError) {
 	var apiErr *sdk.APIError
 	if !errors.As(err, &apiErr) {
-		return "", nil
+		return "", nil, nil
 	}
 	for _, detail := range apiErr.Details {
 		typ, _ := detail["@type"].(string)
@@ -449,29 +320,53 @@ func errorInfoReason(err error) (string, *sdk.APIError) {
 			continue
 		}
 		if reason, _ := detail["reason"].(string); reason != "" {
-			return reason, apiErr
+			metadata, _ := detail["metadata"].(map[string]any)
+			return reason, metadata, apiErr
 		}
 	}
-	return "", apiErr
+	return "", nil, apiErr
 }
 
-const claimedGuidance = "The temporary workspace was claimed, so its API key no longer works. Removed .cadenya/temporary.json. Run `cadenya auth login` in this directory, or create an API key for the workspace in the dashboard."
+const claimedGuidance = "The temporary workspace was claimed, so its API key no longer works. Run `cadenya auth login` in this directory, or create an API key for the workspace in the dashboard."
+
+// temporaryCredentialUsed is the workspace id of the temporary file that
+// newClient authenticated with in this run, or "".
+var temporaryCredentialUsed string
+
+// removeClaimedTemporaryWorkspace removes this directory's file after a
+// TEMPORARY_WORKSPACE_CLAIMED answer, but only when the answer is about that
+// file: the request used it, or the error names its workspace.
+func removeClaimedTemporaryWorkspace(metadata map[string]any) bool {
+	tw, err := readTemporaryWorkspace()
+	if err != nil || tw == nil {
+		return false
+	}
+	named, _ := metadata["workspace_id"].(string)
+	if named != tw.WorkspaceID && temporaryCredentialUsed != tw.WorkspaceID {
+		return false
+	}
+	removed, err := removeTemporaryWorkspace()
+	return err == nil && removed
+}
 
 // reportTemporaryWorkspaceError handles the error reasons tied to temporary
 // workspaces. handled=false leaves the error to the ordinary reporter.
 func reportTemporaryWorkspaceError(w io.Writer, err error) (int, bool) {
-	reason, apiErr := errorInfoReason(err)
+	reason, metadata, apiErr := errorInfo(err)
 	switch reason {
 	case reasonTemporaryWorkspaceClaimed:
-		_ = removeTemporaryWorkspace()
+		removed := removeClaimedTemporaryWorkspace(metadata)
 		if apiErr.Message != "" {
 			fmt.Fprintln(w, "error:", apiErr.Message)
 		}
 		fmt.Fprintln(w, claimedGuidance)
+		if removed {
+			fmt.Fprintln(w, "Removed .cadenya/temporary.json.")
+		}
 		return exitTemporaryWorkspaceClaimed, true
 	case reasonRequiresClaim:
 		fmt.Fprintln(w, "error:", err)
-		if tw, readErr := readTemporaryWorkspace(); readErr == nil && tw != nil && tw.ClaimURL != "" {
+		if tw, readErr := readTemporaryWorkspace(); readErr == nil && tw != nil {
 			fmt.Fprintf(w, "This needs a claimed workspace. Claim it to unlock this (don't share this link): %s\n", tw.ClaimURL)
 		} else {
 			fmt.Fprintln(w, "This needs a claimed workspace. Open the claim link you were given when it was created.")

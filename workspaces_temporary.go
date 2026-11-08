@@ -2,13 +2,17 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"time"
 
 	cli "github.com/urfave/cli/v3"
+
+	sdk "go.cadenya.com/cadenya-go"
 )
 
 // withTemporaryWorkspaceCommands adds the hand-written temporary workspace
@@ -106,17 +110,30 @@ func workspacesCreate(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	now := time.Now()
+	newBase := newBaseURL(cmd)
+	apiBase := apiBaseURLForNew(cmd, newBase)
+	// Only a trusted API is recorded: the file may be read from a checkout
+	// someone else controls. Any other API must be passed on each command.
+	recordBase := ""
+	if trustedAPIBaseURL(apiBase) && normalizeBaseURL(apiBase) != defaultAPIBaseURL {
+		recordBase = normalizeBaseURL(apiBase)
+	}
 	if !cmd.Bool("fresh") {
-		if tw := liveTemporaryWorkspace(); tw != nil {
-			if display != "json" && display != "yaml" {
-				fmt.Fprintf(stdout, "Reusing temporary workspace %s from .cadenya/temporary.json (--fresh creates a new one).\n", tw.WorkspaceID)
+		if tw := liveTemporaryWorkspace(cmd); tw != nil {
+			// A file from another environment is not reused: a staging
+			// workspace's key does not work against production.
+			if normalizeBaseURL(tw.effectiveBaseURL()) == normalizeBaseURL(apiBaseOrDefault(apiBase)) {
+				if display != "json" && display != "yaml" {
+					fmt.Fprintf(stdout, "Reusing temporary workspace %s from .cadenya/temporary.json (--fresh creates a new one).\n", tw.WorkspaceID)
+				}
+				reportGitignore(stderr)
+				fmt.Fprintln(stderr, claimNotice(tw, now))
+				return renderTemporary(display, stdout, tw, true)
 			}
-			fmt.Fprintln(stderr, claimNotice(tw, now))
-			return renderTemporary(display, stdout, tw, true)
+			fmt.Fprintf(stderr, "The temporary workspace %s in .cadenya/temporary.json lives behind %s; creating one for %s and replacing the file.\n", tw.WorkspaceID, tw.effectiveBaseURL(), apiBaseOrDefault(apiBase))
 		}
 	}
 
-	newBase := newBaseURL(cmd)
 	resp, err := createTemporaryWorkspace(ctx, newBase, createTemporaryRequest{
 		Name:        cmd.String("name"),
 		ExpireAfter: expireAfter,
@@ -133,23 +150,48 @@ func workspacesCreate(ctx context.Context, cmd *cli.Command) error {
 		ClaimToken:  resp.ClaimToken,
 		ExpiresAt:   resp.ExpiresAt,
 		NextStep:    resp.NextStep,
-		BaseURL:     apiBaseURLForNew(cmd, newBase),
+		BaseURL:     recordBase,
+	}
+	if recordBase == "" && normalizeBaseURL(apiBaseOrDefault(apiBase)) != defaultAPIBaseURL {
+		fmt.Fprintf(stderr, "note: %s is not a Cadenya API, so .cadenya/temporary.json does not record it; pass --base-url on every command.\n", apiBase)
 	}
 	if err := writeTemporaryWorkspace(tw); err != nil {
-		return fmt.Errorf("saving .cadenya/temporary.json: %w (workspace %s was created; claim it at %s)", err, tw.WorkspaceID, tw.ClaimURL)
+		saveErr := fmt.Errorf("saving .cadenya/temporary.json: %w (workspace %s was created; claim it at %s)", err, tw.WorkspaceID, tw.ClaimURL)
+		if display == "json" || display == "yaml" {
+			// The envelope is the only remaining copy of the key: emit it,
+			// then fail.
+			if renderErr := renderTemporary(display, stdout, tw, false); renderErr != nil {
+				return renderErr
+			}
+			return fmt.Errorf("%w; the envelope above holds the only copy of the API key", saveErr)
+		}
+		return saveErr
 	}
-	note, err := ensureGitignored()
-	if err != nil {
-		fmt.Fprintf(stderr, "warning: could not add "+gitignoreEntry+" to .gitignore: %v. Add it yourself; the file holds an API key.\n", err)
-	} else if note != "" {
-		fmt.Fprintln(stderr, note)
-	}
+	reportGitignore(stderr)
 	if display != "json" && display != "yaml" {
 		fmt.Fprintf(stdout, "Created temporary workspace %s.\n", tw.WorkspaceID)
 		fmt.Fprintln(stdout, "Its API key is saved in .cadenya/temporary.json; cadenya commands run from this directory use it.")
 	}
 	fmt.Fprintln(stderr, claimNotice(tw, now))
 	return renderTemporary(display, stdout, tw, false)
+}
+
+func apiBaseOrDefault(base string) string {
+	if base == "" {
+		return defaultAPIBaseURL
+	}
+	return base
+}
+
+// reportGitignore makes sure the credential file is ignored and says what
+// changed.
+func reportGitignore(stderr io.Writer) {
+	note, err := ensureGitignored()
+	if err != nil {
+		fmt.Fprintf(stderr, "warning: could not make git ignore %s: %v. Ignore it yourself; the file holds an API key.\n", gitignoreEntry, err)
+	} else if note != "" {
+		fmt.Fprintln(stderr, note)
+	}
 }
 
 func renderTemporary(display string, w io.Writer, tw *temporaryWorkspace, reused bool) error {
@@ -210,10 +252,12 @@ func workspacesClaimStatusCommand() *cli.Command {
 		Usage: "Show whether this directory's temporary workspace has been claimed",
 		Description: `Reads ./.cadenya/temporary.json and asks the API, with the temporary key,
 whether the workspace has been claimed. state is one of STATE_UNCLAIMED,
-STATE_PENDING (a claim is finishing), STATE_CLAIMED or STATE_EXPIRED.
+STATE_PENDING (a claim is finishing), STATE_CLAIMED or STATE_EXPIRED. The
+command exits 4 when the state is STATE_EXPIRED.
 
---wait polls at the interval the server asks for until the state is
-STATE_CLAIMED or STATE_EXPIRED. Once claimed, the temporary key no longer
+--wait polls at the interval the server asks for (between 1s and 60s, and
+never past the expiry) until the state is STATE_CLAIMED or STATE_EXPIRED.
+Network errors and 5xx answers are retried with backoff; a 4xx ends the wait. Once claimed, the temporary key no longer
 works: .cadenya/temporary.json is removed, and ` + "`cadenya auth login`" + ` gets a new
 credential.`,
 		Flags: []cli.Flag{
@@ -241,35 +285,118 @@ func workspacesClaimStatus(ctx context.Context, cmd *cli.Command) error {
 		return cli.Exit("no temporary workspace in this directory (.cadenya/temporary.json not found). "+temporaryCreateHint, 1)
 	}
 	base := temporaryAPIBaseURL(cmd, tw)
+	wait := cmd.Bool("wait")
 	lastState := ""
+	failures := 0
 	for {
 		status, err := claimStatusOnce(ctx, base, tw)
 		if err != nil {
-			return err
+			// While waiting, ride out transient failures; a 4xx is final.
+			if !wait || !transientError(err) || time.Now().After(tw.ExpiresAt.Add(claimRetryGrace)) {
+				return err
+			}
+			failures++
+			delay := claimRetryDelay(failures)
+			fmt.Fprintf(stderr, "checking the claim failed (%v); retrying in %s...\n", err, delay)
+			if err := sleepContext(ctx, delay); err != nil {
+				return err
+			}
+			continue
 		}
+		failures = 0
 		if status.State == stateClaimed {
-			_ = removeTemporaryWorkspace()
+			msg := "The workspace has been claimed, so the temporary key no longer works."
+			if removed, _ := removeTemporaryWorkspace(); removed {
+				msg += " Removed .cadenya/temporary.json."
+			}
+			fmt.Fprintln(stderr, msg+" Run `cadenya auth login` in this directory, or create an API key for the workspace in the dashboard.")
 		}
 		done := status.State == stateClaimed || status.State == stateExpired
-		if !cmd.Bool("wait") || done {
-			if status.State == stateClaimed {
-				fmt.Fprintln(stderr, "The workspace has been claimed. Removed .cadenya/temporary.json: the temporary key no longer works. Run `cadenya auth login` in this directory, or create an API key for the workspace in the dashboard.")
+		if !wait || done {
+			if err := renderClaimStatus(display, stdout, status); err != nil {
+				return err
 			}
-			return renderClaimStatus(display, stdout, status)
+			if status.State == stateExpired {
+				return cli.Exit("the temporary workspace expired before it was claimed and is being deleted", exitTemporaryWorkspaceExpired)
+			}
+			return nil
 		}
 		if status.State != lastState {
 			fmt.Fprintf(stderr, "%s: waiting for the claim (claim URL: %s)...\n", status.State, tw.ClaimURL)
 			lastState = status.State
 		}
-		interval := 5 * time.Second
-		if d, err := time.ParseDuration(status.PollInterval); err == nil && d > 0 {
-			interval = d
+		expiresAt := tw.ExpiresAt
+		if status.ExpiresAt != nil {
+			expiresAt = *status.ExpiresAt
 		}
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(interval):
+		if err := sleepContext(ctx, pollDelay(status.PollInterval, expiresAt, time.Now())); err != nil {
+			return err
 		}
+	}
+}
+
+// Poll and retry bounds for claim-status --wait. Variables so tests run
+// fast.
+var (
+	minPollInterval = time.Second
+	maxPollInterval = 60 * time.Second
+	claimRetryBase  = time.Second
+	claimRetryMax   = 30 * time.Second
+	// claimRetryGrace bounds retries past the workspace's expiry.
+	claimRetryGrace = 5 * time.Minute
+)
+
+// pollDelay is the server's poll interval clamped to [minPollInterval,
+// maxPollInterval], and never past expiresAt (but at least the minimum).
+func pollDelay(raw string, expiresAt, now time.Time) time.Duration {
+	// An unreadable or missing interval falls back to 5s; a zero or tiny
+	// one is raised to the minimum below.
+	d, err := time.ParseDuration(raw)
+	if err != nil {
+		d = 5 * time.Second
+	}
+	if d > maxPollInterval {
+		d = maxPollInterval
+	}
+	if untilExpiry := expiresAt.Sub(now); untilExpiry < d {
+		d = untilExpiry
+	}
+	if d < minPollInterval {
+		d = minPollInterval
+	}
+	return d
+}
+
+func claimRetryDelay(failures int) time.Duration {
+	d := claimRetryBase
+	for i := 1; i < failures && d < claimRetryMax; i++ {
+		d *= 2
+	}
+	if d > claimRetryMax {
+		d = claimRetryMax
+	}
+	return d
+}
+
+// transientError reports a failure worth retrying: a network error, a
+// timeout, a 5xx or a 429.
+func transientError(err error) bool {
+	var apiErr *sdk.APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.StatusCode >= 500 || apiErr.StatusCode == http.StatusTooManyRequests
+	}
+	var netErr net.Error
+	return errors.As(err, &netErr) || errors.Is(err, context.DeadlineExceeded)
+}
+
+func sleepContext(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
 	}
 }
 

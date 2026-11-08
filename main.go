@@ -165,12 +165,16 @@ func newClient(cmd *cli.Command) (*sdk.Client, error) {
 	// This directory's temporary workspace is the last resort. When an
 	// account credential outranks it, say so: the user may expect the
 	// temporary workspace.
-	if tw := liveTemporaryWorkspace(); tw != nil {
+	temporaryCredentialUsed = ""
+	if tw := liveTemporaryWorkspace(cmd); tw != nil {
 		if explicitKey || prof != nil {
 			fmt.Fprintf(cmd.Root().ErrWriter, "warning: using %s; ignoring the temporary workspace %s in .cadenya/temporary.json.\n", credentialSource(cmd), tw.WorkspaceID)
 		} else {
+			temporaryCredentialUsed = tw.WorkspaceID
 			opts = append(opts, sdk.WithAPIKey(tw.APIKey))
-			if !workspaceIDConfigured(cmd) {
+			// The temporary key reaches only its own workspace, so a stored
+			// `config set` default never applies; the flag or env still does.
+			if !cmd.Root().IsSet("workspace-id") && os.Getenv("CADENYA_WORKSPACE_ID") == "" {
 				opts = append(opts, sdk.WithWorkspaceID(tw.WorkspaceID))
 			}
 			if !cmd.Root().IsSet("base-url") && tw.BaseURL != "" {
@@ -187,6 +191,16 @@ func newClient(cmd *cli.Command) (*sdk.Client, error) {
 		return nil, errors.New(msg)
 	}
 	return sdk.NewClient(opts...)
+}
+
+// temporaryCredential returns this directory's live temporary workspace when
+// it is the credential in effect: no --api-key, no $CADENYA_API_KEY and no
+// stored login. MIRRORS newClient.
+func temporaryCredential(cmd *cli.Command) *temporaryWorkspace {
+	if cmd.Root().IsSet("api-key") || os.Getenv("CADENYA_API_KEY") != "" || storedProfile(cmd) != nil {
+		return nil
+	}
+	return liveTemporaryWorkspace(cmd)
 }
 
 // workspaceIDConfigured reports a workspace-id from the flag, the

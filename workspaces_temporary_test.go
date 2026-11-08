@@ -49,7 +49,33 @@ func isolate(t *testing.T) string {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(prev) })
+	// Fast, deterministic polling and retries.
+	saved := []time.Duration{minPollInterval, maxPollInterval, claimRetryBase, claimRetryMax}
+	minPollInterval, maxPollInterval, claimRetryBase, claimRetryMax = time.Millisecond, 50*time.Millisecond, time.Millisecond, 5*time.Millisecond
+	t.Cleanup(func() {
+		minPollInterval, maxPollInterval, claimRetryBase, claimRetryMax = saved[0], saved[1], saved[2], saved[3]
+	})
 	return project
+}
+
+// trustAPI lets a fake server stand in for a Cadenya API in
+// .cadenya/temporary.json, optionally paired with a fake auth host.
+func trustAPI(t *testing.T, apiURL, authURL string) {
+	t.Helper()
+	prevAPIs := trustedAPIBaseURLs
+	trustedAPIBaseURLs = append(append([]string{}, prevAPIs...), apiURL)
+	prevAuth := claimAuthBaseURLs
+	claimAuthBaseURLs = map[string]string{}
+	for k, v := range prevAuth {
+		claimAuthBaseURLs[k] = v
+	}
+	if authURL != "" {
+		claimAuthBaseURLs[apiURL] = authURL
+	}
+	t.Cleanup(func() {
+		trustedAPIBaseURLs = prevAPIs
+		claimAuthBaseURLs = prevAuth
+	})
 }
 
 type result struct {
@@ -61,12 +87,20 @@ type result struct {
 // main does.
 func run(t *testing.T, args ...string) result {
 	t.Helper()
+	res, _ := runCtx(t, context.Background(), args...)
+	return res
+}
+
+// runCtx is run with a caller context, also returning the raw error.
+func runCtx(t *testing.T, ctx context.Context, args ...string) (result, error) {
+	t.Helper()
+	temporaryCredentialUsed = ""
 	var stdout, stderr bytes.Buffer
 	root := newRootCommand()
 	root.Writer = &stdout
 	root.ErrWriter = &stderr
 	root.ExitErrHandler = func(context.Context, *cli.Command, error) {}
-	err := root.Run(context.Background(), append([]string{"cadenya"}, args...))
+	err := root.Run(ctx, append([]string{"cadenya"}, args...))
 	code := 0
 	if err != nil {
 		var exitErr cli.ExitCoder
@@ -77,7 +111,7 @@ func run(t *testing.T, args ...string) result {
 			code = reportError(&stderr, err)
 		}
 	}
-	return result{stdout: stdout.String(), stderr: stderr.String(), code: code}
+	return result{stdout: stdout.String(), stderr: stderr.String(), code: code}, err
 }
 
 // fakeProvisioning stands in for new.cadenya.com.
@@ -280,7 +314,7 @@ func TestCreateTemporaryReuseAndFresh(t *testing.T) {
 func TestCreateTemporaryReplacesExpiredFile(t *testing.T) {
 	isolate(t)
 	prov := newFakeProvisioning(t, 24*time.Hour)
-	if err := writeTemporaryWorkspace(&temporaryWorkspace{WorkspaceID: "workspace_old", APIKey: "sk_old", ClaimURL: "u", ExpiresAt: time.Now().Add(-time.Minute)}); err != nil {
+	if err := writeTemporaryWorkspace(&temporaryWorkspace{WorkspaceID: "workspace_old", APIKey: "sk_old", ClaimURL: "https://app.cadenya.com/claim/old", ExpiresAt: time.Now().Add(-time.Minute)}); err != nil {
 		t.Fatal(err)
 	}
 	env, _ := createJSON(t, prov.URL)
@@ -552,6 +586,9 @@ func writeLiveTemporary(t *testing.T, baseURL string) *temporaryWorkspace {
 		ExpiresAt:   time.Now().Add(time.Hour),
 		BaseURL:     baseURL,
 	}
+	if baseURL != "" && !trustedAPIBaseURL(baseURL) {
+		trustAPI(t, baseURL, "")
+	}
 	if err := writeTemporaryWorkspace(tw); err != nil {
 		t.Fatal(err)
 	}
@@ -609,7 +646,8 @@ func TestCredentialPrecedenceWithTemporaryFile(t *testing.T) {
 	t.Run("expired file ignored", func(t *testing.T) {
 		isolate(t)
 		api := newFakeAPI(t)
-		if err := writeTemporaryWorkspace(&temporaryWorkspace{WorkspaceID: "w", APIKey: "sk_old", ExpiresAt: time.Now().Add(-time.Second), BaseURL: api.URL}); err != nil {
+		trustAPI(t, api.URL, "")
+		if err := writeTemporaryWorkspace(&temporaryWorkspace{WorkspaceID: "w", APIKey: "sk_old", ClaimURL: "https://app.cadenya.com/claim/x", ExpiresAt: time.Now().Add(-time.Second), BaseURL: api.URL}); err != nil {
 			t.Fatal(err)
 		}
 		res := run(t, "--base-url", api.URL, "workspaces", "list")
@@ -729,7 +767,7 @@ func TestClaimStatus(t *testing.T) {
 		api.states = []string{stateUnclaimed, stateExpired}
 		writeLiveTemporary(t, api.URL)
 		res := run(t, "workspaces", "claim-status", "--wait", "--display", "json")
-		if res.code != 0 || !strings.Contains(res.stdout, stateExpired) {
+		if res.code != exitTemporaryWorkspaceExpired || !strings.Contains(res.stdout, stateExpired) {
 			t.Errorf("exit %d: %s %s", res.code, res.stdout, res.stderr)
 		}
 	})
@@ -796,6 +834,7 @@ func TestAuthLoginClaimsTemporaryWorkspace(t *testing.T) {
 		t.Setenv("CADENYA_AUTH_BASE_URL", auth.URL)
 		api := newFakeAPI(t)
 		api.handler = claimedHandler
+		trustAPI(t, api.URL, auth.URL)
 		writeLiveTemporary(t, api.URL)
 		res := run(t, "auth", "login", "--no-browser")
 		if res.code != 0 {
@@ -817,6 +856,7 @@ func TestAuthLoginClaimsTemporaryWorkspace(t *testing.T) {
 		t.Setenv("CADENYA_AUTH_BASE_URL", auth.URL)
 		api := newFakeAPI(t)
 		api.states = []string{stateUnclaimed}
+		trustAPI(t, api.URL, auth.URL)
 		writeLiveTemporary(t, api.URL)
 		res := run(t, "auth", "login", "--no-browser")
 		if res.code != 0 {

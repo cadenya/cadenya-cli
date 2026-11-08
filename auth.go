@@ -144,7 +144,7 @@ func credentialSource(cmd *cli.Command) string {
 	if storedProfile(cmd) != nil {
 		return fmt.Sprintf("stored login (profile %q)", activeProfile(cmd))
 	}
-	if tw := liveTemporaryWorkspace(); tw != nil {
+	if tw := liveTemporaryWorkspace(cmd); tw != nil {
 		return fmt.Sprintf("temporary workspace %s (.cadenya/temporary.json)", tw.WorkspaceID)
 	}
 	return "none — set $CADENYA_API_KEY or run `cadenya auth login`"
@@ -242,6 +242,15 @@ func authCommand() *cli.Command {
 	}
 }
 
+// originOf reduces a URL to scheme://host.
+func originOf(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return raw
+	}
+	return u.Scheme + "://" + u.Host
+}
+
 // authDefaultPollInterval is the token poll interval when the device
 // authorization response names none.
 var authDefaultPollInterval = 5 * time.Second
@@ -252,11 +261,21 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 	// A temporary workspace in this directory is claimed by this login: the
 	// claim token rides along with the device authorization, and the
 	// approval page claims the workspace before issuing the credential.
-	claiming := liveTemporaryWorkspace()
-	if claiming != nil && claiming.ClaimToken != "" {
-		form.Set("claim_token", claiming.ClaimToken)
-	} else {
+	claiming := liveTemporaryWorkspace(cmd)
+	if claiming != nil && claiming.ClaimToken == "" {
 		claiming = nil
+	}
+	if claiming != nil {
+		// A claim token only goes to the auth host of the API the workspace
+		// lives behind: never a staging token to production, or the reverse.
+		authBase := originOf(authEndpoint(authDeviceEndpoint))
+		if want := claimAuthBaseURLs[claiming.effectiveBaseURL()]; want == "" || normalizeBaseURL(want) != authBase {
+			fmt.Fprintf(cmd.Root().Writer, "Not claiming the temporary workspace %s with this login: it lives behind %s, and this login goes to %s. Claim it with the link in .cadenya/temporary.json, or log in against the matching environment.\n", claiming.WorkspaceID, claiming.effectiveBaseURL(), authBase)
+			claiming = nil
+		}
+	}
+	if claiming != nil {
+		form.Set("claim_token", claiming.ClaimToken)
 	}
 	if host, err := os.Hostname(); err == nil {
 		name := host
@@ -373,8 +392,11 @@ func reportLoginClaim(ctx context.Context, cmd *cli.Command, out io.Writer, tw *
 	case err != nil:
 		fmt.Fprintf(out, "Could not confirm whether the temporary workspace %s was claimed (%v). Run `cadenya workspaces claim-status`.\n", tw.WorkspaceID, err)
 	case status.State == stateClaimed:
-		_ = removeTemporaryWorkspace()
-		fmt.Fprintf(out, "Claimed temporary workspace %s. It no longer expires; removed .cadenya/temporary.json.\n", tw.WorkspaceID)
+		msg := fmt.Sprintf("Claimed temporary workspace %s. It no longer expires.", tw.WorkspaceID)
+		if removed, _ := removeTemporaryWorkspace(); removed {
+			msg += " Removed .cadenya/temporary.json."
+		}
+		fmt.Fprintln(out, msg)
 	case status.State == statePending:
 		fmt.Fprintf(out, "The claim of temporary workspace %s is finishing. Run `cadenya workspaces claim-status --wait`.\n", tw.WorkspaceID)
 	default:

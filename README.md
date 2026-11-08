@@ -73,7 +73,10 @@ default, `--expire-after` to shorten). Claiming revokes the temporary key, and
 `auth login` run in the same directory sends the claim token with the login so
 one step claims the workspace and stores a credential. `--temporary` is
 refused when a credential is configured and in CI. `--instructions` prints the
-guide for coding agents.
+guide for coding agents. A `.cadenya/temporary.json` that isn't yours (not
+0600, owned by someone else, a symlink, or naming a non-Cadenya API or claim
+host) is ignored with a warning, so a file committed to a repository never
+redirects requests.
 
 ## Stored defaults
 
