@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.0](https://github.com/cadenya/cadenya-cli/compare/v1.11.0...v1.12.0) (2026-11-08)
+
+
+### Features
+
+* temporary workspaces without an account (ENG-974) ([#68](https://github.com/cadenya/cadenya-cli/issues/68)) ([2ec7367](https://github.com/cadenya/cadenya-cli/commit/2ec73677bb27df172801f31b9c117baa926ac317))
+
+
+### Bug Fixes
+
+* explain refused workspace claims on auth login ([#70](https://github.com/cadenya/cadenya-cli/issues/70)) ([f6bda60](https://github.com/cadenya/cadenya-cli/commit/f6bda605b7396902c44b88a857c05b9901506d27))
+
 ## [1.11.0](https://github.com/cadenya/cadenya-cli/compare/v1.10.0...v1.11.0) (2026-10-28)
 
 
