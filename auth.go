@@ -373,7 +373,11 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 				// The auth server already claimed it; no need to ask the
 				// API, whose temporary key the claim revoked.
 				reportClaimed(out, claiming)
+			case claiming != nil && token.ClaimResult != "":
+				// Refused, but the user had an account to sign in to.
+				fmt.Fprintf(out, "Temporary workspace %s was not claimed: %s\n", claiming.WorkspaceID, claimRefusal(token.ClaimResult, claiming))
 			case claiming != nil:
+				// A server that predates claim_result: ask the API.
 				reportLoginClaim(ctx, cmd, out, claiming)
 			}
 			return nil
@@ -384,7 +388,7 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 			interval += 5 * time.Second
 		case token.Error == "access_denied":
 			if token.ClaimResult != "" && claiming != nil {
-				return errors.New(claimRefusedMessage(token.ClaimResult, claiming))
+				return fmt.Errorf("login refused for temporary workspace %s: %s", claiming.WorkspaceID, claimRefusal(token.ClaimResult, claiming))
 			}
 			return errors.New("login was denied in the browser")
 		case token.Error == "expired_token":
@@ -408,21 +412,21 @@ func reportClaimed(out io.Writer, tw *temporaryWorkspace) {
 	fmt.Fprintln(out, msg)
 }
 
-// claimRefusedMessage explains an access_denied login whose claim was
-// refused, by the claim_result reason. The temporary workspace is untouched.
-func claimRefusedMessage(reason string, tw *temporaryWorkspace) string {
-	expiry := tw.ExpiresAt.Local().Format("Mon Jan 2 15:04 MST")
+// claimRefusal explains a refused claim by its claim_result reason. The
+// temporary workspace is untouched. Unknown reasons come from the server
+// and are quoted so they cannot carry terminal control sequences.
+func claimRefusal(reason string, tw *temporaryWorkspace) string {
 	switch reason {
 	case "ACCOUNT_ALREADY_EXISTS":
-		return fmt.Sprintf("login refused: you already have a Cadenya account, and a temporary workspace can only be claimed by someone without one. Sign in to your account and create a workspace there; temporary workspace %s expires at %s.", tw.WorkspaceID, expiry)
+		return fmt.Sprintf("you already have a Cadenya account, and a temporary workspace can only be claimed by someone without one. To keep working in Cadenya, create a workspace in your account; the temporary workspace expires at %s.", tw.ExpiresAt.Local().Format("Mon Jan 2 15:04 MST"))
 	case "TEMPORARY_WORKSPACE_EXPIRED":
-		return fmt.Sprintf("login refused: temporary workspace %s expired before it was claimed and cannot be recovered. Create a new workspace, or remove .cadenya/temporary.json and log in again.", tw.WorkspaceID)
+		return "it expired before it was claimed and cannot be recovered. Remove .cadenya/temporary.json and create a new workspace."
 	case "TEMPORARY_WORKSPACE_CLAIMED":
-		return fmt.Sprintf("login refused: temporary workspace %s was already claimed by someone else, so it cannot be claimed again. Remove .cadenya/temporary.json and log in again.", tw.WorkspaceID)
+		return "it was already claimed by someone else and cannot be claimed again. Remove .cadenya/temporary.json."
 	case "CLAIM_INVALID":
-		return fmt.Sprintf("login refused: the claim token for temporary workspace %s is not valid. Remove .cadenya/temporary.json and log in again.", tw.WorkspaceID)
+		return "its claim token is not valid. Remove .cadenya/temporary.json."
 	default:
-		return fmt.Sprintf("login refused: the claim of temporary workspace %s failed (%s). Run `cadenya workspaces claim-status` for its current state.", tw.WorkspaceID, reason)
+		return fmt.Sprintf("the claim failed (%q). Run `cadenya workspaces claim-status` for its current state.", reason)
 	}
 }
 

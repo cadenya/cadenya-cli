@@ -36,13 +36,12 @@ func TestAuthLoginClaimRefused(t *testing.T) {
 	cases := []struct {
 		reason string
 		want   []string
-		keep   bool
 	}{
-		{"ACCOUNT_ALREADY_EXISTS", []string{"already have a Cadenya account", "create a workspace", "expires"}, true},
-		{"TEMPORARY_WORKSPACE_EXPIRED", []string{"expired", "cannot be recovered"}, true},
-		{"TEMPORARY_WORKSPACE_CLAIMED", []string{"already claimed"}, true},
-		{"CLAIM_INVALID", []string{"claim token", "not valid"}, true},
-		{"SOMETHING_NEW", []string{"SOMETHING_NEW"}, true},
+		{"ACCOUNT_ALREADY_EXISTS", []string{"already have a Cadenya account", "create a workspace", "expires"}},
+		{"TEMPORARY_WORKSPACE_EXPIRED", []string{"expired before it was claimed", "cannot be recovered"}},
+		{"TEMPORARY_WORKSPACE_CLAIMED", []string{"already claimed by someone else"}},
+		{"CLAIM_INVALID", []string{"claim token", "not valid"}},
+		{"SOMETHING_NEW", []string{`"SOMETHING_NEW"`, "claim-status"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.reason, func(t *testing.T) {
@@ -57,10 +56,10 @@ func TestAuthLoginClaimRefused(t *testing.T) {
 			if res.code == 0 {
 				t.Fatalf("a refused claim must fail the login: %s", res.stdout)
 			}
-			if strings.Contains(res.stderr, "login was denied in the browser") && !strings.Contains(res.stderr, tc.want[0]) {
+			if strings.Contains(res.stderr, "login was denied in the browser") {
 				t.Errorf("generic denial left as is: %s", res.stderr)
 			}
-			for _, w := range tc.want {
+			for _, w := range append(tc.want, "login refused", "workspace_T") {
 				if !strings.Contains(res.stderr, w) {
 					t.Errorf("stderr missing %q: %s", w, res.stderr)
 				}
@@ -110,5 +109,37 @@ func TestAuthLoginClaimResultClaimedOnSuccess(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(project, ".cadenya", "temporary.json")); !os.IsNotExist(err) {
 		t.Errorf("temporary.json kept after a claim")
+	}
+}
+
+func TestAuthLoginRefusedClaimOnSuccessExplainsTheReason(t *testing.T) {
+	prevPoll := authDefaultPollInterval
+	authDefaultPollInterval = time.Millisecond
+	defer func() { authDefaultPollInterval = prevPoll }()
+	project := isolate(t)
+	// An existing account holder with workspaces is signed in to them; the
+	// claim is refused beside a credential.
+	auth := fakeAuthToken(t, http.StatusOK, map[string]any{"access_token": "sk_login", "token_type": "bearer", "claim_result": "ACCOUNT_ALREADY_EXISTS", "workspaces": []map[string]string{{"id": "workspace_A", "name": "Mine"}}})
+	t.Setenv("CADENYA_AUTH_BASE_URL", auth.URL)
+	api := newFakeAPI(t)
+	api.states = []string{stateClaimed}
+	trustAPI(t, api.URL, auth.URL)
+	writeLiveTemporary(t, api.URL)
+	res := run(t, "auth", "login", "--no-browser")
+	if res.code != 0 {
+		t.Fatalf("the login succeeded and must exit 0: %d %s", res.code, res.stderr)
+	}
+	for _, w := range []string{"Logged in.", "workspace_T was not claimed", "already have a Cadenya account"} {
+		if !strings.Contains(res.stdout, w) {
+			t.Errorf("stdout missing %q: %s", w, res.stdout)
+		}
+	}
+	// The token response is authoritative: the API (which would say claimed
+	// here) must not be consulted.
+	if strings.Contains(res.stdout, "Claimed temporary workspace") {
+		t.Errorf("reported a claim the server refused: %s", res.stdout)
+	}
+	if _, err := os.Stat(filepath.Join(project, ".cadenya", "temporary.json")); err != nil {
+		t.Errorf("temporary.json must stay after a refused claim: %v", err)
 	}
 }
