@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/cadenya/cadenya-cli/compare/v1.12.0...v1.12.1) (2026-11-08)
+
+
+### Bug Fixes
+
+* fetch the temporary workspace guide from cadenya.com/docs ([#71](https://github.com/cadenya/cadenya-cli/issues/71)) ([d51cfb1](https://github.com/cadenya/cadenya-cli/commit/d51cfb1ec09e14ea7e790cde845e4a5b2959300c))
+
 ## [1.12.0](https://github.com/cadenya/cadenya-cli/compare/v1.11.0...v1.12.0) (2026-11-08)
 
 
