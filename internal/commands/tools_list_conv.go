@@ -39,9 +39,6 @@ func ConvertToolsList(cmd *cli.Command, out *ToolsListConversion) error {
 	if cmd.IsSet("requires-approval") {
 		values["requiresApproval"] = cmd.Bool("requires-approval")
 	}
-	if cmd.IsSet("overlays") {
-		values["overlays"] = cmd.StringSlice("overlays")
-	}
 	if cmd.IsSet("labels") {
 		values["labels"] = cmd.String("labels")
 	}
