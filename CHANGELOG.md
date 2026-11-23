@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/cadenya/cadenya-cli/compare/v1.12.1...v1.13.0) (2026-11-23)
+
+
+### Features
+
+* tool set rules, tool set sync, and the 1.10.0 Go SDK ([#73](https://github.com/cadenya/cadenya-cli/issues/73)) ([116dcdc](https://github.com/cadenya/cadenya-cli/commit/116dcdce71cf756d9331f7eed1ec61991c15eb9a))
+
 ## [1.12.1](https://github.com/cadenya/cadenya-cli/compare/v1.12.0...v1.12.1) (2026-11-08)
 
 
