@@ -110,8 +110,7 @@ func toolSetsCommand() *cli.Command {
 					&cli.StringFlag{Name: "openapi-server-name", Usage: "Name of the server entry in the spec's servers array (OpenAPI 3.2 server.name field). Used to select which server URL to dispatch to when base_url is not set.….", Category: "openapi = url"},
 					&cli.StringFlag{Name: "openapi-upload-id", Usage: "Required. ID of a COMPLETE Upload containing the OpenAPI spec document.", Category: "openapi = upload-id"},
 					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = bare"},
-					&cli.Int32Flag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely.", Category: "adapter = bare"},
-					&cli.StringSliceFlag{Name: "overlay", Usage: "Overlays applied to this tool set's tools, evaluated in order. See ToolOverlay. Overlay keys must be unique within the list. As a repeated field this is…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely. A duration string in seconds, such as \"3600s\".", Category: "adapter = bare"},
 					&cli.StringSliceFlag{Name: "secret", Usage: "The tool set's secrets, identified by normalized name. Order has no meaning. Values are write-only; reads return names only. On create, the tool set and its…. key=value,... over name, value (repeatable; or a document). NAME=VALUE is also accepted."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
@@ -126,7 +125,7 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("adapter"), cmd.String("mcp"), cmd.String("mcp-url"), cmd.String("mcp-include-tools"), cmd.String("mcp-exclude-tools"), cmd.String("mcp-tool-approvals"), cmd.String("mcp-tool-approvals-only"), cmd.String("mcp-just-in-time"), cmd.String("http"), cmd.String("http-base-url"), cmd.String("openapi"), cmd.String("openapi-url"), cmd.String("openapi-include-tools"), cmd.String("openapi-exclude-tools"), cmd.String("openapi-tool-approvals"), cmd.String("openapi-tool-approvals-only"), cmd.String("openapi-base-url"), cmd.String("openapi-server-name"), cmd.String("openapi-upload-id"), cmd.String("bare")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("adapter"), cmd.String("mcp"), cmd.String("mcp-url"), cmd.String("mcp-include-tools"), cmd.String("mcp-exclude-tools"), cmd.String("mcp-tool-approvals"), cmd.String("mcp-tool-approvals-only"), cmd.String("mcp-just-in-time"), cmd.String("http"), cmd.String("http-base-url"), cmd.String("openapi"), cmd.String("openapi-url"), cmd.String("openapi-include-tools"), cmd.String("openapi-exclude-tools"), cmd.String("openapi-tool-approvals"), cmd.String("openapi-tool-approvals-only"), cmd.String("openapi-base-url"), cmd.String("openapi-server-name"), cmd.String("openapi-upload-id"), cmd.String("bare"), cmd.String("bare-content-timeout")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-header")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-include-tools-filter")...)
@@ -137,7 +136,6 @@ func toolSetsCommand() *cli.Command {
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-include-tools-filter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-exclude-tools-filter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-tool-approvals-only-filter")...)
-					_stdinInputs = append(_stdinInputs, cmd.StringSlice("overlay")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
@@ -285,8 +283,7 @@ func toolSetsCommand() *cli.Command {
 					&cli.StringFlag{Name: "openapi-server-name", Usage: "Name of the server entry in the spec's servers array (OpenAPI 3.2 server.name field). Used to select which server URL to dispatch to when base_url is not set.….", Category: "openapi = url"},
 					&cli.StringFlag{Name: "openapi-upload-id", Usage: "ID of a COMPLETE Upload containing the OpenAPI spec document.", Category: "openapi = upload-id"},
 					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "adapter = bare"},
-					&cli.Int32Flag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely.", Category: "adapter = bare"},
-					&cli.StringSliceFlag{Name: "overlay", Usage: "Overlays applied to this tool set's tools, evaluated in order. See ToolOverlay. Overlay keys must be unique within the list. As a repeated field this is…. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "bare-content-timeout", Usage: "How long to wait for content to be set before the tool call errors. If unset, the call waits indefinitely. A duration string in seconds, such as \"3600s\".", Category: "adapter = bare"},
 					&cli.StringSliceFlag{Name: "secret", Usage: "The tool set's secrets, identified by normalized name. Order has no meaning. Values are write-only; reads return names only. On create, the tool set and its…. key=value,... over name, value (repeatable; or a document). NAME=VALUE is also accepted."},
 					&cli.StringFlag{Name: "update-mask", Usage: ""},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
@@ -305,7 +302,7 @@ func toolSetsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("adapter"), cmd.String("mcp"), cmd.String("mcp-url"), cmd.String("mcp-include-tools"), cmd.String("mcp-exclude-tools"), cmd.String("mcp-tool-approvals"), cmd.String("mcp-tool-approvals-only"), cmd.String("mcp-just-in-time"), cmd.String("http"), cmd.String("http-base-url"), cmd.String("openapi"), cmd.String("openapi-url"), cmd.String("openapi-include-tools"), cmd.String("openapi-exclude-tools"), cmd.String("openapi-tool-approvals"), cmd.String("openapi-tool-approvals-only"), cmd.String("openapi-base-url"), cmd.String("openapi-server-name"), cmd.String("openapi-upload-id"), cmd.String("bare"), cmd.String("update-mask")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("adapter"), cmd.String("mcp"), cmd.String("mcp-url"), cmd.String("mcp-include-tools"), cmd.String("mcp-exclude-tools"), cmd.String("mcp-tool-approvals"), cmd.String("mcp-tool-approvals-only"), cmd.String("mcp-just-in-time"), cmd.String("http"), cmd.String("http-base-url"), cmd.String("openapi"), cmd.String("openapi-url"), cmd.String("openapi-include-tools"), cmd.String("openapi-exclude-tools"), cmd.String("openapi-tool-approvals"), cmd.String("openapi-tool-approvals-only"), cmd.String("openapi-base-url"), cmd.String("openapi-server-name"), cmd.String("openapi-upload-id"), cmd.String("bare"), cmd.String("bare-content-timeout"), cmd.String("update-mask")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-header")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("mcp-include-tools-filter")...)
@@ -316,7 +313,6 @@ func toolSetsCommand() *cli.Command {
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-include-tools-filter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-exclude-tools-filter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("openapi-tool-approvals-only-filter")...)
-					_stdinInputs = append(_stdinInputs, cmd.StringSlice("overlay")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
@@ -375,6 +371,41 @@ func toolSetsCommand() *cli.Command {
 						return err
 					}
 					return renderDisplay(_display, _columns, false, out)
+				},
+			},
+			{
+				Name:                      "sync",
+				DisableSliceFlagSeparator: true,
+				Usage:                     "Sync a tool set",
+				ArgsUsage:                 "<id>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "display", Usage: "Output mode (one of: json, yaml, table, extended)"},
+					&cli.StringFlag{Name: "workspace-id", Usage: "Workspace ID."},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if cmd.Args().Len() != 1 {
+						return cli.Exit(fmt.Sprintf("expected exactly 1 positional argument(s) (<id>), got %d", cmd.Args().Len()), 2)
+					}
+					if strings.TrimSpace(cmd.Args().Get(0)) == "" {
+						return cli.Exit("<id> must not be empty", 2)
+					}
+					_display := displayMode(cmd, "json")
+					if !isOneOf(_display, []string{"json", "yaml", "table", "extended"}) {
+						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
+					}
+					if _display != "json" && _display != "yaml" {
+						return cli.Exit("this command has no displayable response; use --display json", 2)
+					}
+					pos0 := cmd.Args().Get(0) // id
+					var converted commands.ToolSetsSyncConversion
+					if err := commands.ConvertToolSetsSync(cmd, &converted); err != nil {
+						return err
+					}
+					client, err := newClient(cmd)
+					if err != nil {
+						return err
+					}
+					return client.ToolSets().Sync(ctx, pos0, &converted.Params)
 				},
 			},
 			{
@@ -537,6 +568,7 @@ func toolSetsCommand() *cli.Command {
 					return renderDisplay(_display, _columns, true, map[string]any{"items": page.Items, "nextCursor": page.NextCursor})
 				},
 			},
+			toolSetRulesCommand(),
 			toolSetSecretsCommand(),
 			toolsCommand(),
 		},

@@ -30,7 +30,6 @@ func toolsCommand() *cli.Command {
 					&cli.StringSliceFlag{Name: "names", Usage: "Filter by tool name (exact match). Multiple values are OR'd together."},
 					&cli.StringSliceFlag{Name: "states", Usage: "Filter by tool state. Multiple values are OR'd together. (one of: STATE_UNSPECIFIED, STATE_AVAILABLE, STATE_OMITTED, STATE_ARCHIVED)"},
 					&cli.BoolFlag{Name: "requires-approval", Usage: "Filter by approval requirement. Omitted = no filter; true = only tools requiring approval; false = only tools not requiring approval."},
-					&cli.StringSliceFlag{Name: "overlays", Usage: "Filter to tools matched by the tool set overlays with these keys (ToolSetSpec.overlays), i.e. tools whose info.overlays contains the key. Multiple values are…"},
 					&cli.StringFlag{Name: "labels", Usage: "Filters by metadata labels. Comma-separated key=value pairs, e.g. \"env=prod,team=ai\". A resource matches only if every pair matches exactly (AND semantics)."},
 					&cli.StringFlag{Name: "sort-order", Usage: "Sort order for results (asc or desc by creation time)"},
 					&cli.BoolFlag{Name: "include-info", Usage: "When set to true you may use more of your alloted API rate-limit"},
@@ -105,6 +104,15 @@ func toolsCommand() *cli.Command {
 					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = bare"},
 					&cli.StringFlag{Name: "bare-always-set-result", Usage: "When set, the tool call's result is recorded immediately as this fixed text instead of parking the call to wait for externally supplied content. The….", Category: "config = bare"},
 					&cli.StringFlag{Name: "llm-tool-name", Usage: "The name provided to the LLM, which may differ from the metadata.name on the tool. LLMs have specific length and format requirements, and tool set sources may…."},
+					&cli.StringFlag{Name: "actions", Usage: "The tool's own actions. They apply after every rule on the tool set, so they win every conflict; the tool's result transforms run last. Only allowed on tools…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringSliceFlag{Name: "actions-parameter-action", Usage: "Pre-call actions, applied in order. A later action on the same parameter path wins. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringSliceFlag{Name: "actions-result-action", Usage: "Post-call actions, applied in order. Result transforms chain: each one reads the previous one's output. Not supported on bare tool sets. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "actions-widget-argument-exposure", Usage: "Whether matching tools expose their final call arguments in widget events. Unset means no opinion. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.BoolFlag{Name: "actions-widget-argument-exposure-enabled", Usage: ""},
+					&cli.StringFlag{Name: "actions-auto-mode", Usage: "Optional automatic approval policy. Unset means no opinion. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringSliceFlag{Name: "actions-auto-mode-question", Usage: "key=value,... over question, threshold (repeatable; or a document)."},
+					&cli.StringFlag{Name: "actions-auto-mode-passing-mode", Usage: "One of: all, none, most."},
+					&cli.StringFlag{Name: "actions-auto-mode-failure-message", Usage: "Optional guidance returned to the agent when the decision thresholds fail. When empty, a default denial message is used. Client errors never use this message."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -121,10 +129,13 @@ func toolsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("config"), cmd.String("http"), cmd.String("http-path"), cmd.String("http-query"), cmd.String("http-request-body-template"), cmd.String("http-request-body-content-type"), cmd.String("mcp"), cmd.String("mcp-annotations"), cmd.String("mcp-annotations-title"), cmd.String("openapi"), cmd.String("openapi-path"), cmd.String("openapi-method"), cmd.String("bare"), cmd.String("bare-always-set-result"), cmd.String("llm-tool-name")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("config"), cmd.String("http"), cmd.String("http-path"), cmd.String("http-query"), cmd.String("http-request-body-template"), cmd.String("http-request-body-content-type"), cmd.String("mcp"), cmd.String("mcp-annotations"), cmd.String("mcp-annotations-title"), cmd.String("openapi"), cmd.String("openapi-path"), cmd.String("openapi-method"), cmd.String("bare"), cmd.String("bare-always-set-result"), cmd.String("llm-tool-name"), cmd.String("actions"), cmd.String("actions-widget-argument-exposure"), cmd.String("actions-auto-mode"), cmd.String("actions-auto-mode-failure-message")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("parameter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("http-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("actions-parameter-action")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("actions-result-action")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("actions-auto-mode-question")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}
@@ -264,6 +275,15 @@ func toolsCommand() *cli.Command {
 					&cli.StringFlag{Name: "bare", Usage: "YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true, Category: "config = bare"},
 					&cli.StringFlag{Name: "bare-always-set-result", Usage: "When set, the tool call's result is recorded immediately as this fixed text instead of parking the call to wait for externally supplied content. The….", Category: "config = bare"},
 					&cli.StringFlag{Name: "llm-tool-name", Usage: "The name provided to the LLM, which may differ from the metadata.name on the tool. LLMs have specific length and format requirements, and tool set sources may…."},
+					&cli.StringFlag{Name: "actions", Usage: "The tool's own actions. They apply after every rule on the tool set, so they win every conflict; the tool's result transforms run last. Only allowed on tools…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringSliceFlag{Name: "actions-parameter-action", Usage: "Pre-call actions, applied in order. A later action on the same parameter path wins. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringSliceFlag{Name: "actions-result-action", Usage: "Post-call actions, applied in order. Result transforms chain: each one reads the previous one's output. Not supported on bare tool sets. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "actions-widget-argument-exposure", Usage: "Whether matching tools expose their final call arguments in widget events. Unset means no opinion. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.BoolFlag{Name: "actions-widget-argument-exposure-enabled", Usage: ""},
+					&cli.StringFlag{Name: "actions-auto-mode", Usage: "Optional automatic approval policy. Unset means no opinion. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
+					&cli.StringSliceFlag{Name: "actions-auto-mode-question", Usage: "key=value,... over question, threshold (repeatable; or a document)."},
+					&cli.StringFlag{Name: "actions-auto-mode-passing-mode", Usage: "One of: all, none, most."},
+					&cli.StringFlag{Name: "actions-auto-mode-failure-message", Usage: "Optional guidance returned to the agent when the decision thresholds fail. When empty, a default denial message is used. Client errors never use this message."},
 					&cli.StringFlag{Name: "update-mask", Usage: ""},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
@@ -284,10 +304,13 @@ func toolsCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "NAME", path: []string{"metadata", "name"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("config"), cmd.String("http"), cmd.String("http-path"), cmd.String("http-query"), cmd.String("http-request-body-template"), cmd.String("http-request-body-content-type"), cmd.String("mcp"), cmd.String("mcp-annotations"), cmd.String("mcp-annotations-title"), cmd.String("openapi"), cmd.String("openapi-path"), cmd.String("openapi-method"), cmd.String("bare"), cmd.String("bare-always-set-result"), cmd.String("llm-tool-name"), cmd.String("update-mask")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("metadata"), cmd.String("name"), cmd.String("external-id"), cmd.String("spec"), cmd.String("description"), cmd.String("config"), cmd.String("http"), cmd.String("http-path"), cmd.String("http-query"), cmd.String("http-request-body-template"), cmd.String("http-request-body-content-type"), cmd.String("mcp"), cmd.String("mcp-annotations"), cmd.String("mcp-annotations-title"), cmd.String("openapi"), cmd.String("openapi-path"), cmd.String("openapi-method"), cmd.String("bare"), cmd.String("bare-always-set-result"), cmd.String("llm-tool-name"), cmd.String("actions"), cmd.String("actions-widget-argument-exposure"), cmd.String("actions-auto-mode"), cmd.String("actions-auto-mode-failure-message"), cmd.String("update-mask")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("parameter")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("http-header")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("actions-parameter-action")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("actions-result-action")...)
+					_stdinInputs = append(_stdinInputs, cmd.StringSlice("actions-auto-mode-question")...)
 					if err := stdinBudget(_stdinInputs); err != nil {
 						return cli.Exit(err.Error(), 2)
 					}

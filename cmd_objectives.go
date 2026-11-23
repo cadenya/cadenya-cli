@@ -94,6 +94,7 @@ func objectivesCommand() *cli.Command {
 					&cli.StringSliceFlag{Name: "pinned-parameter", Usage: "Parameters forced onto this objective's tool calls. A pinned parameter is removed from the tool schema the LLM sees, and its value is always overwritten…. KEY=VALUE (repeatable; or a document)."},
 					&cli.StringFlag{Name: "client-tools", Usage: "Tools the caller defines and executes for this objective. Each definition is upserted into the agent's client tools tool set, and only the definitions listed…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.StringSliceFlag{Name: "client-tools-definition", Usage: "The tool definitions. Names must be unique within the list. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "system-prompt", Usage: "Replaces the selected variation's system_prompt_template for this objective only. Rendered as Liquid with system_prompt_data (for example, {{…."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
 					&cli.BoolFlag{Name: "strict", Usage: "Reject fields the request does not accept in --file and document inputs instead of dropping them with a warning"},
@@ -107,7 +108,7 @@ func objectivesCommand() *cli.Command {
 						return cli.Exit(fmt.Sprintf("--display: invalid value %q (valid: json, yaml, table, extended)", _display), 2)
 					}
 					_columns := []displayColumn{{header: "ID", path: []string{"metadata", "id"}}, {header: "EXTERNAL ID", path: []string{"metadata", "externalId"}}, {header: "CREATED", path: []string{"metadata", "createdAt"}}, {header: "STATE", path: []string{"state"}}}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("first-user-message"), cmd.String("episodic-memory"), cmd.String("episodic-memory-key"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name"), cmd.String("client-tools")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("first-user-message"), cmd.String("episodic-memory"), cmd.String("episodic-memory-key"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name"), cmd.String("client-tools"), cmd.String("system-prompt")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("system-prompt-data")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)
@@ -1024,6 +1025,7 @@ func objectivesCommand() *cli.Command {
 					&cli.StringSliceFlag{Name: "pinned-parameter", Usage: "Parameters forced onto this objective's tool calls. A pinned parameter is removed from the tool schema the LLM sees, and its value is always overwritten…. KEY=VALUE (repeatable; or a document)."},
 					&cli.StringFlag{Name: "client-tools", Usage: "Tools the caller defines and executes for this objective. Each definition is upserted into the agent's client tools tool set, and only the definitions listed…. YAML/JSON document (literal, @path, or - for stdin).", TakesFile: true},
 					&cli.StringSliceFlag{Name: "client-tools-definition", Usage: "The tool definitions. Names must be unique within the list. One YAML/JSON document per occurrence (literal, @path, or -)."},
+					&cli.StringFlag{Name: "system-prompt", Usage: "Replaces the selected variation's system_prompt_template for this objective only. Rendered as Liquid with system_prompt_data (for example, {{…."},
 					&cli.BoolFlag{Name: "include-deltas", Usage: "Also stream transient assistantMessageDelta and reasoningDelta events: text fragments as the model generates them, ahead of the durable assistantMessage and…."},
 					&cli.StringFlag{Name: "file", Aliases: []string{"f"}, TakesFile: true, Usage: "Whole request body from a YAML/JSON file (or - for stdin); other flags override its values"},
 					&cli.BoolFlag{Name: "dry-run", Usage: "Print the assembled request body (YAML; JSON with --display json) and exit without calling the API"},
@@ -1041,7 +1043,7 @@ func objectivesCommand() *cli.Command {
 					if _display != "json" {
 						return cli.Exit("streaming commands support only --display json (one JSON document per event)", 2)
 					}
-					_stdinInputs := []string{cmd.String("file"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("first-user-message"), cmd.String("episodic-memory"), cmd.String("episodic-memory-key"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name"), cmd.String("client-tools")}
+					_stdinInputs := []string{cmd.String("file"), cmd.String("agent-id"), cmd.String("variation-id"), cmd.String("metadata"), cmd.String("external-id"), cmd.String("first-user-message"), cmd.String("episodic-memory"), cmd.String("episodic-memory-key"), cmd.String("tenant"), cmd.String("tenant-id"), cmd.String("tenant-name"), cmd.String("subject"), cmd.String("subject-id"), cmd.String("subject-name"), cmd.String("client-tools"), cmd.String("system-prompt")}
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("label")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("system-prompt-data")...)
 					_stdinInputs = append(_stdinInputs, cmd.StringSlice("secret")...)

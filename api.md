@@ -543,7 +543,7 @@ cadenya objectives list [--workspace-id <value>] [--limit <value>] [--cursor <va
 Create a new objective
 
 ```sh
-cadenya objectives create [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... [--external-id <value>] [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [--client-tools-definition <doc>]... [-f <doc>] [--dry-run]
+cadenya objectives create [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... [--external-id <value>] [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [--client-tools-definition <doc>]... [--system-prompt <value>] [-f <doc>] [--dry-run]
 ```
 Get an objective by ID
 
@@ -643,7 +643,7 @@ cadenya objectives interrupt <objective-id> [--workspace-id <value>]
 Create an objective and stream its events
 
 ```sh
-cadenya objectives create-and-stream [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... --external-id <value> [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [--client-tools-definition <doc>]... [--include-deltas[=true|false]] [-f <doc>] [--dry-run] [--last-event-id <id>]
+cadenya objectives create-and-stream [--workspace-id <value>] --agent-id <value> [--variation-id <value>] [--label KEY=VALUE]... --external-id <value> [--system-prompt-data KEY=VALUE|<doc>]... [--first-user-message <value>] [--secret k=v,...|<doc>]... [--memory-cascade k=v,...|<doc>]... [--first-user-message-data KEY=VALUE|<doc>]... [--episodic-memory-key <value>] [--tenant-id <value>] [--tenant-name <value>] [--subject-id <value>] [--subject-name <value>] [--pinned-parameter KEY=VALUE]... [--client-tools-definition <doc>]... [--system-prompt <value>] [--include-deltas[=true|false]] [-f <doc>] [--dry-run] [--last-event-id <id>]
 ```
 
 ## cadenya tool-search
@@ -687,7 +687,7 @@ cadenya tool-sets list [--workspace-id <value>] [--limit <value>] [--cursor <val
 Create a new tool set
 
 ```sh
-cadenya tool-sets create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] --adapter <mcp|http|openapi|bare> [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--overlay <doc>]... [--secret k=v,...|<doc>]... [-f <doc>] [--dry-run]
+cadenya tool-sets create [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... [--description <value>] --adapter <mcp|http|openapi|bare> [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--secret k=v,...|<doc>]... [-f <doc>] [--dry-run]
 ```
 Get a tool set by ID
 
@@ -702,12 +702,17 @@ cadenya tool-sets delete <id> [--workspace-id <value>]
 Update a tool set
 
 ```sh
-cadenya tool-sets update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--adapter <mcp|http|openapi|bare>] [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--overlay <doc>]... [--secret k=v,...|<doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
+cadenya tool-sets update <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--adapter <mcp|http|openapi|bare>] [--mcp-url <value>] [--mcp-header KEY=VALUE]... [--mcp-include-tools-filter <doc>]... [--mcp-include-tools-operator <and|or>] [--mcp-exclude-tools-filter <doc>]... [--mcp-exclude-tools-operator <and|or>] [--mcp-tool-approvals <always|only>] [--mcp-tool-approvals-always[=true|false]] [--mcp-tool-approvals-only-filter <doc>]... [--mcp-tool-approvals-only-operator <and|or>] [--mcp-just-in-time-enabled[=true|false]] [--mcp-just-in-time-fail-objective-on-tool-list-error[=true|false]] [--http-base-url <value>] [--http-header KEY=VALUE]... [--openapi <url|upload-id>] [--openapi-url <value>] [--openapi-header KEY=VALUE]... [--openapi-include-tools-filter <doc>]... [--openapi-include-tools-operator <and|or>] [--openapi-exclude-tools-filter <doc>]... [--openapi-exclude-tools-operator <and|or>] [--openapi-tool-approvals <always|only>] [--openapi-tool-approvals-always[=true|false]] [--openapi-tool-approvals-only-filter <doc>]... [--openapi-tool-approvals-only-operator <and|or>] [--openapi-base-url <value>] [--openapi-server-name <value>] [--openapi-upload-id <value>] [--bare-content-timeout <value>] [--secret k=v,...|<doc>]... [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Archive a tool set
 
 ```sh
 cadenya tool-sets archive <id> [--workspace-id <value>]
+```
+Sync a tool set
+
+```sh
+cadenya tool-sets sync <id> [--workspace-id <value>]
 ```
 Unarchive a tool set
 
@@ -728,6 +733,34 @@ List tool set usage
 
 ```sh
 cadenya tool-sets list-usage <tool-set-id> [--workspace-id <value>] [--tool-id <value>] [--limit <value>] [--cursor <value>] [--sort-order <value>]
+```
+
+## cadenya tool-sets rules
+
+List tool set rules
+
+```sh
+cadenya tool-sets rules list <tool-set-id> [--workspace-id <value>]
+```
+Create a tool set rule
+
+```sh
+cadenya tool-sets rules create <tool-set-id> [--workspace-id <value>] --name <value> [--description <value>] [--when <value>] [--actions-parameter-action <doc>]... [--actions-result-action <doc>]... [--actions-widget-argument-exposure-enabled[=true|false]] [--actions-auto-mode-question k=v,...|<doc>]... [--actions-auto-mode-passing-mode <all|none|most>] [--actions-auto-mode-failure-message <value>] [--disabled[=true|false]] [--position <value>] [-f <doc>] [--dry-run]
+```
+Get a tool set rule by ID
+
+```sh
+cadenya tool-sets rules retrieve <tool-set-id> <id> [--workspace-id <value>]
+```
+Delete a tool set rule
+
+```sh
+cadenya tool-sets rules delete <tool-set-id> <id> [--workspace-id <value>]
+```
+Update a tool set rule
+
+```sh
+cadenya tool-sets rules update <tool-set-id> <id> [--workspace-id <value>] [--name <value>] [--description <value>] [--when <value>] [--actions-parameter-action <doc>]... [--actions-result-action <doc>]... [--actions-widget-argument-exposure-enabled[=true|false]] [--actions-auto-mode-question k=v,...|<doc>]... [--actions-auto-mode-passing-mode <all|none|most>] [--actions-auto-mode-failure-message <value>] [--disabled[=true|false]] [--position <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 
 ## cadenya tool-sets secrets
@@ -763,12 +796,12 @@ cadenya tool-sets secrets update <tool-set-id> <id> [--workspace-id <value>] [--
 List tools
 
 ```sh
-cadenya tool-sets tools list <tool-set-id> [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--prefix <value>] [--query <value>] [--names <value>]... [--states <value>]... [--requires-approval[=true|false]] [--overlays <value>]... [--labels <value>] [--sort-order <value>] [--include-info[=true|false]]
+cadenya tool-sets tools list <tool-set-id> [--workspace-id <value>] [--limit <value>] [--cursor <value>] [--prefix <value>] [--query <value>] [--names <value>]... [--states <value>]... [--requires-approval[=true|false]] [--labels <value>] [--sort-order <value>] [--include-info[=true|false]]
 ```
 Create a new tool
 
 ```sh
-cadenya tool-sets tools create <tool-set-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --description <value> --requires-approval[=true|false] --parameter KEY=VALUE|<doc>... --config <http|mcp|openapi|bare> [--http-request-method <get|post|put|patch|delete>] [--http-path <value>] [--http-query <value>] [--http-header KEY=VALUE]... [--http-request-body-template <value>] [--http-request-body-content-type <value>] [--mcp-annotations-title <value>] [--mcp-annotations-read-only-hint[=true|false]] [--mcp-annotations-destructive-hint[=true|false]] [--mcp-annotations-idempotent-hint[=true|false]] [--mcp-annotations-open-world-hint[=true|false]] [--openapi-path <value>] [--openapi-method <value>] [--bare-always-set-result <value>] [--llm-tool-name <value>] [-f <doc>] [--dry-run]
+cadenya tool-sets tools create <tool-set-id> [--workspace-id <value>] --name <value> [--external-id <value>] [--label KEY=VALUE]... --description <value> --requires-approval[=true|false] --parameter KEY=VALUE|<doc>... --config <http|mcp|openapi|bare> [--http-request-method <get|post|put|patch|delete>] [--http-path <value>] [--http-query <value>] [--http-header KEY=VALUE]... [--http-request-body-template <value>] [--http-request-body-content-type <value>] [--mcp-annotations-title <value>] [--mcp-annotations-read-only-hint[=true|false]] [--mcp-annotations-destructive-hint[=true|false]] [--mcp-annotations-idempotent-hint[=true|false]] [--mcp-annotations-open-world-hint[=true|false]] [--openapi-path <value>] [--openapi-method <value>] [--bare-always-set-result <value>] [--llm-tool-name <value>] [--actions-parameter-action <doc>]... [--actions-result-action <doc>]... [--actions-widget-argument-exposure-enabled[=true|false]] [--actions-auto-mode-question k=v,...|<doc>]... [--actions-auto-mode-passing-mode <all|none|most>] [--actions-auto-mode-failure-message <value>] [-f <doc>] [--dry-run]
 ```
 Get a tool by ID
 
@@ -783,7 +816,7 @@ cadenya tool-sets tools delete <tool-set-id> <id> [--workspace-id <value>]
 Update a tool
 
 ```sh
-cadenya tool-sets tools update <tool-set-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--requires-approval[=true|false]] [--parameter KEY=VALUE|<doc>]... [--config <http|mcp|openapi|bare>] [--http-request-method <get|post|put|patch|delete>] [--http-path <value>] [--http-query <value>] [--http-header KEY=VALUE]... [--http-request-body-template <value>] [--http-request-body-content-type <value>] [--mcp-annotations-title <value>] [--mcp-annotations-read-only-hint[=true|false]] [--mcp-annotations-destructive-hint[=true|false]] [--mcp-annotations-idempotent-hint[=true|false]] [--mcp-annotations-open-world-hint[=true|false]] [--openapi-path <value>] [--openapi-method <value>] [--bare-always-set-result <value>] [--llm-tool-name <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
+cadenya tool-sets tools update <tool-set-id> <id> [--workspace-id <value>] [--name <value>] [--external-id <value>] [--label KEY=VALUE]... [--description <value>] [--requires-approval[=true|false]] [--parameter KEY=VALUE|<doc>]... [--config <http|mcp|openapi|bare>] [--http-request-method <get|post|put|patch|delete>] [--http-path <value>] [--http-query <value>] [--http-header KEY=VALUE]... [--http-request-body-template <value>] [--http-request-body-content-type <value>] [--mcp-annotations-title <value>] [--mcp-annotations-read-only-hint[=true|false]] [--mcp-annotations-destructive-hint[=true|false]] [--mcp-annotations-idempotent-hint[=true|false]] [--mcp-annotations-open-world-hint[=true|false]] [--openapi-path <value>] [--openapi-method <value>] [--bare-always-set-result <value>] [--llm-tool-name <value>] [--actions-parameter-action <doc>]... [--actions-result-action <doc>]... [--actions-widget-argument-exposure-enabled[=true|false]] [--actions-auto-mode-question k=v,...|<doc>]... [--actions-auto-mode-passing-mode <all|none|most>] [--actions-auto-mode-failure-message <value>] [--update-mask <value>] [-f <doc>] [--dry-run]
 ```
 Omit a tool
 
